@@ -1,0 +1,28 @@
+---
+description: Put Godot visuals in scenes the 2D editor can show
+alwaysApply: true
+---
+
+# Visible in the Godot 2D editor
+
+Build visuals as scenes so they can be opened and edited in the 2D editor.
+
+## Screens
+
+Put panels, anchors, containers, theme overrides, and default text on the `.tscn`. Scripts wire signals, track state, and fill text that changes. `scenes/ui/game_menu.tscn` is the pattern.
+
+## Small visual elements
+
+A card, row, chip, badge, damage number, flash, or similar look gets its own scene, even when it is not a full screen. `scenes/ui/mech_card.tscn` is the pattern. Scripts `preload` that scene, `instantiate` it, and set the data for each copy.
+
+## Spawned actors
+
+A mech or prop is a scene. Spawn code only places instances.
+
+## Existing screens
+
+If a screen already builds its layout in code, ask before moving that whole layout into a scene. Small visual elements may be extracted into their own scenes as part of the task.
+
+## Stay in scripts
+
+Rules, combat math, turn flow, and AI stay in scripts and resources. Nodes display that state and emit signals for input. Do not assemble a look with `Button.new()`, `Label.new()`, `Control.new()`, or `StyleBoxFlat.new()`.

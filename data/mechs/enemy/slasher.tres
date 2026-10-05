@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="MechData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/mechs/mech_data.gd" id="1_mech"]
+
+[resource]
+script = ExtResource("1_mech")
+id = "slasher"
+display_name = "Slasher"
+short_name = "SLA"
+team = "enemy"
+max_hp = 8
+move_range = 2
+speed = 6
+turn_count = 3
+color = Color(0.4, 0.38, 0.3, 1)
+art_id = "grunt_slasher"

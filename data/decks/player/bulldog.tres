@@ -1,0 +1,86 @@
+[gd_resource type="Resource" script_class="MechDeck" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/mech_deck.gd" id="1_deck"]
+[ext_resource type="Script" path="res://scripts/cards/card_data.gd" id="2_card"]
+
+[sub_resource type="Resource" id="c1"]
+script = ExtResource("2_card")
+id = "bulldog_hammer"
+display_name = "Hammer"
+description = "A heavy blast up close."
+card_type = "Attack"
+damage = 7
+reach = 1
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c2"]
+script = ExtResource("2_card")
+id = "bulldog_slug"
+display_name = "Slug"
+description = "A solid hit up close."
+card_type = "Attack"
+damage = 8
+reach = 1
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c3"]
+script = ExtResource("2_card")
+id = "bulldog_suppress"
+display_name = "Suppress"
+description = "A quick hit up close."
+card_type = "Attack"
+damage = 5
+reach = 1
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c4"]
+script = ExtResource("2_card")
+id = "bulldog_buckshot"
+display_name = "Buckshot"
+description = "A close shot at one enemy."
+card_type = "Attack"
+damage = 6
+reach = 1
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c5"]
+script = ExtResource("2_card")
+id = "bulldog_reposition"
+display_name = "Reposition"
+description = "Move 2 cells."
+card_type = "Move"
+movement = 2
+reach = 0
+target_type = "self"
+
+[sub_resource type="Resource" id="c6"]
+script = ExtResource("2_card")
+id = "bulldog_brace"
+display_name = "Brace"
+description = "Add guard, step 1 cell, and catch next hit on an ally."
+card_type = "Defense"
+defense_kind = "Guard"
+block = 5
+reach = 0
+movement = 1
+target_type = "self"
+intercept = true
+
+[sub_resource type="Resource" id="c7"]
+script = ExtResource("2_card")
+id = "bulldog_anchor"
+display_name = "Anchor"
+is_special = true
+description = "Add barrier, step 2 cells, and catch next hit on an ally."
+card_type = "Defense"
+defense_kind = "Guard"
+barrier = 6
+reach = 0
+movement = 2
+target_type = "self"
+intercept = true
+
+[resource]
+script = ExtResource("1_deck")
+mech_id = "bulldog"
+cards = Array[ExtResource("2_card")]([SubResource("c1"), SubResource("c2"), SubResource("c3"), SubResource("c4"), SubResource("c5"), SubResource("c6"), SubResource("c7")])

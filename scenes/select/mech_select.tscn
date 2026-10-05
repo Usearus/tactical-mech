@@ -1,0 +1,445 @@
+[gd_scene format=3 uid="uid://bhglw501au833"]
+
+[ext_resource type="Script" uid="uid://cxcmri3brorgm" path="res://scripts/select/mech_select.gd" id="1_select"]
+[ext_resource type="PackedScene" path="res://scenes/ui/roster_row.tscn" id="2_row"]
+[ext_resource type="PackedScene" path="res://scenes/ui/info_badge.tscn" id="3_badge"]
+[ext_resource type="Texture2D" uid="uid://wkanx7w3nqyu" path="res://art/mechs/player/purple/pilot.png" id="4_hi4pi"]
+[ext_resource type="PackedScene" path="res://scenes/ui/info_note.tscn" id="4_note"]
+[ext_resource type="Texture2D" uid="uid://cge1goco58nhh" path="res://art/mechs/player/purple/idle.png" id="5_idle"]
+[ext_resource type="PackedScene" path="res://scenes/ui/menu_corner.tscn" id="5_menu"]
+[ext_resource type="Shader" uid="uid://d27gl6uwnvpj2" path="res://shaders/stage_dots.gdshader" id="6_dots"]
+[ext_resource type="Shader" uid="uid://cq4x1eey38sqy" path="res://shaders/card_edge_fade.gdshader" id="7_fade"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_dots"]
+shader = ExtResource("6_dots")
+shader_parameter/fill_color = Color(0.2, 0.21, 0.25, 1)
+shader_parameter/dot_color = Color(0.42, 0.44, 0.5, 0.8)
+shader_parameter/spacing = 22.0
+shader_parameter/radius = 1.15
+shader_parameter/edge_top = 0.3
+shader_parameter/edge_bottom = 0.7
+shader_parameter/clip_shape = true
+shader_parameter/fill_alpha = 1.0
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_hi4pi"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_hi4pi")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle"]
+atlas = ExtResource("5_idle")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_2y0ul"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fade"]
+shader = ExtResource("7_fade")
+
+[sub_resource type="Gradient" id="Gradient_card_fade"]
+offsets = PackedFloat32Array(0, 0.62, 1)
+colors = PackedColorArray(0.08, 0.09, 0.12, 0, 0.08, 0.09, 0.12, 0, 0.08, 0.09, 0.12, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_card_fade"]
+gradient = SubResource("Gradient_card_fade")
+width = 256
+height = 4
+
+[node name="MechSelect" type="Control" unique_id=1926490492]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_select")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1843206450]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.09, 0.12, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1511935117]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=2013402375]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root" unique_id=1739357898]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BackButton" type="Button" parent="Margin/Root/Header" unique_id=2104771365]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "BACK"
+
+[node name="Title" type="Label" parent="Margin/Root/Header" unique_id=1467983678]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 48
+text = "Select Squad"
+vertical_alignment = 1
+
+[node name="MenuCorner" parent="Margin/Root/Header" unique_id=520120217 instance=ExtResource("5_menu")]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Body" type="HBoxContainer" parent="Margin/Root" unique_id=1190710064]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="RosterScroll" type="ScrollContainer" parent="Margin/Root/Body" unique_id=1189416206]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Roster" type="VBoxContainer" parent="Margin/Root/Body/RosterScroll" unique_id=1399912060]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="RosterRow" parent="Margin/Root/Body/RosterScroll/Roster" unique_id=419210072 instance=ExtResource("2_row")]
+layout_mode = 2
+
+[node name="Preview" type="VBoxContainer" parent="Margin/Root/Body" unique_id=1662736675]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="Frame" type="PanelContainer" parent="Margin/Root/Body/Preview" unique_id=1741212037]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_type_variation = &"PreviewFrame"
+
+[node name="Shape" type="ColorRect" parent="Margin/Root/Body/Preview/Frame" unique_id=923065568]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_dots")
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Column" type="VBoxContainer" parent="Margin/Root/Body/Preview/Frame" unique_id=1605761604]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="Identity" type="HBoxContainer" parent="Margin/Root/Body/Preview/Frame/Column" unique_id=982011749]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="Stage" type="Panel" parent="Margin/Root/Body/Preview/Frame/Column/Identity" unique_id=367119491]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 160)
+custom_maximum_size = Vector2(400, -1)
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 1.6
+theme_type_variation = &"PreviewStageOpen"
+
+[node name="Pilot" type="AnimatedSprite2D" parent="Margin/Root/Body/Preview/Frame/Column/Identity/Stage" unique_id=813894158]
+unique_name_in_owner = true
+z_index = 2
+position = Vector2(103, 196)
+scale = Vector2(3, 3)
+sprite_frames = SubResource("SpriteFrames_hi4pi")
+
+[node name="Mech" type="AnimatedSprite2D" parent="Margin/Root/Body/Preview/Frame/Column/Identity/Stage" unique_id=1070440158]
+unique_name_in_owner = true
+z_index = 1
+position = Vector2(255, 138)
+scale = Vector2(4.7500005, 4.7500005)
+sprite_frames = SubResource("SpriteFrames_2y0ul")
+
+[node name="MarginContainer" type="MarginContainer" parent="Margin/Root/Body/Preview/Frame/Column/Identity" unique_id=1450877211]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_right = 24
+
+[node name="Copy" type="VBoxContainer" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer" unique_id=1120376593]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 22
+
+[node name="PreviewName" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy" unique_id=2123135898]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 56
+text = "Select a mech"
+vertical_alignment = 1
+
+[node name="Details" type="HBoxContainer" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy" unique_id=1948638605]
+layout_mode = 2
+theme_override_constants/separation = 40
+
+[node name="Blurb" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details" unique_id=2056319186]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.82, 0.84, 0.88, 1)
+theme_override_font_sizes/font_size = 28
+text = "Deck mixes a variety of shot strengths, and can guard itself before moving in to fire."
+autowrap_mode = 3
+
+[node name="StatTable" type="VBoxContainer" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details" unique_id=2141663532]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="StatHeader" type="HBoxContainer" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable" unique_id=761832496]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_constants/separation = 76
+
+[node name="StatsLabel" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatHeader" unique_id=306369279]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Stats"
+vertical_alignment = 1
+
+[node name="TierLabel" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatHeader" unique_id=920848088]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Tier"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="StatGrid" type="GridContainer" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable" unique_id=333580319]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 2
+columns = 3
+
+[node name="HpName" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=1304226726]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "HP"
+
+[node name="HpStat" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=1601253732]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "0"
+horizontal_alignment = 2
+
+[node name="HpGrade" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=1035796695]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "D"
+horizontal_alignment = 2
+
+[node name="AtkName" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "ATK"
+
+[node name="AtkStat" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "0-0"
+horizontal_alignment = 2
+
+[node name="AtkGrade" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "D"
+horizontal_alignment = 2
+
+[node name="RngName" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "RNG"
+
+[node name="RngStat" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "0-0"
+horizontal_alignment = 2
+
+[node name="RngGrade" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "D"
+horizontal_alignment = 2
+
+[node name="MovName" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=369757978]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "MOV"
+
+[node name="MovStat" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=1122603975]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "0"
+horizontal_alignment = 2
+
+[node name="MovGrade" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=1772358144]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "D"
+horizontal_alignment = 2
+
+[node name="SpdName" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=1919822405]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "SPD"
+
+[node name="SpdStat" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=1675184691]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "0"
+horizontal_alignment = 2
+
+[node name="SpdGrade" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=265614429]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "D"
+horizontal_alignment = 2
+
+[node name="OvdName" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=1057633240]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "OVD"
+
+[node name="OvdStat" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=1999527779]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "0"
+horizontal_alignment = 2
+
+[node name="OvdGrade" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=69355910]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "D"
+horizontal_alignment = 2
+
+[node name="CardRow" type="MarginContainer" parent="Margin/Root/Body/Preview/Frame/Column" unique_id=532936715]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 8
+
+[node name="DeckScroll" type="ScrollContainer" parent="Margin/Root/Body/Preview/Frame/Column/CardRow" unique_id=1117552412]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 228)
+layout_mode = 2
+horizontal_scroll_mode = 3
+vertical_scroll_mode = 0
+
+[node name="DeckLead" type="MarginContainer" parent="Margin/Root/Body/Preview/Frame/Column/CardRow/DeckScroll" unique_id=1844299011]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 64
+
+[node name="Deck" type="HBoxContainer" parent="Margin/Root/Body/Preview/Frame/Column/CardRow/DeckScroll/DeckLead" unique_id=1736637161]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="CardFade" type="TextureRect" parent="Margin/Root/Body/Preview/Frame/Column/CardRow" unique_id=1321193668]
+unique_name_in_owner = true
+z_index = 120
+z_as_relative = false
+material = SubResource("ShaderMaterial_fade")
+layout_mode = 2
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_card_fade")
+expand_mode = 1
+
+[node name="Footer" type="HBoxContainer" parent="Margin/Root/Body/Preview" unique_id=2062312766]
+layout_mode = 2
+theme_override_constants/separation = 32
+alignment = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Margin/Root/Body/Preview/Footer" unique_id=1566814438]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="OverdriveTotal" type="Label" parent="Margin/Root/Body/Preview/Footer/HBoxContainer" unique_id=825177111]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Total Overdrive 0"
+vertical_alignment = 1
+
+[node name="OverdriveInfo" parent="Margin/Root/Body/Preview/Footer/HBoxContainer" unique_id=729039353 instance=ExtResource("3_badge")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="DeployButton" type="Button" parent="Margin/Root/Body/Preview/Footer" unique_id=1940760441]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+disabled = true
+text = "Deploy Squad 0/3"
+
+[node name="SpecialNote" parent="." unique_id=545859770 instance=ExtResource("4_note")]
+unique_name_in_owner = true
+layout_mode = 0

@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/arrow_left.png" id="1_arrow"]
+
+[node name="TimelineArrow" type="TextureRect"]
+texture_filter = 0
+custom_minimum_size = Vector2(32, 32)
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("1_arrow")
+expand_mode = 1
+stretch_mode = 5

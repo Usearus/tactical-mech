@@ -1,0 +1,214 @@
+[gd_scene format=3 uid="uid://uuk6s2xwa8ql"]
+
+[ext_resource type="Script" uid="uid://uovvhmguclue" path="res://scripts/battle/battle_results.gd" id="1_results"]
+[ext_resource type="PackedScene" uid="uid://crdbjniijj00m" path="res://scenes/battle/results_row_player.tscn" id="2_player"]
+[ext_resource type="Texture2D" uid="uid://wkanx7w3nqyu" path="res://art/mechs/player/purple/pilot.png" id="3_us68v"]
+[ext_resource type="Texture2D" uid="uid://dbb5sxvm8vcxk" path="res://art/mechs/enemy/boss_blue_rocket_launcher/idle.png" id="4_us68v"]
+[ext_resource type="PackedScene" uid="uid://drlpehs8acpqk" path="res://scenes/battle/results_row_enemy.tscn" id="5_enemy"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_fisqk"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_us68v")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_oiw7q"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_us68v")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="BattleResults" type="Control" unique_id=597736290]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_results")
+
+[node name="Dim" type="ColorRect" parent="." unique_id=528066846]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02, 0.03, 0.05, 0.9)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1426275474]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Body" type="VBoxContainer" parent="Margin" unique_id=732448122]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Margin/Body" unique_id=172031138]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 48
+text = "Victory"
+horizontal_alignment = 1
+
+[node name="Results" type="HBoxContainer" parent="Margin/Body" unique_id=953199523]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 48
+
+[node name="Players" type="VBoxContainer" parent="Margin/Body/Results" unique_id=1376710578]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="PlayerHeading" type="Label" parent="Margin/Body/Results/Players" unique_id=2015770897]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.86, 1, 1)
+text = "SQUAD"
+horizontal_alignment = 1
+
+[node name="PlayerList" type="VBoxContainer" parent="Margin/Body/Results/Players" unique_id=1249889517]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="ResultsRowPlayer" parent="Margin/Body/Results/Players/PlayerList" unique_id=1266384632 instance=ExtResource("2_player")]
+layout_mode = 2
+
+[node name="Line" parent="Margin/Body/Results/Players/PlayerList/ResultsRowPlayer/Margin" parent_id_path=PackedInt32Array(1266384632, 990629012) index="0" unique_id=244897904]
+theme_override_constants/separation = 16
+
+[node name="Sprite" parent="Margin/Body/Results/Players/PlayerList/ResultsRowPlayer/Margin/Line/Portrait" parent_id_path=PackedInt32Array(1266384632, 484570413) index="0" unique_id=1092808088]
+position = Vector2(60, 60)
+sprite_frames = SubResource("SpriteFrames_fisqk")
+
+[node name="Stats" parent="Margin/Body/Results/Players/PlayerList/ResultsRowPlayer/Margin/Line" index="1" unique_id=1199753181]
+accessibility_region = true
+
+[node name="Enemies" type="VBoxContainer" parent="Margin/Body/Results" unique_id=2079802581]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="EnemyHeading" type="Label" parent="Margin/Body/Results/Enemies" unique_id=1222730652]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.55, 0.5, 1)
+text = "ENEMY"
+horizontal_alignment = 1
+
+[node name="EnemyList" type="VBoxContainer" parent="Margin/Body/Results/Enemies" unique_id=1398263450]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="ResultsRowEnemy" parent="Margin/Body/Results/Enemies/EnemyList" unique_id=788600482 instance=ExtResource("5_enemy")]
+layout_mode = 2
+
+[node name="Sprite" parent="Margin/Body/Results/Enemies/EnemyList/ResultsRowEnemy/Margin/Line/Portrait" parent_id_path=PackedInt32Array(788600482, 1927154183) index="0" unique_id=162014066]
+position = Vector2(60, 60)
+scale = Vector2(1.8125, 1.8125)
+sprite_frames = SubResource("SpriteFrames_oiw7q")
+
+[node name="Footer" type="VBoxContainer" parent="Margin/Body" unique_id=8455407]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SquadGaugeHost" type="VBoxContainer" parent="Margin/Body/Footer" unique_id=1649804626]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="NextLabel" type="Label" parent="Margin/Body/Footer/SquadGaugeHost" unique_id=226629014]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.78, 1, 1)
+theme_override_font_sizes/font_size = 22
+text = "NEXT +1"
+
+[node name="SquadNote" type="Label" parent="Margin/Body/Footer/SquadGaugeHost" unique_id=1640987990]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.8, 0.84, 1)
+theme_override_font_sizes/font_size = 22
+text = "+1 added from battle"
+
+[node name="BottomRow" type="HBoxContainer" parent="Margin/Body/Footer" unique_id=1259440768]
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="OverdriveBarHost" type="VBoxContainer" parent="Margin/Body/Footer/BottomRow" unique_id=1142049174]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SquadBar" type="ProgressBar" parent="Margin/Body/Footer/BottomRow/OverdriveBarHost" unique_id=1710685369]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_type_variation = &"SquadGauge"
+max_value = 5.0
+value = 3.0
+show_percentage = false
+
+[node name="Title" type="Label" parent="Margin/Body/Footer/BottomRow/OverdriveBarHost/SquadBar" unique_id=1351161087]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_right = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 32
+text = "Overdrive"
+vertical_alignment = 1
+
+[node name="Charge" type="Label" parent="Margin/Body/Footer/BottomRow/OverdriveBarHost/SquadBar" unique_id=1878474343]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_right = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 32
+text = "3/5"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="ContinueButton" type="Button" parent="Margin/Body/Footer/BottomRow" unique_id=718943684]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Return"
+
+[editable path="Margin/Body/Results/Players/PlayerList/ResultsRowPlayer"]
+[editable path="Margin/Body/Results/Enemies/EnemyList/ResultsRowEnemy"]

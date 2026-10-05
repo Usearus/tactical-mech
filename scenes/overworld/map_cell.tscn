@@ -1,0 +1,76 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/ui/cell_mark.tscn" id="1_mark"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cell"]
+resource_local_to_scene = true
+bg_color = Color(0, 0, 0, 0)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_frame"]
+resource_local_to_scene = true
+bg_color = Color(0, 0, 0, 0)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_window"]
+resource_local_to_scene = true
+bg_color = Color(0, 0, 0, 0)
+
+[node name="MapCell" type="Button"]
+z_index = 1
+clip_text = true
+focus_mode = 0
+flat = true
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxFlat_cell")
+
+[node name="Shade" type="ColorRect" parent="."]
+z_index = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 1
+color = Color(0, 0, 0, 0)
+
+[node name="Frame" type="Panel" parent="."]
+z_index = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_frame")
+
+[node name="MechSprite" type="AnimatedSprite2D" parent="."]
+visible = false
+z_index = 4
+texture_filter = 1
+centered = true
+
+[node name="BattleWindow" type="Panel" parent="."]
+visible = false
+z_index = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_window")
+
+[node name="CellMark" parent="." instance=ExtResource("1_mark")]
+z_index = 3

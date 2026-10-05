@@ -1,0 +1,30 @@
+---
+description: Scenes display state; scripts and resources own it
+alwaysApply: true
+---
+
+# Scenes show, scripts own
+
+The scene is the look. Scripts and `.tres` resources are the game.
+
+## Where state lives
+
+HP, guard, decks, turn order, and rules live on scripts and resources (`MechState`, `CardData`, deck `.tres` files). A label, slider, or button only displays that state. Do not read `Label.text` or a control's value to decide combat, movement, or win conditions.
+
+## How data moves
+
+Managers push data down by calling methods or setting properties on child visuals. UI reports input up with signals (`pressed`, `pulled`, `confirmed`). The parent updates the model, then refreshes the view.
+
+```gdscript
+# Bad: the bar polls the model every frame
+func _process(_delta: float) -> void:
+    value = player.hp
+
+# Good: the model emits; the bar updates when health changes
+func _ready() -> void:
+    player.health_changed.connect(set_hp)
+```
+
+## What may stay on the node
+
+A self-contained control may own its hover, pulse, or reveal animation. `AnimationPlayer` and particle nodes own their playback. Trigger them with a method or signal. Do not step those frames from a manager's `_process`.

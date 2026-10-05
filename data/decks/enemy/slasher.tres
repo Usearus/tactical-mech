@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="MechDeck" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/mech_deck.gd" id="1_deck"]
+[ext_resource type="Script" path="res://scripts/cards/card_data.gd" id="2_card"]
+
+[sub_resource type="Resource" id="c1"]
+script = ExtResource("2_card")
+id = "slasher_cut"
+display_name = "Cut"
+description = "A cut at an adjacent enemy."
+card_type = "Attack"
+damage = 6
+reach = 1
+target_type = "enemy"
+
+[resource]
+script = ExtResource("1_deck")
+mech_id = "slasher"
+cards = Array[ExtResource("2_card")]([SubResource("c1")])

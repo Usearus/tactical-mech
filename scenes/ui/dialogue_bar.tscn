@@ -1,0 +1,157 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/dialogue_bar.gd" id="1_bar"]
+
+[node name="DialogueBar" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_bar")
+
+[node name="Dialogue" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = -220.0
+offset_right = -40.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Frame" type="ColorRect" parent="Dialogue"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.45, 0.78, 1, 1)
+
+[node name="Fill" type="ColorRect" parent="Dialogue"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = -3.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.06, 0.08, 0.13, 0.96)
+
+[node name="Edge" type="ColorRect" parent="Dialogue"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = 14.0
+offset_bottom = -3.0
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.45, 0.78, 1, 1)
+
+[node name="PortraitWell" type="Control" parent="Dialogue"]
+unique_name_in_owner = true
+clip_contents = true
+custom_minimum_size = Vector2(164, 164)
+layout_mode = 1
+anchor_bottom = 1.0
+offset_left = 22.0
+offset_top = 16.0
+offset_right = 186.0
+offset_bottom = -16.0
+mouse_filter = 2
+
+[node name="Backing" type="ColorRect" parent="Dialogue/PortraitWell"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.14, 0.18, 0.28, 1)
+
+[node name="Portrait" type="TextureRect" parent="Dialogue/PortraitWell"]
+unique_name_in_owner = true
+texture_filter = 0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Speaker" type="Label" parent="Dialogue"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 196.0
+offset_top = 16.0
+offset_right = 900.0
+offset_bottom = 52.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.45, 0.78, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 28
+text = "Speaker"
+uppercase = true
+
+[node name="Body" type="Label" parent="Dialogue"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 196.0
+offset_top = 62.0
+offset_right = -36.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.95, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 36
+text = "Dialogue goes here."
+autowrap_mode = 3
+
+[node name="Prompt" type="Label" parent="Dialogue"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -56.0
+offset_top = -40.0
+offset_right = -16.0
+offset_bottom = -10.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.95, 0.98, 1)
+theme_override_font_sizes/font_size = 28
+text = ">>"
+horizontal_alignment = 2
+vertical_alignment = 2

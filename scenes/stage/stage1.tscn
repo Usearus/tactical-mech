@@ -1,0 +1,85 @@
+[gd_scene format=4 uid="uid://b48hw6jcurvh"]
+
+[ext_resource type="Texture2D" uid="uid://lfan6ajsysa5" path="res://art/tileset/TacticalMechTileSetTry1.png" id="1_gs387"]
+[ext_resource type="PackedScene" path="res://scenes/overworld/stage_spawn.tscn" id="2_spawn"]
+[ext_resource type="Resource" path="res://data/mechs/enemy/scout.tres" id="8_scout"]
+[ext_resource type="Resource" path="res://data/mechs/enemy/raider.tres" id="9_raider"]
+[ext_resource type="Resource" path="res://data/mechs/enemy/gunner.tres" id="10_gunner"]
+[ext_resource type="Resource" path="res://data/mechs/enemy/slasher.tres" id="11_slasher"]
+[ext_resource type="Resource" path="res://data/mechs/enemy/boss_green.tres" id="12_boss"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_n2v6n"]
+load_path = "res://.godot/imported/TacticalMechTileSetTry1.png-28283eb9dff8df5b97989f0f168ba21d.ctex"
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_gs387"]
+texture = SubResource("CompressedTexture2D_n2v6n")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ys2ni"]
+texture = ExtResource("1_gs387")
+margins = Vector2i(1, 1)
+separation = Vector2i(1, 0)
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+4:0/0 = 0
+4:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, -32, 32, -32, 32, 32, -32, 32)
+5:0/0 = 0
+5:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, -32, 32, -32, 32, 32, -32, 32)
+6:0/0 = 0
+6:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, -32, 32, -32, 32, 32, -32, 32)
+7:0/0 = 0
+7:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, -32, 32, -32, 32, 32, -32, 32)
+
+[sub_resource type="TileSet" id="TileSet_p86no"]
+tile_size = Vector2i(64, 64)
+physics_layer_0/collision_layer = 1
+sources/0 = SubResource("TileSetAtlasSource_gs387")
+sources/1 = SubResource("TileSetAtlasSource_ys2ni")
+
+[node name="TileMapLayer" type="TileMapLayer" unique_id=650542425]
+tile_map_data = PackedByteArray("AAAAAAAAAQAEAAAAAAABAAAAAQAGAAAAAAABAAEAAQACAAAAAGACAAEAAQADAAAAAGADAAIAAQAAAAAAAAACAAAAAQAFAAAAAAADAAAAAQAFAAAAAAADAAEAAQADAAAAAGAAAAIAAQAEAAAAAAABAAIAAQAAAAAAAAABAAMAAQACAAAAAAABAAQAAQADAAAAAAABAAUAAQADAAAAAAACAAMAAQADAAAAAFACAAQAAQABAAAAAAACAAUAAQAFAAAAAAADAAMAAQADAAAAAFADAAQAAQAFAAAAAAADAAUAAQABAAAAAAAEAAAAAQAFAAAAAAAEAAEAAQADAAAAAGAEAAIAAQAAAAAAAAAEAAMAAQADAAAAAFAEAAQAAQAFAAAAAAAEAAUAAQABAAAAAAAFAAAAAQAFAAAAAAAFAAEAAQADAAAAAGAFAAIAAQAAAAAAAAAFAAMAAQADAAAAAFAFAAUAAQABAAAAAAAGAAAAAQAFAAAAAAAGAAEAAQADAAAAAGAGAAIAAQAAAAAAAAAGAAMAAQADAAAAAFAGAAQAAQAFAAAAAAAGAAUAAQABAAAAAAAHAAAAAQAFAAAAAAAHAAEAAQADAAAAAGAHAAIAAQAAAAAAAAAHAAMAAQADAAAAAFAHAAQAAQABAAAAAAAHAAUAAQAFAAAAAAAIAAAAAQAFAAAAAAAIAAEAAQADAAAAAGAIAAIAAQAAAAAAAAAIAAMAAQADAAAAAFAIAAQAAQABAAAAAAAIAAUAAQABAAAAAAAJAAAAAQAFAAAAAAAJAAEAAQADAAAAAGAJAAIAAQAAAAAAAAAJAAMAAQADAAAAAFAJAAQAAQABAAAAAAAJAAUAAQABAAAAAAAKAAAAAQAFAAAAAAAKAAEAAQADAAAAAGAKAAIAAQAAAAAAAAAKAAMAAQADAAAAAFAKAAQAAQABAAAAAAAKAAUAAQABAAAAAAALAAAAAQAHAAAAAAALAAEAAQACAAAAADALAAIAAQAAAAAAAAALAAMAAQACAAAAAFALAAQAAQADAAAAADALAAUAAQADAAAAADAMAAAAAQAEAAAAAAAMAAEAAQAAAAAAAAAMAAIAAQAAAAAAAAAMAAMAAQAAAAAAAAAMAAQAAQAAAAAAAAAMAAUAAQAAAAAAAAANAAAAAQAGAAAAAAANAAEAAQACAAAAAGANAAIAAQAAAAAAAAANAAMAAQACAAAAAAANAAQAAQADAAAAAAANAAUAAQADAAAAAAAOAAAAAQAFAAAAAAAOAAEAAQADAAAAAGAOAAIAAQAAAAAAAAAOAAMAAQADAAAAAFAOAAQAAQABAAAAAAAOAAUAAQABAAAAAAAPAAAAAQAFAAAAAAAPAAEAAQADAAAAAGAPAAIAAQAAAAAAAAAPAAMAAQADAAAAAFAPAAQAAQABAAAAAAAPAAUAAQABAAAAAAAQAAAAAQAFAAAAAAAQAAEAAQADAAAAAGAQAAIAAQAAAAAAAAAQAAMAAQADAAAAAFAQAAQAAQABAAAAAAAQAAUAAQABAAAAAAARAAAAAQAFAAAAAAARAAEAAQADAAAAAGARAAIAAQAAAAAAAAARAAMAAQADAAAAAFARAAQAAQABAAAAAAARAAUAAQABAAAAAAASAAAAAQAFAAAAAAASAAEAAQADAAAAAGASAAIAAQAEAAAAAAASAAMAAQADAAAAAFASAAQAAQAFAAAAAAASAAUAAQAFAAAAAAAIAAYAAQAFAAAAAAAJAAYAAQAFAAAAAAAKAAYAAQAFAAAAAAALAAYAAQAHAAAAAAAMAAYAAQAEAAAAAAANAAYAAQAGAAAAAAAOAAYAAQAFAAAAAAAPAAYAAQAFAAAAAAAQAAYAAQAFAAAAAAARAAYAAQAFAAAAAAASAAYAAQAFAAAAAAAAAAQAAQAEAAAAAAAAAAMAAQAEAAAAAAAAAAYAAQAEAAAAAAABAAYAAQAGAAAAAAACAAYAAQAFAAAAAAADAAYAAQABAAAAAAAEAAYAAQABAAAAAAAGAAYAAQABAAAAAAAAAAEAAQAEAAAAAAACAAIAAQAAAAAAAAAAAAUAAQAEAAAAAAAFAAQAAQAFAAAAAAAFAAYAAQABAAAAAAAHAAYAAQAFAAAAAAA=")
+tile_set = SubResource("TileSet_p86no")
+rendering_quadrant_size = 64
+physics_quadrant_size = 64
+
+[node name="Player1" parent="." instance=ExtResource("2_spawn")]
+position = Vector2(96, 96)
+slot = 1
+
+[node name="Player2" parent="." instance=ExtResource("2_spawn")]
+position = Vector2(160, 160)
+slot = 2
+
+[node name="Player3" parent="." instance=ExtResource("2_spawn")]
+position = Vector2(96, 224)
+slot = 3
+
+[node name="Scout" parent="." instance=ExtResource("2_spawn")]
+position = Vector2(544, 160)
+mech = ExtResource("8_scout")
+
+[node name="Scout2" parent="." instance=ExtResource("2_spawn")]
+position = Vector2(608, 224)
+mech = ExtResource("8_scout")
+
+[node name="Raider" parent="." instance=ExtResource("2_spawn")]
+position = Vector2(928, 288)
+mech = ExtResource("9_raider")
+
+[node name="Gunner" parent="." instance=ExtResource("2_spawn")]
+position = Vector2(608, 96)
+mech = ExtResource("10_gunner")
+
+[node name="Gunner2" parent="." instance=ExtResource("2_spawn")]
+position = Vector2(736, 288)
+mech = ExtResource("10_gunner")
+
+[node name="Slasher" parent="." instance=ExtResource("2_spawn")]
+position = Vector2(928, 160)
+mech = ExtResource("11_slasher")
+
+[node name="BossGreen" parent="." instance=ExtResource("2_spawn")]
+position = Vector2(1056, 160)
+mech = ExtResource("12_boss")

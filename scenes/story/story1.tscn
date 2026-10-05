@@ -1,0 +1,98 @@
+[gd_scene format=3 uid="uid://dtsm1drkyad5p"]
+
+[ext_resource type="PackedScene" path="res://scenes/story/story.tscn" id="1_base"]
+[ext_resource type="Script" uid="uid://d1hy6pewttitq" path="res://scripts/story/story_line.gd" id="2_line"]
+[ext_resource type="Texture2D" uid="uid://bfsnt2gcpfks0" path="res://art/backgrounds/scene_alley.jpg" id="3_bg"]
+[ext_resource type="Texture2D" uid="uid://wkanx7w3nqyu" path="res://art/mechs/player/purple/pilot.png" id="4_raven"]
+[ext_resource type="Texture2D" uid="uid://dj4ec55gtrtip" path="res://art/mechs/player/white/pilot.png" id="5_comet"]
+[ext_resource type="Texture2D" uid="uid://cd7cswcd8k2ja" path="res://art/mechs/player/white/idle.png" id="6_white"]
+[ext_resource type="Texture2D" uid="uid://cge1goco58nhh" path="res://art/mechs/player/purple/idle.png" id="7_purple"]
+
+[sub_resource type="Resource" id="l1"]
+script = ExtResource("2_line")
+speaker = "Comet"
+text = "Street's clear. The citadel is watching the far end."
+portrait = ExtResource("5_comet")
+art_id = "white"
+
+[sub_resource type="Resource" id="l2"]
+script = ExtResource("2_line")
+speaker = "Raven"
+text = "Then we walk it. Call them before they call us."
+portrait = ExtResource("4_raven")
+art_id = "purple"
+
+[sub_resource type="Resource" id="l3"]
+script = ExtResource("2_line")
+speaker = "Comet"
+text = "On your mark."
+portrait = ExtResource("5_comet")
+art_id = "white"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_white"]
+atlas = ExtResource("6_white")
+region = Rect2(0, 0, 65, 65)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_white"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_white")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 6.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_purple"]
+atlas = ExtResource("7_purple")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_purple"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_purple")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 6.0
+}]
+
+[node name="Story1" unique_id=1654964324 instance=ExtResource("1_base")]
+lines = Array[ExtResource("2_line")]([SubResource("l1"), SubResource("l2"), SubResource("l3")])
+next_scene = "res://scenes/select/mech_select.tscn"
+
+[node name="Background" parent="." index="0"]
+texture = ExtResource("3_bg")
+
+[node name="Comet" type="AnimatedSprite2D" parent="Cast" index="0" unique_id=595604282]
+position = Vector2(350, 650)
+scale = Vector2(8, 8)
+sprite_frames = SubResource("SpriteFrames_white")
+animation = &"idle"
+offset = Vector2(0, -31)
+metadata/art_id = "white"
+
+[node name="Raven" type="AnimatedSprite2D" parent="Cast" index="1" unique_id=1871329343]
+position = Vector2(950, 650)
+scale = Vector2(8, 8)
+sprite_frames = SubResource("SpriteFrames_purple")
+animation = &"idle"
+offset = Vector2(0, -31)
+flip_h = true
+metadata/art_id = "purple"
+
+[node name="PortraitWell" parent="DialogueBar/Dialogue" index="3"]
+anchors_preset = 9
+
+[node name="Portrait" parent="DialogueBar/Dialogue/PortraitWell" index="1"]
+texture = ExtResource("5_comet")
+
+[node name="Speaker" parent="DialogueBar/Dialogue" index="4"]
+text = "Comet"
+
+[node name="Body" parent="DialogueBar/Dialogue" index="5"]
+text = "Street's clear. The citadel is watching the far end."
+
+[editable path="DialogueBar"]

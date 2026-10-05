@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/props/barrier_prop.gd" id="1_barrier"]
+
+[node name="Barrier" type="AnimatedSprite2D"]
+z_index = 1
+texture_filter = 1
+centered = true
+script = ExtResource("1_barrier")

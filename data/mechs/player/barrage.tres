@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="MechData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/mechs/mech_data.gd" id="1_mech"]
+
+[resource]
+script = ExtResource("1_mech")
+id = "barrage"
+display_name = "Barrage"
+short_name = "BAR"
+team = "player"
+max_hp = 13
+move_range = 2
+attack_range = 2
+speed = 6
+charge = 4
+blurb = "Deck lands heavy shots at exact distances, so it has to keep that range."
+hp_grade = "D"
+atk_grade = "S"
+rng_grade = "S"
+move_grade = "C"
+speed_grade = "C"
+charge_grade = "D"
+color = Color(0.95, 0.45, 0.12, 1)
+art_id = "orange"

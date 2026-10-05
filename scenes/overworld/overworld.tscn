@@ -1,0 +1,535 @@
+[gd_scene format=3 uid="uid://blvhwfglgt7se"]
+
+[ext_resource type="Script" uid="uid://dyntsebovbv3o" path="res://scripts/overworld/overworld_manager.gd" id="1_overworld"]
+[ext_resource type="Script" uid="uid://c4wug2b2q41ke" path="res://scripts/ui/mech_panel.gd" id="2_panel"]
+[ext_resource type="PackedScene" path="res://scenes/ui/mode_banner.tscn" id="3_banner"]
+[ext_resource type="PackedScene" path="res://scenes/ui/dialogue_bar.tscn" id="4_dialogue"]
+[ext_resource type="PackedScene" path="res://scenes/ui/confirm_portrait.tscn" id="5_portrait"]
+[ext_resource type="PackedScene" path="res://scenes/ui/menu_corner.tscn" id="6_menu"]
+[ext_resource type="PackedScene" path="res://scenes/ui/deck_overlay.tscn" id="7_deck"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge.tscn" id="8_badge"]
+[ext_resource type="Texture2D" uid="uid://dyg7w74pu38co" path="res://art/icons/stats/crescent.png" id="9_barrier"]
+[ext_resource type="Texture2D" uid="uid://6ou21nsmsfyv" path="res://art/icons/stats/clock.png" id="10_clock"]
+[ext_resource type="Texture2D" uid="uid://cgi3jvk7dim1a" path="res://art/icons/stats/attack.png" id="11_attack"]
+[ext_resource type="PackedScene" path="res://scenes/ui/timeline_arrow.tscn" id="12_arrow"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_enemy_chip"]
+bg_color = Color(0.08, 0.09, 0.11, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.48, 0.45, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="Overworld" type="Control" unique_id=635823143]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_overworld")
+
+[node name="Background" type="ColorRect" parent="." unique_id=177531370]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.07, 0.08, 0.1, 1)
+
+[node name="Layout" type="VBoxContainer" parent="." unique_id=911162838]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 6
+
+[node name="TopBar" type="MarginContainer" parent="Layout" unique_id=960325653]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 0
+
+[node name="Chrome" type="HBoxContainer" parent="Layout/TopBar" unique_id=1847548645]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TopStack" type="VBoxContainer" parent="Layout/TopBar/Chrome" unique_id=24869388]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="StatusLabel" type="Label" parent="Layout/TopBar/Chrome/TopStack" unique_id=371576363]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Turn 1"
+autowrap_mode = 3
+clip_text = true
+
+[node name="HeaderRow" type="HBoxContainer" parent="Layout/TopBar/Chrome/TopStack" unique_id=1502573842]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TimelineColumn" type="HBoxContainer" parent="Layout/TopBar/Chrome/TopStack/HeaderRow" unique_id=1679356133]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+alignment = 0
+
+[node name="TurnLead" type="HBoxContainer" parent="Layout/TopBar/Chrome/TopStack/HeaderRow/TimelineColumn"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="TimelineQueue" type="GridContainer" parent="Layout/TopBar/Chrome/TopStack/HeaderRow/TimelineColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 2
+columns = 2
+
+[node name="TitleGap" type="Control" parent="Layout/TopBar/Chrome/TopStack/HeaderRow/TimelineColumn/TimelineQueue"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TimelineTitle" type="Label" parent="Layout/TopBar/Chrome/TopStack/HeaderRow/TimelineColumn/TimelineQueue"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 32
+text = "Timeline"
+vertical_alignment = 1
+
+[node name="TimelineArrow" parent="Layout/TopBar/Chrome/TopStack/HeaderRow/TimelineColumn/TimelineQueue" instance=ExtResource("12_arrow")]
+layout_mode = 2
+
+[node name="TurnTimeline" type="HBoxContainer" parent="Layout/TopBar/Chrome/TopStack/HeaderRow/TimelineColumn/TimelineQueue" unique_id=1013875534]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="Gauges" type="VBoxContainer" parent="Layout/TopBar/Chrome/TopStack/HeaderRow" unique_id=195683816]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+theme_override_constants/separation = 4
+
+[node name="SquadGaugeRow" type="HBoxContainer" parent="Layout/TopBar/Chrome/TopStack/HeaderRow/Gauges" unique_id=549526240]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PlayerGauge" type="ProgressBar" parent="Layout/TopBar/Chrome/TopStack/HeaderRow/Gauges/SquadGaugeRow" unique_id=1055121502]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 56)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"SquadGauge"
+max_value = 5.0
+show_percentage = false
+
+[node name="Title" type="Label" parent="Layout/TopBar/Chrome/TopStack/HeaderRow/Gauges/SquadGaugeRow/PlayerGauge" unique_id=396308253]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_right = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 32
+text = "Overdrive"
+vertical_alignment = 1
+
+[node name="Charge" type="Label" parent="Layout/TopBar/Chrome/TopStack/HeaderRow/Gauges/SquadGaugeRow/PlayerGauge" unique_id=1229651575]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_right = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 32
+text = "0/5"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="NextGaugeLabel" type="Label" parent="Layout/TopBar/Chrome/TopStack/HeaderRow/Gauges/SquadGaugeRow" unique_id=853369310]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Next Gauge +2"
+vertical_alignment = 1
+
+[node name="ConfirmStrip" type="HBoxContainer" parent="Layout/TopBar/Chrome/TopStack" unique_id=239853674]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="SquadGauge" type="ProgressBar" parent="Layout/TopBar/Chrome/TopStack/ConfirmStrip" unique_id=982125430]
+custom_minimum_size = Vector2(200, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"SquadGauge"
+max_value = 5.0
+value = 3.0
+show_percentage = false
+
+[node name="Title" type="Label" parent="Layout/TopBar/Chrome/TopStack/ConfirmStrip/SquadGauge" unique_id=2134891448]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_right = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 32
+text = "Overdrive"
+vertical_alignment = 1
+
+[node name="Charge" type="Label" parent="Layout/TopBar/Chrome/TopStack/ConfirmStrip/SquadGauge" unique_id=428276027]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_right = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 32
+text = "3/5"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Players" type="HBoxContainer" parent="Layout/TopBar/Chrome/TopStack/ConfirmStrip" unique_id=568766515]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="PlayerChip" parent="Layout/TopBar/Chrome/TopStack/ConfirmStrip/Players" unique_id=821345026 instance=ExtResource("5_portrait")]
+layout_mode = 2
+
+[node name="Versus" type="Label" parent="Layout/TopBar/Chrome/TopStack/ConfirmStrip" unique_id=1194956573]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 40
+text = "vs"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Enemies" type="HBoxContainer" parent="Layout/TopBar/Chrome/TopStack/ConfirmStrip" unique_id=1233500468]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="EnemyChip" parent="Layout/TopBar/Chrome/TopStack/ConfirmStrip/Enemies" unique_id=1567641165 instance=ExtResource("5_portrait")]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_enemy_chip")
+
+[node name="MenuCorner" parent="Layout/TopBar/Chrome" unique_id=1726355825 instance=ExtResource("6_menu")]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="GridHost" type="Control" parent="Layout" unique_id=1776455546]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Center" type="Control" parent="Layout/GridHost" unique_id=511732374]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Grid" type="GridContainer" parent="Layout/GridHost/Center" unique_id=26803116]
+unique_name_in_owner = true
+layout_mode = 0
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+columns = 21
+
+[node name="ApproachLayer" type="Control" parent="Layout/GridHost/Center" unique_id=26803117]
+unique_name_in_owner = true
+z_index = 4
+layout_mode = 0
+mouse_filter = 2
+
+[node name="Actions" type="HBoxContainer" parent="." unique_id=1074993116]
+z_index = 20
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -192.0
+offset_top = -104.0
+offset_right = -12.0
+offset_bottom = -8.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 2
+
+[node name="AttackButton" type="Button" parent="Actions" unique_id=1560037951]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(180, 96)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"AccentButton"
+theme_override_font_sizes/font_size = 32
+text = "ATTACK"
+
+[node name="CancelButton" type="Button" parent="Actions" unique_id=1658297369]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(180, 96)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 32
+text = "CANCEL"
+
+[node name="UndoMoveButton" type="Button" parent="Actions" unique_id=1584452214]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(180, 96)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 32
+text = "UNDO MOVE"
+
+[node name="EndTurnButton" type="Button" parent="Actions" unique_id=1642396806]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 96)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 32
+text = "END TURN"
+
+[node name="Resolution" type="Control" parent="." unique_id=602133929]
+unique_name_in_owner = true
+visible = false
+z_index = 50
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="Resolution" unique_id=1777134061]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02, 0.03, 0.05, 0.78)
+
+[node name="Center" type="VBoxContainer" parent="Resolution" unique_id=211934155]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -110.0
+offset_right = 280.0
+offset_bottom = 110.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 28
+alignment = 1
+
+[node name="ResolutionTitle" type="Label" parent="Resolution/Center" unique_id=1828473049]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 72
+text = "End of Demo"
+horizontal_alignment = 1
+
+[node name="BackToTitleButton" type="Button" parent="Resolution/Center" unique_id=831509234]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "Back to title"
+
+[node name="StatsWindow" type="PanelContainer" parent="." unique_id=42481503]
+unique_name_in_owner = true
+visible = false
+z_index = 25
+custom_minimum_size = Vector2(380, 0)
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = -120.0
+offset_right = 392.0
+offset_bottom = -8.0
+grow_vertical = 0
+theme_type_variation = &"SidePanel"
+
+[node name="StatsMargin" type="MarginContainer" parent="StatsWindow" unique_id=1034346891]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="StatsBody" type="HBoxContainer" parent="StatsWindow/StatsMargin" unique_id=915445967]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+script = ExtResource("2_panel")
+
+[node name="PortraitHost" type="Panel" parent="StatsWindow/StatsMargin/StatsBody" unique_id=1764791670]
+custom_minimum_size = Vector2(88, 88)
+clip_contents = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"PortraitFrame"
+
+[node name="Portrait" type="AnimatedSprite2D" parent="StatsWindow/StatsMargin/StatsBody/PortraitHost" unique_id=398920021]
+texture_filter = 1
+
+[node name="Stats" type="VBoxContainer" parent="StatsWindow/StatsMargin/StatsBody"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Name" type="Label" parent="StatsWindow/StatsMargin/StatsBody/Stats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Mech"
+vertical_alignment = 1
+
+[node name="Vitals" type="HBoxContainer" parent="StatsWindow/StatsMargin/StatsBody/Stats"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="HitPoints" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals" instance=ExtResource("8_badge")]
+visible = true
+layout_mode = 2
+
+[node name="Amount" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals/HitPoints" index="1"]
+text = "10 / 10"
+
+[node name="Barrier" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals" instance=ExtResource("8_badge")]
+visible = true
+layout_mode = 2
+
+[node name="Icon" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals/Barrier" index="0"]
+texture = ExtResource("9_barrier")
+modulate = Color(0.45, 0.78, 1, 1)
+
+[node name="Amount" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals/Barrier" index="1"]
+theme_override_colors/font_color = Color(0.45, 0.78, 1, 1)
+
+[node name="Action" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals" instance=ExtResource("8_badge")]
+visible = true
+layout_mode = 2
+
+[node name="Icon" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals/Action" index="0"]
+texture = ExtResource("10_clock")
+modulate = Color(1, 0.92, 0.55, 1)
+
+[node name="Amount" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals/Action" index="1"]
+theme_override_colors/font_color = Color(1, 0.92, 0.55, 1)
+
+[node name="Attack" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals" instance=ExtResource("8_badge")]
+visible = true
+layout_mode = 2
+
+[node name="Icon" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals/Attack" index="0"]
+texture = ExtResource("11_attack")
+
+[node name="MapLine" type="Label" parent="StatsWindow/StatsMargin/StatsBody/Stats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "MOV 0, ATR 0, SPD 0"
+vertical_alignment = 1
+
+[node name="DeckButton" type="Button" parent="StatsWindow/StatsMargin/StatsBody"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(120, 88)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 32
+text = "DECK"
+
+[node name="DeckOverlay" parent="." instance=ExtResource("7_deck")]
+unique_name_in_owner = true
+
+[node name="ModeBanner" parent="." unique_id=934759388 instance=ExtResource("3_banner")]
+unique_name_in_owner = true
+z_index = 80
+layout_mode = 1
+
+[node name="DialogueBar" parent="." unique_id=179225544 instance=ExtResource("4_dialogue")]
+unique_name_in_owner = true
+z_index = 70
+layout_mode = 1

@@ -1,0 +1,87 @@
+[gd_resource type="Resource" script_class="MechDeck" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/mech_deck.gd" id="1_deck"]
+[ext_resource type="Script" path="res://scripts/cards/card_data.gd" id="2_card"]
+
+[sub_resource type="Resource" id="c1"]
+script = ExtResource("2_card")
+id = "comet_sting"
+display_name = "Sting"
+description = "A light hit up close."
+card_type = "Attack"
+damage = 3
+reach = 1
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c2"]
+script = ExtResource("2_card")
+id = "comet_dart"
+display_name = "Dart"
+description = "A fast nick from a short range."
+card_type = "Attack"
+damage = 3
+reach = 2
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c3"]
+script = ExtResource("2_card")
+id = "comet_flick"
+display_name = "Flick"
+description = "A light hit from a short range."
+card_type = "Attack"
+damage = 3
+reach = 2
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c4"]
+script = ExtResource("2_card")
+id = "comet_skim"
+display_name = "Skim"
+description = "Move 1 cell, and strike an enemy."
+card_type = "Attack"
+damage = 4
+reach = 1
+movement = 1
+move_timing = "Before"
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c5"]
+script = ExtResource("2_card")
+id = "comet_slip"
+display_name = "Slip"
+description = "Add guard, step 1 cell, and catch next hit on an ally."
+card_type = "Defense"
+defense_kind = "Guard"
+block = 4
+reach = 0
+movement = 1
+target_type = "self"
+intercept = true
+
+[sub_resource type="Resource" id="c6"]
+script = ExtResource("2_card")
+id = "comet_veil"
+display_name = "Veil"
+description = "Step 1 cell, and add guard to an adjacent ally."
+card_type = "Defense"
+defense_kind = "Guard"
+block = 5
+move_timing = "Before"
+movement = 1
+reach = 0
+target_type = "ally"
+
+[sub_resource type="Resource" id="c7"]
+script = ExtResource("2_card")
+id = "comet_spark"
+display_name = "Spark"
+is_special = true
+description = "Add 2 charge to your next overdrive gauge."
+card_type = "Defense"
+reach = 0
+target_type = "squad"
+
+[resource]
+script = ExtResource("1_deck")
+mech_id = "comet"
+cards = Array[ExtResource("2_card")]([SubResource("c1"), SubResource("c2"), SubResource("c3"), SubResource("c4"), SubResource("c5"), SubResource("c6"), SubResource("c7")])

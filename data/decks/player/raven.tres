@@ -1,0 +1,84 @@
+[gd_resource type="Resource" script_class="MechDeck" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/mech_deck.gd" id="1_deck"]
+[ext_resource type="Script" path="res://scripts/cards/card_data.gd" id="2_card"]
+
+[sub_resource type="Resource" id="c1"]
+script = ExtResource("2_card")
+id = "raven_burst_fire"
+display_name = "Burst Fire"
+description = "Hit one enemy in range."
+card_type = "Attack"
+damage = 3
+reach = 2
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c2"]
+script = ExtResource("2_card")
+id = "raven_snap_shot"
+display_name = "Snap Shot"
+description = "A quick shot at long range."
+card_type = "Attack"
+damage = 3
+reach = 3
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c3"]
+script = ExtResource("2_card")
+id = "raven_strafe"
+display_name = "Strafe"
+description = "Fire, then move 2 cells."
+card_type = "Attack"
+damage = 3
+reach = 2
+movement = 2
+move_timing = "After"
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c4"]
+script = ExtResource("2_card")
+id = "raven_needle"
+display_name = "Needle"
+description = "A close, precise hit."
+card_type = "Attack"
+damage = 4
+reach = 1
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c5"]
+script = ExtResource("2_card")
+id = "raven_cover"
+display_name = "Cover"
+description = "Add guard to an adjacent ally."
+card_type = "Defense"
+defense_kind = "Guard"
+block = 5
+reach = 0
+target_type = "ally"
+
+[sub_resource type="Resource" id="c6"]
+script = ExtResource("2_card")
+id = "raven_evade"
+display_name = "Evade"
+description = "Dodge one attack entirely if in hand."
+card_type = "Defense"
+defense_kind = "Dodge"
+block = 0
+reach = 0
+target_type = "self"
+
+[sub_resource type="Resource" id="c7"]
+script = ExtResource("2_card")
+id = "raven_screen"
+display_name = "Screen"
+is_special = true
+description = "Add 4 barrier to every teammate."
+card_type = "Defense"
+barrier = 4
+reach = 0
+target_type = "team"
+
+[resource]
+script = ExtResource("1_deck")
+mech_id = "raven"
+cards = Array[ExtResource("2_card")]([SubResource("c1"), SubResource("c2"), SubResource("c3"), SubResource("c4"), SubResource("c5"), SubResource("c6"), SubResource("c7")])

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="MechData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/mechs/mech_data.gd" id="1_mech"]
+
+[resource]
+script = ExtResource("1_mech")
+id = "lancer"
+display_name = "Lancer"
+short_name = "LAN"
+team = "player"
+max_hp = 16
+move_range = 3
+speed = 5
+charge = 2
+blurb = "Deck mixes a variety of shot strengths, and can guard itself before moving in to fire."
+hp_grade = "C"
+atk_grade = "A"
+rng_grade = "B"
+move_grade = "A"
+speed_grade = "C"
+charge_grade = "B"
+color = Color(0.85, 0.8, 0.25, 1)
+art_id = "tan"

@@ -1,0 +1,66 @@
+[gd_scene format=3 uid="uid://dm2x0drnvxdgy"]
+
+[ext_resource type="Script" uid="uid://c76w438kv8st2" path="res://scripts/ui/mode_banner.gd" id="1_banner"]
+
+[node name="ModeBanner" type="Control" unique_id=685734311]
+clip_contents = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_banner")
+
+[node name="Dim" type="ColorRect" parent="." unique_id=532000075]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="Stripe" type="Control" parent="." unique_id=1707175348]
+unique_name_in_owner = true
+clip_contents = true
+anchors_preset = 0
+offset_right = 720.0
+offset_bottom = 132.0
+
+[node name="Bar" type="ColorRect" parent="Stripe" unique_id=1188338969]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.07058824, 0.16078432, 0.2784314, 1)
+
+[node name="Edge" type="ColorRect" parent="Stripe" unique_id=1709390288]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 16.0
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.2509804, 0.72156864, 0.9490196, 1)
+
+[node name="Title" type="Label" parent="Stripe" unique_id=1806923307]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 64
+text = "Overdrive mode"
+horizontal_alignment = 1
+vertical_alignment = 1

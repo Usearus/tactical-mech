@@ -1,0 +1,84 @@
+[gd_resource type="Resource" script_class="MechDeck" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/mech_deck.gd" id="1_deck"]
+[ext_resource type="Script" path="res://scripts/cards/card_data.gd" id="2_card"]
+
+[sub_resource type="Resource" id="c1"]
+script = ExtResource("2_card")
+id = "lancer_slug"
+display_name = "Shotgun"
+description = "Fire on one adjacent enemy."
+card_type = "Attack"
+damage = 6
+reach = 1
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c2"]
+script = ExtResource("2_card")
+id = "lancer_extended_range"
+display_name = "Extended Range"
+description = "Weaker fire at a distant enemy."
+card_type = "Attack"
+damage = 4
+reach = 2
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c3"]
+script = ExtResource("2_card")
+id = "lancer_critical_hit"
+display_name = "Critical hit"
+description = "A heavy blast up close."
+card_type = "Attack"
+damage = 8
+reach = 1
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c4"]
+script = ExtResource("2_card")
+id = "lancer_graze"
+display_name = "Graze"
+description = "A near miss on the target."
+card_type = "Attack"
+damage = 2
+reach = 1
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c5"]
+script = ExtResource("2_card")
+id = "lancer_parry"
+display_name = "Parry"
+description = "Add guard to this mech."
+card_type = "Defense"
+defense_kind = "Guard"
+block = 4
+reach = 0
+target_type = "self"
+
+[sub_resource type="Resource" id="c6"]
+script = ExtResource("2_card")
+id = "lancer_guard"
+display_name = "Guard"
+description = "Add guard to this mech."
+card_type = "Defense"
+defense_kind = "Guard"
+block = 3
+reach = 0
+target_type = "self"
+
+[sub_resource type="Resource" id="c7"]
+script = ExtResource("2_card")
+id = "lancer_charge"
+display_name = "Charge"
+is_special = true
+description = "Move 2 cells, then fire for 7."
+card_type = "Attack"
+damage = 7
+reach = 1
+movement = 2
+move_timing = "Before"
+target_type = "enemy"
+
+[resource]
+script = ExtResource("1_deck")
+mech_id = "lancer"
+cards = Array[ExtResource("2_card")]([SubResource("c1"), SubResource("c2"), SubResource("c3"), SubResource("c4"), SubResource("c5"), SubResource("c6"), SubResource("c7")])

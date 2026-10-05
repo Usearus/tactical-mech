@@ -1,0 +1,89 @@
+[gd_resource type="Resource" script_class="MechDeck" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/mech_deck.gd" id="1_deck"]
+[ext_resource type="Script" path="res://scripts/cards/card_data.gd" id="2_card"]
+
+[sub_resource type="Resource" id="c1"]
+script = ExtResource("2_card")
+id = "barrage_rocket"
+display_name = "Rocket"
+description = "Launch one rocket exactly 3 cells away."
+card_type = "Attack"
+damage = 11
+reach = 3
+exact_range = true
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c2"]
+script = ExtResource("2_card")
+id = "barrage_slide_fire"
+display_name = "Slide & Fire"
+description = "Move 1 cell, fire exactly 3 cells away."
+card_type = "Attack"
+damage = 6
+reach = 3
+exact_range = true
+movement = 1
+move_timing = "Before"
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c3"]
+script = ExtResource("2_card")
+id = "barrage_heavy_missle"
+display_name = "Heavy Missile"
+description = "A heavy shot exactly 2 cells away."
+card_type = "Attack"
+damage = 9
+reach = 2
+exact_range = true
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c4"]
+script = ExtResource("2_card")
+id = "barrage_flak"
+display_name = "Flak"
+description = "Hit one enemy at mid range."
+card_type = "Attack"
+damage = 5
+reach = 2
+target_type = "enemy"
+
+[sub_resource type="Resource" id="c5"]
+script = ExtResource("2_card")
+id = "barrage_quick_boost"
+display_name = "Quick Boost"
+description = "Move one cell."
+card_type = "Move"
+movement = 1
+reach = 0
+target_type = "self"
+
+[sub_resource type="Resource" id="c6"]
+script = ExtResource("2_card")
+id = "barrage_brace"
+display_name = "Brace"
+description = "Add guard to this mech."
+card_type = "Defense"
+defense_kind = "Guard"
+block = 5
+reach = 0
+target_type = "self"
+
+[sub_resource type="Resource" id="c7"]
+script = ExtResource("2_card")
+id = "barrage_salvo"
+display_name = "Salvo"
+is_special = true
+description = "Move 1 cell, hit every enemy exactly 3 cells away."
+card_type = "Attack"
+damage = 6
+reach = 3
+exact_range = true
+movement = 1
+move_timing = "Before"
+target_type = "enemies"
+
+[resource]
+script = ExtResource("1_deck")
+mech_id = "barrage"
+cards = Array[ExtResource("2_card")]([SubResource("c1"), SubResource("c2"), SubResource("c3"), SubResource("c4"), SubResource("c5"), SubResource("c6"), SubResource("c7")])

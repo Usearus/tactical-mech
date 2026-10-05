@@ -1,0 +1,91 @@
+[gd_scene format=3 uid="uid://cr43116mbib6d"]
+
+[ext_resource type="Script" uid="uid://d23wawxdbuc8j" path="res://scripts/ui/finisher_banner.gd" id="1_qe5th"]
+[ext_resource type="Texture2D" uid="uid://ccc0cikr5xmrn" path="res://art/mechs/player/white/white-fire-pose.png" id="2_krhex"]
+[ext_resource type="Texture2D" uid="uid://dj4ec55gtrtip" path="res://art/mechs/player/white/pilot.png" id="3_7clnu"]
+
+[node name="FinisherBanner" type="Control" unique_id=1625695687]
+clip_contents = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_qe5th")
+
+[node name="Dim" type="ColorRect" parent="." unique_id=130312927]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="Stripe" type="Control" parent="." unique_id=366851834]
+unique_name_in_owner = true
+clip_contents = true
+anchors_preset = 0
+offset_right = 1280.0
+offset_bottom = 334.0
+
+[node name="Bar" type="ColorRect" parent="Stripe" unique_id=1755142974]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.07, 0.16, 0.28, 1)
+
+[node name="Edge" type="ColorRect" parent="Stripe" unique_id=1800871457]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 16.0
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.2509804, 0.72156864, 0.9490196, 1)
+
+[node name="Title" type="Label" parent="Stripe" unique_id=1096342277]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 779.0
+offset_top = 98.0
+offset_right = -36.0
+offset_bottom = -107.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 64
+text = "Finisher"
+horizontal_alignment = 2
+vertical_alignment = 1
+uppercase = true
+
+[node name="Portrait" type="TextureRect" parent="Stripe" unique_id=1995472994]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 205.0
+offset_top = -27.0
+offset_right = 771.32837
+offset_bottom = 500.0
+texture = ExtResource("2_krhex")
+
+[node name="Pilot" type="TextureRect" parent="Stripe" unique_id=1125235746]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 6.0
+offset_top = 25.0
+offset_right = 327.0
+offset_bottom = 346.0
+texture = ExtResource("3_7clnu")

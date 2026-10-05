@@ -1,3 +1,6 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# Local game builds. GitHub rejects files over 100 MB.
+/executable exports/

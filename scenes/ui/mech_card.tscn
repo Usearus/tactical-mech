@@ -1,0 +1,248 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/mech_card.gd" id="1_card"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_chip.tscn" id="2_chip"]
+[ext_resource type="Texture2D" uid="uid://cgi3jvk7dim1a" path="res://art/icons/stats/attack.png" id="3_attack"]
+[ext_resource type="Texture2D" uid="uid://dalaeet41hfqs" path="res://art/icons/stats/defend.png" id="4_guard"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_frame"]
+resource_local_to_scene = true
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
+bg_color = Color(0.14, 0.15, 0.19, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.86, 0.9, 0.96, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
+resource_local_to_scene = true
+content_margin_left = 4.0
+content_margin_top = 3.0
+content_margin_right = 4.0
+content_margin_bottom = 3.0
+bg_color = Color(0.28, 0.3, 0.34, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_footer"]
+resource_local_to_scene = true
+content_margin_left = 2.0
+content_margin_top = 4.0
+content_margin_right = 2.0
+content_margin_bottom = 4.0
+bg_color = Color(0.09, 0.1, 0.13, 1)
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+anti_aliasing = false
+
+[sub_resource type="Gradient" id="Gradient_shine"]
+offsets = PackedFloat32Array(0, 0.38, 0.5, 0.62, 1)
+colors = PackedColorArray(1, 1, 1, 0, 1, 0.94, 0.7, 0, 1, 0.98, 0.92, 0.72, 1, 0.94, 0.7, 0, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_shine"]
+gradient = SubResource("Gradient_shine")
+width = 64
+height = 8
+fill_from = Vector2(0, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_wave"]
+offsets = PackedFloat32Array(0, 0.3, 0.5, 0.7, 1)
+colors = PackedColorArray(0.15, 0.45, 1, 0, 0.2, 0.55, 1, 0.45, 0.35, 0.75, 1, 0.9, 0.2, 0.55, 1, 0.45, 0.15, 0.45, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_wave"]
+gradient = SubResource("Gradient_wave")
+width = 8
+height = 64
+fill_from = Vector2(0.5, 1)
+fill_to = Vector2(0.5, 0)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_add"]
+blend_mode = 1
+
+[node name="MechCard" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 172)
+offset_right = 160.0
+offset_bottom = 108.0
+size_flags_horizontal = 3
+size_flags_vertical = 4
+clip_contents = true
+theme_override_styles/panel = SubResource("StyleBoxFlat_frame")
+script = ExtResource("1_card")
+
+[node name="Column" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Header" type="PanelContainer" parent="Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_header")
+
+[node name="CardTitle" type="Label" parent="Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 26
+text = "Card"
+horizontal_alignment = 1
+clip_text = true
+
+[node name="Body" type="MarginContainer" parent="Column"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 2
+
+[node name="Copy" type="VBoxContainer" parent="Column/Body"]
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="Detail" type="Label" parent="Column/Body/Copy"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.8, 0.84, 1)
+theme_override_font_sizes/font_size = 24
+text = "Instruction"
+horizontal_alignment = 1
+vertical_alignment = 0
+autowrap_mode = 3
+clip_text = true
+
+[node name="Footer" type="PanelContainer" parent="Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_footer")
+
+[node name="Strength" type="Label" parent="Column/Footer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_font_sizes/font_size = 24
+text = "ATK 0"
+horizontal_alignment = 1
+clip_text = true
+
+[node name="Stats" type="HBoxContainer" parent="Column/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="StatChip" parent="Column/Footer/Stats" instance=ExtResource("2_chip")]
+layout_mode = 2
+
+[node name="GaugeTag" type="Label" parent="."]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.45, 0.78, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 28
+text = "+1 charge"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OverdriveWave" type="Control" parent="."]
+visible = false
+clip_contents = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Band" type="TextureRect" parent="OverdriveWave"]
+custom_minimum_size = Vector2(0, 0)
+layout_mode = 0
+offset_right = 176.0
+offset_bottom = 80.0
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_wave")
+expand_mode = 1
+stretch_mode = 1
+material = SubResource("CanvasItemMaterial_add")
+
+[node name="PowerMark" type="HBoxContainer" parent="OverdriveWave"]
+layout_mode = 0
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="Plus" type="Label" parent="OverdriveWave/PowerMark"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.45, 0.78, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_font_sizes/font_size = 72
+text = "+"
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="OverdriveWave/PowerMark"]
+texture_filter = 1
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("3_attack")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(0.45, 0.78, 1, 1)
+
+[node name="Guard" type="TextureRect" parent="OverdriveWave/PowerMark"]
+texture_filter = 1
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("4_guard")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(0.45, 0.78, 1, 1)
+
+[node name="Shine" type="Control" parent="."]
+visible = false
+z_index = 2
+clip_contents = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Flash" type="ColorRect" parent="Shine"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+modulate = Color(1, 1, 1, 0)
+material = SubResource("CanvasItemMaterial_add")
+
+[node name="Glint" type="TextureRect" parent="Shine"]
+custom_minimum_size = Vector2(0, 0)
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 140.0
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_shine")
+expand_mode = 1
+stretch_mode = 1
+material = SubResource("CanvasItemMaterial_add")

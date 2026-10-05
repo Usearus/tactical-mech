@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="MechData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/mechs/mech_data.gd" id="1_mech"]
+
+[resource]
+script = ExtResource("1_mech")
+id = "comet"
+display_name = "Comet"
+short_name = "COM"
+team = "player"
+max_hp = 18
+move_range = 4
+speed = 10
+charge = 1
+blurb = "Deck hits lightly, but it acts first. One card banks charge for the next overdrive."
+hp_grade = "B"
+atk_grade = "D"
+rng_grade = "B"
+move_grade = "S"
+speed_grade = "S"
+charge_grade = "S"
+color = Color(0.82, 0.9, 0.98, 1)
+art_id = "white"

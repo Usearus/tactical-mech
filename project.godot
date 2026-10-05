@@ -11,15 +11,20 @@ config_version=5
 [application]
 
 config/name="TacticalMech"
+run/main_scene="res://scenes/main/main.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
 
 [autoload]
 
+GameManager="*res://scripts/game/game_manager.gd"
 _mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
+GameMenu="*res://scenes/ui/game_menu.tscn"
 
 [display]
 
+window/size/viewport_width=1280
+window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
@@ -27,11 +32,19 @@ window/stretch/aspect="expand"
 
 enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
 
+[gui]
+
+theme/custom="res://themes/game_theme.tres"
+theme/custom_font="res://fonts/m5x7.ttf"
+theme/default_font_size=32
+
 [physics]
 
 3d/physics_engine="Jolt Physics"
 
 [rendering]
 
+textures/canvas_textures/default_texture_filter=0
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true

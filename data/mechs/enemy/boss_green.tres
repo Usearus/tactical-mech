@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="MechData" format=3 uid="uid://bca26b3kbihlu"]
+
+[ext_resource type="Script" uid="uid://cftw0ab1yp2yk" path="res://scripts/mechs/mech_data.gd" id="1_mech"]
+
+[resource]
+script = ExtResource("1_mech")
+id = "boss_green"
+display_name = "Green Boss"
+short_name = "BOSS"
+team = "enemy"
+max_hp = 20
+barrier = 10
+speed = 3
+turn_count = 4
+color = Color(0.35, 0.42, 0.22, 1)
+art_id = "boss_green"

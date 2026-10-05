@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="MechData" format=3 uid="uid://d8bltvkn63ax"]
+
+[ext_resource type="Script" uid="uid://cftw0ab1yp2yk" path="res://scripts/mechs/mech_data.gd" id="1_mech"]
+
+[resource]
+script = ExtResource("1_mech")
+id = "raven"
+display_name = "Raven"
+short_name = "RAV"
+max_hp = 14
+move_range = 4
+speed = 7
+blurb = "Deck has lower attack power, but makes up for it with high mobility, even being able to dodge hits entirely."
+hp_grade = "D"
+atk_grade = "D"
+rng_grade = "S"
+move_grade = "S"
+speed_grade = "B"
+charge_grade = "S"
+color = Color(0.2, 0.75, 0.9, 1)
+art_id = "purple"

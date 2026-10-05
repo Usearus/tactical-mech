@@ -1,0 +1,695 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" uid="uid://b3te7dqvrcci" path="res://scripts/ui/game_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" uid="uid://bf73balm8cafr" path="res://art/icons/stats/heart.png" id="2_heart"]
+[ext_resource type="Texture2D" uid="uid://dalaeet41hfqs" path="res://art/icons/stats/defend.png" id="3_defend"]
+[ext_resource type="Texture2D" uid="uid://dyg7w74pu38co" path="res://art/icons/stats/crescent.png" id="4_crescent"]
+[ext_resource type="Texture2D" uid="uid://6ou21nsmsfyv" path="res://art/icons/stats/clock.png" id="5_clock"]
+[ext_resource type="Texture2D" uid="uid://cgi3jvk7dim1a" path="res://art/icons/stats/attack.png" id="6_attack"]
+[ext_resource type="Texture2D" uid="uid://b8462wlb0eitc" path="res://art/icons/stats/range.png" id="7_range"]
+[ext_resource type="Texture2D" uid="uid://csq7vuho7tsji" path="res://art/icons/stats/move.png" id="8_move"]
+[ext_resource type="Texture2D" uid="uid://csfy2mm3stq16" path="res://art/icons/stats/dodge.png" id="9_dodge"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0.08, 0.09, 0.12, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.38, 0.42, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_page"]
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+bg_color = Color(0.08, 0.09, 0.12, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.38, 0.42, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="GameMenu" type="CanvasLayer"]
+layer = 90
+script = ExtResource("1_menu")
+
+[node name="Root" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Scrim" type="ColorRect" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.45)
+
+[node name="MenuPage" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -560.0
+offset_top = 72.0
+offset_right = -12.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_page")
+
+[node name="Column" type="VBoxContainer" parent="Root/MenuPage"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Tabs" type="HBoxContainer" parent="Root/MenuPage/Column"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LogTab" type="Button" parent="Root/MenuPage/Column/Tabs"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+toggle_mode = true
+theme_override_font_sizes/font_size = 32
+text = "Mission Log"
+
+[node name="LegendTab" type="Button" parent="Root/MenuPage/Column/Tabs"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+toggle_mode = true
+theme_override_font_sizes/font_size = 32
+text = "Legend"
+
+[node name="LogBody" type="RichTextLabel" parent="Root/MenuPage/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 28
+text = "No statuses yet."
+scroll_following = true
+
+[node name="Legend" type="VBoxContainer" parent="Root/MenuPage/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="Scroll" type="ScrollContainer" parent="Root/MenuPage/Column/Legend"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="List" type="VBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="Heart" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Heart"]
+texture_filter = 0
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("2_heart")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Heart"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "Hit points left before this mech is destroyed."
+autowrap_mode = 3
+vertical_alignment = 1
+
+[node name="Defend" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Defend"]
+texture_filter = 0
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("3_defend")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Defend"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "Guard that absorbs hits before hit points. Only active during a battle."
+autowrap_mode = 3
+vertical_alignment = 1
+
+[node name="Crescent" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Crescent"]
+texture_filter = 0
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("4_crescent")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Crescent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "Barrier that absorbs hits after guard, before hit points. Remains after battle."
+autowrap_mode = 3
+vertical_alignment = 1
+
+[node name="Clock" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Clock"]
+texture_filter = 0
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("5_clock")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Clock"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "Cards left before this enemy takes a turn."
+autowrap_mode = 3
+vertical_alignment = 1
+
+[node name="Attack" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Attack"]
+texture_filter = 0
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("6_attack")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Attack"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "Damage this card deals."
+autowrap_mode = 3
+vertical_alignment = 1
+
+[node name="Range" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Range"]
+texture_filter = 0
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("7_range")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Range"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "How far this card can reach."
+autowrap_mode = 3
+vertical_alignment = 1
+
+[node name="Move" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Move"]
+texture_filter = 0
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("8_move")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Move"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "Cells this card moves."
+autowrap_mode = 3
+vertical_alignment = 1
+
+[node name="Dodge" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Dodge"]
+texture_filter = 0
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("9_dodge")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Dodge"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "This card negates one incoming attack."
+autowrap_mode = 3
+vertical_alignment = 1
+
+[node name="HowTo" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -560.0
+offset_top = 72.0
+offset_right = -12.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_page")
+
+[node name="Column" type="VBoxContainer" parent="Root/HowTo"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Pages" type="Control" parent="Root/HowTo/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Loadout" type="VBoxContainer" parent="Root/HowTo/Column/Pages"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="Root/HowTo/Column/Pages/Loadout"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Root/HowTo/Column/Pages/Loadout/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "Choosing a Loadout"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Count" type="Label" parent="Root/HowTo/Column/Pages/Loadout/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "1/7"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Body" type="Label" parent="Root/HowTo/Column/Pages/Loadout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 36
+text = "Choose mechs before starting a mission. Mechs have individual stats to look out for, including their Overdrive (OVD) value, which determines how many actions it will take to activate the Overdrive mechanic and create bonus' for your team during battle.
+
+HP = Hit points at start of mission
+ATK = Attack power from deck
+RNG = Attack range from deck. Also initiate attack distance.
+MOV = Movement range on map
+SPD = Higher speed moves first on map
+OVD = Additional actions needed to activate Overdrive"
+autowrap_mode = 3
+
+[node name="Map" type="VBoxContainer" parent="Root/HowTo/Column/Pages"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="Root/HowTo/Column/Pages/Map"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Root/HowTo/Column/Pages/Map/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "The Map"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Count" type="Label" parent="Root/HowTo/Column/Pages/Map/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "2/7"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Body" type="Label" parent="Root/HowTo/Column/Pages/Map"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 36
+text = "Your mechs take turns on the map. On a mech's turn, move it, then end the turn or attack an enemy within your ATR. Most mechs must stand next to the target. Destroy every hostile to finish the mission."
+autowrap_mode = 3
+
+[node name="Fight" type="VBoxContainer" parent="Root/HowTo/Column/Pages"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="Root/HowTo/Column/Pages/Fight"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Root/HowTo/Column/Pages/Fight/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "Starting a Fight"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Count" type="Label" parent="Root/HowTo/Column/Pages/Fight/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "3/7"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Body" type="Label" parent="Root/HowTo/Column/Pages/Fight"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 36
+text = "Stand next to an enemy to attack. Fights are not just 1 on 1 in this game. Mechs inside the highlighted area join the battle. There are big disadvantages to going in battle with one mech, so prioritize keeping your squad nearby when you attack or are attacked by the enemy."
+autowrap_mode = 3
+
+[node name="Cards" type="VBoxContainer" parent="Root/HowTo/Column/Pages"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="Root/HowTo/Column/Pages/Cards"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Root/HowTo/Column/Pages/Cards/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "Cards"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Count" type="Label" parent="Root/HowTo/Column/Pages/Cards/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "4/7"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Body" type="Label" parent="Root/HowTo/Column/Pages/Cards"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 36
+text = "Each mech has a unique deck of cards that are brought into battle. More mechs in the fight means more cards. Play a card, then choose its target. Attacks deal damage within their range. Move cards step that mech. A battle lasts two rounds."
+autowrap_mode = 3
+
+[node name="Defense" type="VBoxContainer" parent="Root/HowTo/Column/Pages"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="Root/HowTo/Column/Pages/Defense"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Root/HowTo/Column/Pages/Defense/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "Defense"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Count" type="Label" parent="Root/HowTo/Column/Pages/Defense/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "5/7"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Body" type="Label" parent="Root/HowTo/Column/Pages/Defense"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 36
+text = "Cards that add Guard to a mech will absorb hits during that battle, then drops afterwards. Cards that add Barrier absorbs hits as well, however it stays when you return to the map. Cards that Dodge stay in hand and negates one incoming attack."
+autowrap_mode = 3
+
+[node name="Timers" type="VBoxContainer" parent="Root/HowTo/Column/Pages"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="Root/HowTo/Column/Pages/Timers"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Root/HowTo/Column/Pages/Timers/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "Enemy Timers"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Count" type="Label" parent="Root/HowTo/Column/Pages/Timers/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "6/7"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Body" type="Label" parent="Root/HowTo/Column/Pages/Timers"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 36
+text = "Each enemy shows how many cards are left before it acts. Playing a card, or ending the turn, counts every timer down. At zero, that enemy takes a turn. Discarding a card does not count down enemy action timers."
+autowrap_mode = 3
+
+[node name="Overdrive" type="VBoxContainer" parent="Root/HowTo/Column/Pages"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="Root/HowTo/Column/Pages/Overdrive"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Root/HowTo/Column/Pages/Overdrive/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "Overdrive"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Count" type="Label" parent="Root/HowTo/Column/Pages/Overdrive/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "7/7"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Body" type="Label" parent="Root/HowTo/Column/Pages/Overdrive"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 36
+text = "Moving on the map and discarding cards in battle fills the squad's Overdrive gauge. When the Overdrive gauge is full, press Activate Overdrive in battle to enable Overdrive for the remainder of the battle. Attacks hit harder, guards block more, and each mech's overdrive card can enter the hand. The gauge is spent when the fight ends."
+autowrap_mode = 3
+
+[node name="Nav" type="HBoxContainer" parent="Root/HowTo/Column"]
+layout_mode = 2
+
+[node name="HowToBack" type="Button" parent="Root/HowTo/Column/Nav"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 64)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+text = "< Back"
+
+[node name="Gap" type="Control" parent="Root/HowTo/Column/Nav"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="HowToNext" type="Button" parent="Root/HowTo/Column/Nav"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 64)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+text = "Next >"
+
+[node name="MenuPanel" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -248.0
+offset_top = 72.0
+offset_right = -12.0
+offset_bottom = 304.0
+grow_horizontal = 0
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_menu")
+
+[node name="Column" type="VBoxContainer" parent="Root/MenuPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MissionLog" type="Button" parent="Root/MenuPanel/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 64)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+text = "Mission Log"
+
+[node name="LegendButton" type="Button" parent="Root/MenuPanel/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 64)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+text = "Legend"
+
+[node name="QuitButton" type="Button" parent="Root/MenuPanel/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 64)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+text = "Quit demo"

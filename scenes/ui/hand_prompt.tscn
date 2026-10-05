@@ -1,0 +1,89 @@
+[gd_scene format=3 uid="uid://b7n3handprom"]
+
+[ext_resource type="Script" uid="uid://d4k8handprmpt" path="res://scripts/ui/hand_prompt.gd" id="1_prompt"]
+
+[node name="HandPrompt" type="Control" unique_id=1231300637]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_prompt")
+
+[node name="Dim" type="ColorRect" parent="." unique_id=1048852562]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.03, 0.05, 0.62)
+
+[node name="Center" type="CenterContainer" parent="." unique_id=964115183]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Window" type="PanelContainer" parent="Center" unique_id=1060825421]
+custom_minimum_size = Vector2(680, 0)
+layout_mode = 2
+theme_type_variation = &"SidePanel"
+
+[node name="Margin" type="MarginContainer" parent="Center/Window" unique_id=1613172287]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 28
+
+[node name="Column" type="VBoxContainer" parent="Center/Window/Margin" unique_id=1795820256]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="Prompt" type="Label" parent="Center/Window/Margin/Column" unique_id=813818407]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 32
+text = "Do you want to draw a new hand for the next round? You are about to end this round without using any cards."
+autowrap_mode = 3
+
+[node name="Actions" type="HBoxContainer" parent="Center/Window/Margin/Column" unique_id=956507091]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="NewHandButton" type="Button" parent="Center/Window/Margin/Column/Actions" unique_id=1903532511]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"AccentButton"
+theme_override_font_sizes/font_size = 32
+text = "Yes, new hand"
+
+[node name="EndTurnButton" type="Button" parent="Center/Window/Margin/Column/Actions" unique_id=500671645]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 32
+text = "No, end round"
+
+[node name="Close" type="Button" parent="." unique_id=812345001]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -68.0
+offset_top = 8.0
+offset_right = -12.0
+offset_bottom = 64.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 32
+text = "X"

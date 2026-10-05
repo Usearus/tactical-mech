@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="MechData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/mechs/mech_data.gd" id="1_mech"]
+
+[resource]
+script = ExtResource("1_mech")
+id = "raider"
+display_name = "Raider"
+short_name = "RDR"
+team = "enemy"
+max_hp = 7
+move_range = 3
+speed = 5
+turn_count = 3
+color = Color(0.55, 0.15, 0.35, 1)
+art_id = "grunt_dog"

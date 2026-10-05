@@ -1,0 +1,45 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/approach_box.gd" id="1_box"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_idle"]
+bg_color = Color(1, 0.86, 0.2, 0.28)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(1, 0.82, 0.12, 0.95)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_chosen"]
+bg_color = Color(1, 0.78, 0.08, 0.55)
+border_width_left = 6
+border_width_top = 6
+border_width_right = 6
+border_width_bottom = 6
+border_color = Color(1, 0.97, 0.62, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="ApproachBox" type="Button"]
+visible = false
+focus_mode = 0
+flat = true
+script = ExtResource("1_box")
+idle_style = SubResource("StyleBoxFlat_idle")
+chosen_style = SubResource("StyleBoxFlat_chosen")
+
+[node name="Fill" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_idle")

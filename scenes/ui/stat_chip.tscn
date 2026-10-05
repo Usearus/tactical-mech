@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://cgi3jvk7dim1a" path="res://art/icons/stats/attack.png" id="1_icon"]
+
+[node name="StatChip" type="HBoxContainer"]
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="."]
+texture_filter = 0
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("1_icon")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(0.95, 0.96, 0.98, 1)
+
+[node name="Number" type="Label" parent="."]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_font_sizes/font_size = 24
+text = "3"
+vertical_alignment = 1

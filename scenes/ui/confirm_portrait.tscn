@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_chip"]
+bg_color = Color(0.08, 0.09, 0.11, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.82, 1, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="ConfirmPortrait" type="Panel"]
+custom_minimum_size = Vector2(80, 80)
+size_flags_vertical = 4
+clip_contents = true
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_chip")
+
+[node name="Portrait" type="AnimatedSprite2D" parent="."]
+texture_filter = 0
+centered = true

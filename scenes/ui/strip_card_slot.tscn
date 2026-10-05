@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[node name="StripCardSlot" type="Control"]
+custom_minimum_size = Vector2(168, 228)
+size_flags_horizontal = 4
+size_flags_vertical = 8
+mouse_filter = 2
