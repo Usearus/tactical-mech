@@ -7,10 +7,10 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/confirm_portrait.tscn" id="5_portrait"]
 [ext_resource type="PackedScene" path="res://scenes/ui/menu_corner.tscn" id="6_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/deck_overlay.tscn" id="7_deck"]
-[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge.tscn" id="8_badge"]
-[ext_resource type="Texture2D" uid="uid://dyg7w74pu38co" path="res://art/icons/stats/crescent.png" id="9_barrier"]
-[ext_resource type="Texture2D" uid="uid://6ou21nsmsfyv" path="res://art/icons/stats/clock.png" id="10_clock"]
-[ext_resource type="Texture2D" uid="uid://cgi3jvk7dim1a" path="res://art/icons/stats/attack.png" id="11_attack"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_hit_points.tscn" id="8_hp"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_barrier.tscn" id="9_barrier"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_action.tscn" id="10_action"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_attack.tscn" id="11_attack"]
 [ext_resource type="PackedScene" path="res://scenes/ui/timeline_arrow.tscn" id="12_arrow"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_enemy_chip"]
@@ -469,41 +469,24 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 14
 
-[node name="HitPoints" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals" instance=ExtResource("8_badge")]
+[node name="HitPoints" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals" instance=ExtResource("8_hp")]
 visible = true
 layout_mode = 2
 
 [node name="Amount" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals/HitPoints" index="1"]
 text = "10 / 10"
 
-[node name="Barrier" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals" instance=ExtResource("8_badge")]
+[node name="Barrier" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals" instance=ExtResource("9_barrier")]
 visible = true
 layout_mode = 2
 
-[node name="Icon" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals/Barrier" index="0"]
-texture = ExtResource("9_barrier")
-modulate = Color(0.45, 0.78, 1, 1)
-
-[node name="Amount" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals/Barrier" index="1"]
-theme_override_colors/font_color = Color(0.45, 0.78, 1, 1)
-
-[node name="Action" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals" instance=ExtResource("8_badge")]
+[node name="Action" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals" instance=ExtResource("10_action")]
 visible = true
 layout_mode = 2
 
-[node name="Icon" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals/Action" index="0"]
-texture = ExtResource("10_clock")
-modulate = Color(1, 0.92, 0.55, 1)
-
-[node name="Amount" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals/Action" index="1"]
-theme_override_colors/font_color = Color(1, 0.92, 0.55, 1)
-
-[node name="Attack" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals" instance=ExtResource("8_badge")]
+[node name="Attack" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals" instance=ExtResource("11_attack")]
 visible = true
 layout_mode = 2
-
-[node name="Icon" parent="StatsWindow/StatsMargin/StatsBody/Stats/Vitals/Attack" index="0"]
-texture = ExtResource("11_attack")
 
 [node name="MapLine" type="Label" parent="StatsWindow/StatsMargin/StatsBody/Stats"]
 layout_mode = 2

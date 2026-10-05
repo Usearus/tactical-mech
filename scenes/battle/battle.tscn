@@ -8,12 +8,12 @@
 [ext_resource type="PackedScene" uid="uid://cr43116mbib6d" path="res://scenes/ui/finisher_banner.tscn" id="5_finisher"]
 [ext_resource type="PackedScene" path="res://scenes/ui/menu_corner.tscn" id="6_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/info_note.tscn" id="7_note"]
-[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge.tscn" id="8_badge"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_hit_points.tscn" id="8_hp"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_barrier.tscn" id="8_barrier"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_guard.tscn" id="8_guard"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_action.tscn" id="8_action"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_attack.tscn" id="8_attack"]
 [ext_resource type="PackedScene" uid="uid://b7n3handprom" path="res://scenes/ui/hand_prompt.tscn" id="9_prompt"]
-[ext_resource type="Texture2D" uid="uid://dyg7w74pu38co" path="res://art/icons/stats/crescent.png" id="10_barrier"]
-[ext_resource type="Texture2D" uid="uid://dalaeet41hfqs" path="res://art/icons/stats/defend.png" id="11_guard"]
-[ext_resource type="Texture2D" uid="uid://6ou21nsmsfyv" path="res://art/icons/stats/clock.png" id="12_clock"]
-[ext_resource type="Texture2D" uid="uid://cgi3jvk7dim1a" path="res://art/icons/stats/attack.png" id="13_attack"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_p86no"]
 animations = [{
@@ -502,49 +502,25 @@ theme_override_font_sizes/font_size = 28
 text = "Mech"
 vertical_alignment = 1
 
-[node name="HitPoints" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=1416919991 instance=ExtResource("8_badge")]
+[node name="HitPoints" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=1416919991 instance=ExtResource("8_hp")]
 visible = true
 layout_mode = 2
 
-[node name="Barrier" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=958988119 instance=ExtResource("8_badge")]
+[node name="Barrier" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=958988119 instance=ExtResource("8_barrier")]
 visible = true
 layout_mode = 2
 
-[node name="Icon" parent="StatsWindow/StatsMargin/Actions/Stats/Barrier" index="0"]
-texture = ExtResource("10_barrier")
-modulate = Color(0.45, 0.78, 1, 1)
-
-[node name="Amount" parent="StatsWindow/StatsMargin/Actions/Stats/Barrier" index="1"]
-theme_override_colors/font_color = Color(0.45, 0.78, 1, 1)
-
-[node name="Guard" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=492778006 instance=ExtResource("8_badge")]
+[node name="Guard" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=492778006 instance=ExtResource("8_guard")]
 visible = true
 layout_mode = 2
 
-[node name="Icon" parent="StatsWindow/StatsMargin/Actions/Stats/Guard" index="0"]
-texture = ExtResource("11_guard")
-modulate = Color(0.45, 0.78, 1, 1)
-
-[node name="Amount" parent="StatsWindow/StatsMargin/Actions/Stats/Guard" index="1"]
-theme_override_colors/font_color = Color(0.45, 0.78, 1, 1)
-
-[node name="Action" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=640560636 instance=ExtResource("8_badge")]
+[node name="Action" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=640560636 instance=ExtResource("8_action")]
 visible = true
 layout_mode = 2
 
-[node name="Icon" parent="StatsWindow/StatsMargin/Actions/Stats/Action" index="0"]
-texture = ExtResource("12_clock")
-modulate = Color(1, 0.92, 0.55, 1)
-
-[node name="Amount" parent="StatsWindow/StatsMargin/Actions/Stats/Action" index="1"]
-theme_override_colors/font_color = Color(1, 0.92, 0.55, 1)
-
-[node name="Attack" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=2062396361 instance=ExtResource("8_badge")]
+[node name="Attack" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=2062396361 instance=ExtResource("8_attack")]
 visible = true
 layout_mode = 2
-
-[node name="Icon" parent="StatsWindow/StatsMargin/Actions/Stats/Attack" index="0"]
-texture = ExtResource("13_attack")
 
 [node name="BannerLayer" type="CanvasLayer" parent="." unique_id=210628390]
 layer = 85

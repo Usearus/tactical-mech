@@ -1,8 +1,8 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Texture2D" uid="uid://bf73balm8cafr" path="res://art/icons/stats/heart.png" id="1_icon"]
+[ext_resource type="Texture2D" uid="uid://cgi3jvk7dim1a" path="res://art/icons/stats/attack.png" id="1_icon"]
 
-[node name="StatBadge" type="HBoxContainer"]
+[node name="StatBadgeAttack" type="HBoxContainer"]
 visible = false
 mouse_filter = 2
 theme_override_constants/separation = 2

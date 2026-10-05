@@ -1,10 +1,10 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/ui/cell_mark.tscn" id="1_mark"]
-[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge.tscn" id="2_badge"]
-[ext_resource type="Texture2D" uid="uid://dyg7w74pu38co" path="res://art/icons/stats/crescent.png" id="3_barrier"]
-[ext_resource type="Texture2D" uid="uid://dalaeet41hfqs" path="res://art/icons/stats/defend.png" id="4_guard"]
-[ext_resource type="Texture2D" uid="uid://6ou21nsmsfyv" path="res://art/icons/stats/clock.png" id="5_clock"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_action.tscn" id="2_action"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_hit_points.tscn" id="3_hp"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_barrier.tscn" id="4_barrier"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_guard.tscn" id="5_guard"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cell"]
 resource_local_to_scene = true
@@ -74,18 +74,15 @@ offset_bottom = 110.0
 mouse_filter = 2
 theme_override_constants/separation = 0
 
-[node name="TurnCount" parent="Counters" instance=ExtResource("2_badge")]
+[node name="TurnCount" parent="Counters" instance=ExtResource("2_action")]
 layout_mode = 2
 alignment = 2
 
 [node name="Icon" parent="Counters/TurnCount" index="0"]
-texture = ExtResource("5_clock")
-modulate = Color(1, 0.92, 0.55, 1)
 size_flags_horizontal = 8
 
 [node name="Amount" parent="Counters/TurnCount" index="1"]
 size_flags_horizontal = 8
-theme_override_colors/font_color = Color(1, 0.92, 0.55, 1)
 
 [node name="Vitals" type="VBoxContainer" parent="."]
 z_index = 4
@@ -97,28 +94,14 @@ offset_bottom = 110.0
 mouse_filter = 2
 theme_override_constants/separation = 0
 
-[node name="HitPoints" parent="Vitals" instance=ExtResource("2_badge")]
+[node name="HitPoints" parent="Vitals" instance=ExtResource("3_hp")]
 layout_mode = 2
 
-[node name="Barrier" parent="Vitals" instance=ExtResource("2_badge")]
+[node name="Barrier" parent="Vitals" instance=ExtResource("4_barrier")]
 layout_mode = 2
 
-[node name="Icon" parent="Vitals/Barrier" index="0"]
-texture = ExtResource("3_barrier")
-modulate = Color(0.45, 0.78, 1, 1)
-
-[node name="Amount" parent="Vitals/Barrier" index="1"]
-theme_override_colors/font_color = Color(0.45, 0.78, 1, 1)
-
-[node name="Guard" parent="Vitals" instance=ExtResource("2_badge")]
+[node name="Guard" parent="Vitals" instance=ExtResource("5_guard")]
 layout_mode = 2
-
-[node name="Icon" parent="Vitals/Guard" index="0"]
-texture = ExtResource("4_guard")
-modulate = Color(0.45, 0.78, 1, 1)
-
-[node name="Amount" parent="Vitals/Guard" index="1"]
-theme_override_colors/font_color = Color(0.45, 0.78, 1, 1)
 
 [node name="CellMark" parent="." instance=ExtResource("1_mark")]
 z_index = 3
