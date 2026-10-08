@@ -48,6 +48,11 @@ func moves_before() -> bool:
 	return card_type == "Attack" and movement > 0 and move_timing == "Before"
 
 
+## Step first, then strike or guard. The step is legal even when the follow-up is not.
+func steps_then_acts() -> bool:
+	return movement > 0 and move_timing == "Before"
+
+
 func moves_after() -> bool:
 	return card_type == "Attack" and movement > 0 and move_timing == "After"
 

@@ -4,7 +4,7 @@ extends RefCounted
 ## Overworld enemy turn. Each enemy walks orthogonally toward the nearest
 ## player. A grunt stops one cell short and holds, and steps in only when
 ## another enemy can reach that same player this round. A boss, and the last
-## living enemy, step in alone. Mechs can pass through each other, but cannot stop on the same cell.
+## living enemy, step in alone. A mech cannot walk through another mech.
 
 const STEPS: Array[Vector2i] = [
 	Vector2i.RIGHT,
@@ -14,7 +14,7 @@ const STEPS: Array[Vector2i] = [
 ]
 
 
-## Plans one enemy move without changing the map. The path may pass through a mech, and it always ends on an empty cell.
+## Plans one enemy move without changing the map. The path stops at another mech.
 static func plan_enemy_move(
 	unit: MechState,
 	everyone: Array[MechState],
@@ -31,8 +31,7 @@ static func plan_enemy_move(
 		var next := _step_toward(cursor, target.overworld_position, everyone, map_size)
 		if next == cursor:
 			break
-		var occupant := _unit_at(next, everyone)
-		if occupant != null and steps_left <= 1:
+		if _unit_at(next, everyone) != null:
 			break
 		if not steps_in and _beside_any_player(next, everyone):
 			break
@@ -125,8 +124,35 @@ static func path_from_distances(origin: Vector2i, destination: Vector2i, distanc
 	return path
 
 
-## Movement ignores other mechs. The roster is unused here on purpose.
-static func reachable(unit: MechState, _everyone: Array[MechState], map_size: Vector2i) -> Dictionary:
+## Cells inside `allowed` that can be reached from `origin` without crossing a mech.
+static func reachable_within(
+	origin: Vector2i,
+	allowed: Dictionary,
+	everyone: Array[MechState],
+	mover: MechState,
+	map_size: Vector2i
+) -> Dictionary:
+	var distances := {origin: 0}
+	if not allowed.has(origin):
+		return distances
+	var queue: Array[Vector2i] = [origin]
+	while not queue.is_empty():
+		var current: Vector2i = queue.pop_front()
+		for step in STEPS:
+			var next: Vector2i = current + step
+			if distances.has(next) or not allowed.has(next):
+				continue
+			if not _in_bounds(next, map_size) or StageMap.blocked(next):
+				continue
+			if _blocked_by_mech(next, mover, everyone):
+				continue
+			distances[next] = int(distances[current]) + 1
+			queue.append(next)
+	return distances
+
+
+## Movement stops at another mech. The mover's own cell does not count.
+static func reachable(unit: MechState, everyone: Array[MechState], map_size: Vector2i) -> Dictionary:
 	var distances := {unit.overworld_position: 0}
 	var queue: Array[Vector2i] = [unit.overworld_position]
 	while not queue.is_empty():
@@ -138,7 +164,7 @@ static func reachable(unit: MechState, _everyone: Array[MechState], map_size: Ve
 			var next: Vector2i = current + step
 			if distances.has(next) or not _in_bounds(next, map_size):
 				continue
-			if StageMap.blocked(next):
+			if StageMap.blocked(next) or _blocked_by_mech(next, unit, everyone):
 				continue
 			distances[next] = distance + 1
 			queue.append(next)
@@ -175,7 +201,7 @@ static func _nearest_player_from(origin: Vector2i, everyone: Array[MechState]) -
 static func _step_toward(
 	origin: Vector2i,
 	target: Vector2i,
-	_everyone: Array[MechState],
+	everyone: Array[MechState],
 	map_size: Vector2i
 ) -> Vector2i:
 	var options: Array[Vector2i] = []
@@ -191,8 +217,15 @@ static func _step_toward(
 	for coords in options:
 		if not _in_bounds(coords, map_size) or StageMap.blocked(coords):
 			continue
+		if _unit_at(coords, everyone) != null:
+			continue
 		return coords
 	return origin
+
+
+static func _blocked_by_mech(coords: Vector2i, mover: MechState, everyone: Array[MechState]) -> bool:
+	var unit := _unit_at(coords, everyone)
+	return unit != null and unit != mover
 
 
 static func _unit_at(coords: Vector2i, everyone: Array[MechState]) -> MechState:

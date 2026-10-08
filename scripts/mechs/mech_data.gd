@@ -29,5 +29,12 @@ extends Resource
 @export var color: Color = Color.WHITE
 @export var art_id: String = ""
 
-## Hover text for the mech select stats. The same lines are in How to Play.
-const STAT_GUIDE := "HP = Hit points at start of mission\nATK = Attack power from deck\nRNG = Attack range from deck. Also initiate attack distance.\nMOV = Movement range on map\nSPD = Higher speed moves first on map\nOVD = Additional actions needed to activate Overdrive"
+## Hover text for each stat on the select screen. Keys match the StatGrid node prefixes. The same lines are in How to Play.
+const STAT_TIPS := {
+	"Hp": "HP = Hit points at start of mission",
+	"Atk": "ATK = Attack power from deck",
+	"Rng": "RNG = Attack range from deck. Also initiate attack distance.",
+	"Mov": "MOV = Movement range on map",
+	"Spd": "SPD = Higher speed moves first on map",
+	"Ovd": "OVD = Additional actions needed to activate Overdrive",
+}

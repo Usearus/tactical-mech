@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Texture2D" path="res://art/icons/info.png" id="1_info"]
+[ext_resource type="Texture2D" path="res://art/icons/info.svg" id="1_info"]
 
 [node name="InfoBadge" type="TextureButton"]
 z_index = 3

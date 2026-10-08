@@ -1,14 +1,14 @@
 [gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" uid="uid://b3te7dqvrcci" path="res://scripts/ui/game_menu.gd" id="1_menu"]
-[ext_resource type="Texture2D" uid="uid://bf73balm8cafr" path="res://art/icons/stats/heart.png" id="2_heart"]
-[ext_resource type="Texture2D" uid="uid://dalaeet41hfqs" path="res://art/icons/stats/defend.png" id="3_defend"]
-[ext_resource type="Texture2D" uid="uid://dyg7w74pu38co" path="res://art/icons/stats/crescent.png" id="4_crescent"]
-[ext_resource type="Texture2D" uid="uid://6ou21nsmsfyv" path="res://art/icons/stats/clock.png" id="5_clock"]
-[ext_resource type="Texture2D" uid="uid://cgi3jvk7dim1a" path="res://art/icons/stats/attack.png" id="6_attack"]
-[ext_resource type="Texture2D" uid="uid://b8462wlb0eitc" path="res://art/icons/stats/range.png" id="7_range"]
-[ext_resource type="Texture2D" uid="uid://csq7vuho7tsji" path="res://art/icons/stats/move.png" id="8_move"]
-[ext_resource type="Texture2D" uid="uid://csfy2mm3stq16" path="res://art/icons/stats/dodge.png" id="9_dodge"]
+[ext_resource type="Texture2D" path="res://art/icons/stats/heart.svg" id="2_heart"]
+[ext_resource type="Texture2D" path="res://art/icons/stats/defend.svg" id="3_defend"]
+[ext_resource type="Texture2D" path="res://art/icons/stats/crescent.svg" id="4_crescent"]
+[ext_resource type="Texture2D" path="res://art/icons/stats/clock.svg" id="5_clock"]
+[ext_resource type="Texture2D" path="res://art/icons/stats/attack.svg" id="6_attack"]
+[ext_resource type="Texture2D" path="res://art/icons/stats/range.svg" id="7_range"]
+[ext_resource type="Texture2D" path="res://art/icons/stats/move.svg" id="8_move"]
+[ext_resource type="Texture2D" path="res://art/icons/stats/dodge.svg" id="9_dodge"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu"]
 content_margin_left = 8.0

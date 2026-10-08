@@ -4,6 +4,7 @@ extends RefCounted
 const FRAME_SIZE := 64
 const IDLE_FPS := 6.0
 const ATTACK_FPS := 8.0
+const BOOST_FPS := 10.0
 
 static var _cache: Dictionary = {}
 static var _pilots: Dictionary = {}
@@ -25,8 +26,21 @@ static func frames_for(art_id: String) -> SpriteFrames:
 	var attack := _load_attack(art_id)
 	if attack != null:
 		_add_strip(frames, "attack", attack, false, ATTACK_FPS)
+	var boosting := _load_boosting(art_id)
+	if boosting != null:
+		_add_strip(frames, "boosting", boosting, true, BOOST_FPS)
 	_cache[art_id] = frames
 	return frames
+
+
+## Boost pose while a mech travels. Mechs without boosting.png keep idle.
+static func play_moving(sprite: AnimatedSprite2D) -> void:
+	if sprite == null or sprite.sprite_frames == null:
+		return
+	if sprite.sprite_frames.has_animation("boosting"):
+		sprite.play("boosting")
+	elif sprite.sprite_frames.has_animation("idle"):
+		sprite.play("idle")
 
 
 static func _slice_size(texture: Texture2D) -> Vector2i:
@@ -154,6 +168,14 @@ static func impact_frames() -> SpriteFrames:
 static func _load_idle(art_id: String) -> Texture2D:
 	for folder in ["player", "enemy"]:
 		var path := "res://art/mechs/%s/%s/idle.png" % [folder, art_id]
+		if ResourceLoader.exists(path):
+			return load(path) as Texture2D
+	return null
+
+
+static func _load_boosting(art_id: String) -> Texture2D:
+	for folder in ["player", "enemy"]:
+		var path := "res://art/mechs/%s/%s/boosting.png" % [folder, art_id]
 		if ResourceLoader.exists(path):
 			return load(path) as Texture2D
 	return null

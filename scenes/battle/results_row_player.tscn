@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://crdbjniijj00m"]
 
-[ext_resource type="Texture2D" uid="uid://buewvhx8pieog" path="res://icodot-svg/2d/games/icon-card-heart-2d.svg" id="1_wvc32"]
-[ext_resource type="Texture2D" uid="uid://dyg7w74pu38co" path="res://art/icons/stats/crescent.png" id="2_crescent"]
+[ext_resource type="Texture2D" path="res://art/icons/stats/heart.svg" id="1_wvc32"]
+[ext_resource type="Texture2D" path="res://art/icons/stats/crescent.svg" id="2_crescent"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_row"]
 bg_color = Color(0.1, 0.11, 0.14, 1)
@@ -59,6 +59,7 @@ layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="Icon" type="TextureRect" parent="Margin/Line/Stats/Hp" unique_id=599221948]
+modulate = Color(1, 1, 1, 1)
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2

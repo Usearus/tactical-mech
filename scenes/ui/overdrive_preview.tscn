@@ -1,0 +1,84 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/overdrive_preview.gd" id="1_preview"]
+[ext_resource type="PackedScene" path="res://scenes/ui/info_badge.tscn" id="2_badge"]
+[ext_resource type="PackedScene" path="res://scenes/ui/overdrive_segment.tscn" id="3_segment"]
+[ext_resource type="PackedScene" path="res://scenes/ui/overdrive_mark.tscn" id="4_mark"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_frame"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.09, 0.1, 0.13, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.38, 0.42, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="OverdrivePreview" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 48)
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_frame")
+script = ExtResource("1_preview")
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Title" type="Label" parent="Row"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 32
+text = "Overdrive"
+vertical_alignment = 1
+
+[node name="OverdriveInfo" parent="Row" instance=ExtResource("2_badge")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Gap" type="Control" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Segments" type="HBoxContainer" parent="Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="Segment" parent="Row/Segments" instance=ExtResource("3_segment")]
+layout_mode = 2
+
+[node name="Segment2" parent="Row/Segments" instance=ExtResource("3_segment")]
+layout_mode = 2
+
+[node name="Segment3" parent="Row/Segments" instance=ExtResource("3_segment")]
+layout_mode = 2
+
+[node name="Segment4" parent="Row/Segments" instance=ExtResource("3_segment")]
+layout_mode = 2
+
+[node name="Mark" parent="Row/Segments" instance=ExtResource("4_mark")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="Length" type="Label" parent="Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 32
+text = "4"
+horizontal_alignment = 2
+vertical_alignment = 1

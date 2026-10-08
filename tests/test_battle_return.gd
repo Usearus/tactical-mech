@@ -6,6 +6,10 @@ func suite_name() -> String:
 	return "battle_return"
 
 
+func suite_setup(_ctx: Dictionary) -> void:
+	StageMap.use("res://scenes/stage/stage1.tscn")
+
+
 func test_horizontal_return_matches_battle_cells() -> void:
 	var player := _mech("lancer", "player", Vector2i(8, 3))
 	var ally := _mech("bulldog", "player", Vector2i(7, 3))
@@ -132,6 +136,44 @@ func test_destroyed_mech_yields_its_cell() -> void:
 	moved[player.id] = placed[enemy.id]
 	BattleDeployment.commit_to_overworld(encounter, moved, everyone, _map())
 	assert_eq(player.overworld_position, Vector2i(9, 3), "the survivor takes the cell where the enemy fell")
+
+
+func test_view_ring_matches_the_playable_board() -> void:
+	var player := _mech("lancer", "player", Vector2i(8, 3))
+	var enemy := _mech("scout", "enemy", Vector2i(9, 3))
+	var everyone: Array[MechState] = [player, enemy]
+	var encounter := EncounterData.create(player, Vector2i.RIGHT, everyone)
+	assert_eq(BattleDeployment.view_size(), Vector2i(10, 7), "the view is the 6x3 plus two cells each side")
+	for y in 3:
+		for x in 6:
+			var play := Vector2i(x, y)
+			var view := play + Vector2i(BattleDeployment.VIEW_MARGIN, BattleDeployment.VIEW_MARGIN)
+			var world := BattleDeployment.overworld_cell_for(encounter, play)
+			assert_eq(BattleDeployment.overworld_cell_for_view(encounter, view), world, "playable view cells stay on the fight")
+			assert_eq(BattleDeployment.view_cell_for_overworld(encounter, world), view, "the fight cell maps back to the view")
+	assert_false(BattleDeployment.is_play_cell(Vector2i(0, 0)), "the corner of the view is scenery")
+	assert_true(BattleDeployment.is_play_cell(Vector2i(2, 2)), "the playable board starts two cells in")
+	var edge := BattleDeployment.overworld_cell_for_view(encounter, Vector2i(0, 2))
+	assert_eq(BattleDeployment.view_cell_for_overworld(encounter, edge), Vector2i(0, 2), "a ring cell maps back to itself")
+
+
+func test_view_ring_turns_with_a_north_south_fight() -> void:
+	var player := _mech("lancer", "player", Vector2i(8, 4))
+	var enemy := _mech("scout", "enemy", Vector2i(8, 3))
+	var everyone: Array[MechState] = [player, enemy]
+	var encounter := EncounterData.create(player, Vector2i.UP, everyone)
+	for y in 7:
+		for x in 10:
+			var view := Vector2i(x, y)
+			var world := BattleDeployment.overworld_cell_for_view(encounter, view)
+			assert_eq(BattleDeployment.view_cell_for_overworld(encounter, world), view, "every view cell, including the ring, turns back onto the stage")
+	var play := Vector2i(3, 1)
+	var view := play + Vector2i(BattleDeployment.VIEW_MARGIN, BattleDeployment.VIEW_MARGIN)
+	assert_eq(
+		BattleDeployment.overworld_cell_for_view(encounter, view),
+		BattleDeployment.overworld_cell_for(encounter, play),
+		"the defender's cell is the same stage cell as before"
+	)
 
 
 func _map() -> Vector2i:

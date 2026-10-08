@@ -3,6 +3,8 @@ extends RefCounted
 
 ## Side-by-side fights use 3 rows by 6 columns.
 const WIDE := Vector2i(6, 3)
+## Scenery cells drawn around the playable board. Two on every side makes a 10 by 7 view.
+const VIEW_MARGIN := 2
 ## Fights stacked north to south use 3 columns by 6 rows.
 const TALL := Vector2i(3, 6)
 ## D2 on the wide board. The mech being attacked always stands here.
@@ -15,6 +17,39 @@ const TALL_SOUTH := Vector2i(1, 3)
 ## The battle board is always horizontal. A north-south fight is rotated onto it.
 static func grid_size(_encounter: EncounterData) -> Vector2i:
 	return WIDE
+
+
+## Playable board plus the scenery ring. The ring is not part of the fight.
+static func view_size() -> Vector2i:
+	return WIDE + Vector2i(VIEW_MARGIN, VIEW_MARGIN) * 2
+
+
+## Battle-board cell under a view cell. Negative when the view cell is in the ring.
+static func play_cell(view_cell: Vector2i) -> Vector2i:
+	return view_cell - Vector2i(VIEW_MARGIN, VIEW_MARGIN)
+
+
+static func is_play_cell(view_cell: Vector2i) -> bool:
+	var play := play_cell(view_cell)
+	return play.x >= 0 and play.y >= 0 and play.x < WIDE.x and play.y < WIDE.y
+
+
+## Stage cell drawn at this view cell, including the ring. Off the stage when the fight is at the edge.
+static func overworld_cell_for_view(encounter: EncounterData, view_cell: Vector2i) -> Vector2i:
+	return overworld_cell_for(encounter, play_cell(view_cell))
+
+
+## View cell for a stage cell. Outside the 10 by 7 when that mech is beyond the ring.
+static func view_cell_for_overworld(encounter: EncounterData, world: Vector2i) -> Vector2i:
+	if encounter == null or encounter.attacker == null:
+		return Vector2i(-1, -1)
+	var layout := _battle_layout(encounter)
+	var origin: Vector2i = layout["origin"]
+	var local := world - origin
+	var battle := local
+	if bool(layout["vertical"]):
+		battle = _rotate_tall(local, bool(layout["clockwise"]))
+	return battle + Vector2i(VIEW_MARGIN, VIEW_MARGIN)
 
 
 ## Footprint on the overworld. North-south fights stay tall here.

@@ -9,6 +9,10 @@ func suite_name() -> String:
 	return "overworld_ai"
 
 
+func suite_setup(_ctx: Dictionary) -> void:
+	StageMap.use("res://scenes/stage/stage1.tscn")
+
+
 func test_lone_grunt_stops_one_cell_short() -> void:
 	var player := _unit("pilot", "player", Vector2i(10, 3), 2)
 	var grunt := _unit("scout", "enemy", Vector2i(6, 3), 4)
@@ -62,6 +66,21 @@ func test_enemy_who_already_acted_does_not_count_unless_beside_the_player() -> v
 	assert_eq(_destination(actor, [player, held, actor]), Vector2i(8, 3))
 	held.overworld_position = Vector2i(10, 4)
 	assert_eq(_destination(actor, [player, held, actor]), Vector2i(9, 3))
+
+
+func test_mechs_do_not_walk_through_each_other() -> void:
+	var player := _unit("pilot", "player", Vector2i(10, 3), 2)
+	var blocker := _unit("wing", "player", Vector2i(8, 3), 2)
+	var grunt := _unit("scout", "enemy", Vector2i(6, 3), 4)
+	var everyone: Array[MechState] = [player, blocker, grunt]
+	var plan := OverworldAi.plan_enemy_move(grunt, everyone, MAP)
+	var path: Array = plan["path"]
+	assert_false(path.has(Vector2i(8, 3)))
+	assert_false(path.has(Vector2i(10, 3)))
+	assert_eq(_destination(grunt, everyone), Vector2i(7, 3))
+	var distances := OverworldAi.reachable(grunt, everyone, MAP)
+	assert_false(distances.has(Vector2i(8, 3)))
+	assert_false(distances.has(Vector2i(10, 3)))
 
 
 func test_grunts_on_different_players_do_not_unlock_each_other() -> void:

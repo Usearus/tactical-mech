@@ -20,7 +20,7 @@ var _outcome := "Victory"
 var _rows: Array[UnitRow] = []
 var _fight_offense := false
 var _squad_charge := 0
-var _squad_max := 5
+var _squad_max := 4
 var _after: Dictionary = {}
 var _squad_fill: StyleBoxFlat
 

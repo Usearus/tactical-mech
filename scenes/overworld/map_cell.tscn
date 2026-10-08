@@ -1,26 +1,66 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/ui/cell_mark.tscn" id="1_mark"]
+[ext_resource type="Script" path="res://scripts/overworld/turn_glow.gd" id="2_glow"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cell"]
 resource_local_to_scene = true
 bg_color = Color(0, 0, 0, 0)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
+expand_margin_left = -2.0
+expand_margin_top = -2.0
+expand_margin_right = -2.0
+expand_margin_bottom = -2.0
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_shade"]
+resource_local_to_scene = true
+bg_color = Color(0, 0, 0, 0)
+expand_margin_left = -2.0
+expand_margin_top = -2.0
+expand_margin_right = -2.0
+expand_margin_bottom = -2.0
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_attack"]
+resource_local_to_scene = true
+bg_color = Color(0, 0, 0, 0)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_frame"]
 resource_local_to_scene = true
 bg_color = Color(0, 0, 0, 0)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
+expand_margin_left = -2.0
+expand_margin_top = -2.0
+expand_margin_right = -2.0
+expand_margin_bottom = -2.0
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_glow"]
+blend_mode = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_window"]
 resource_local_to_scene = true
 bg_color = Color(0, 0, 0, 0)
+expand_margin_left = -2.0
+expand_margin_top = -2.0
+expand_margin_right = -2.0
+expand_margin_bottom = -2.0
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [node name="MapCell" type="Button"]
 z_index = 1
@@ -31,7 +71,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = SubResource("StyleBoxFlat_cell")
 
-[node name="Shade" type="ColorRect" parent="."]
+[node name="Shade" type="Panel" parent="."]
 z_index = 1
 layout_mode = 1
 anchors_preset = 15
@@ -40,8 +80,17 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture_filter = 1
-color = Color(0, 0, 0, 0)
+theme_override_styles/panel = SubResource("StyleBoxFlat_shade")
+
+[node name="AttackShade" type="Panel" parent="."]
+z_index = 1
+layout_mode = 1
+anchor_left = 0.16
+anchor_top = 0.16
+anchor_right = 0.84
+anchor_bottom = 0.84
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_attack")
 
 [node name="Frame" type="Panel" parent="."]
 z_index = 2
@@ -59,6 +108,13 @@ visible = false
 z_index = 4
 texture_filter = 1
 centered = true
+
+[node name="TurnGlow" type="AnimatedSprite2D" parent="MechSprite"]
+visible = false
+material = SubResource("CanvasItemMaterial_glow")
+texture_filter = 1
+centered = true
+script = ExtResource("2_glow")
 
 [node name="BattleWindow" type="Panel" parent="."]
 visible = false

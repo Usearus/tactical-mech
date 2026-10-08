@@ -3,7 +3,7 @@ extends Control
 const CARD_SCENE := preload("res://scenes/ui/mech_card.tscn")
 const SLOT_SCENE := preload("res://scenes/ui/strip_card_slot.tscn")
 const ROW_SCENE := preload("res://scenes/ui/roster_row.tscn")
-const OVERDRIVE_NOTE := "Temporarily boost your attack and guard when overdrive is full. Each mech's overdrive adds to this total."
+const OVERDRIVE_NOTE := "Actions to fill this gauge. The stage sets a minimum. High OVD makes it longer. A full gauge boosts attack and guard."
 const TIER_GOLD := Color(0.98, 0.84, 0.32)
 ## Screen pixels the cut moves right for each pixel down. Matches the squad-screen reference.
 const SHAPE_SLOPE := 0.46
@@ -52,8 +52,7 @@ var _deploy_flash: Tween
 @onready var deck: HBoxContainer = %Deck
 @onready var deck_scroll: ScrollContainer = %DeckScroll
 @onready var card_fade: TextureRect = %CardFade
-@onready var overdrive_total: Label = %OverdriveTotal
-@onready var overdrive_info: TextureButton = %OverdriveInfo
+@onready var overdrive_preview: OverdrivePreview = %OverdrivePreview
 @onready var deploy_button: Button = %DeployButton
 
 
@@ -261,8 +260,17 @@ func _watch_stat_tips() -> void:
 		var stat := child as Control
 		if stat == null:
 			continue
-		stat.set_meta("tip_width", 480.0)
-		_special_note.tap(stat, MechData.STAT_GUIDE)
+		var note := _stat_tip(stat.name)
+		if note.is_empty():
+			continue
+		_special_note.tap(stat, note)
+
+
+func _stat_tip(node_name: String) -> String:
+	for key in MechData.STAT_TIPS:
+		if node_name.begins_with(key):
+			return MechData.STAT_TIPS[key]
+	return ""
 
 
 func _show_deck() -> void:
@@ -335,7 +343,8 @@ func _show_totals() -> void:
 	var total_charge := 0
 	for data in _squad:
 		total_charge += data.charge
-	overdrive_total.text = "Total Overdrive %d" % total_charge
+	if overdrive_preview != null:
+		overdrive_preview.show_squad(total_charge, GameManager.SQUAD_ATTACK_MAX)
 
 
 func _apply_sprite(sprite: AnimatedSprite2D, frames: SpriteFrames, animate: bool) -> void:
@@ -468,9 +477,10 @@ func _style_frame() -> void:
 
 
 func _add_overdrive_info() -> void:
-	if overdrive_info == null or _special_note == null:
+	if overdrive_preview == null or overdrive_preview.info_badge == null or _special_note == null:
 		return
-	_special_note.attach(overdrive_info, OVERDRIVE_NOTE)
+	overdrive_preview.info_badge.set_meta("tip_width", 480.0)
+	_special_note.attach(overdrive_preview.info_badge, OVERDRIVE_NOTE)
 
 
 func _add_special_info(view: MechCard) -> void:

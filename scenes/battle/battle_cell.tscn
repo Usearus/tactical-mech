@@ -61,40 +61,20 @@ theme_override_font_sizes/font_size = 32
 horizontal_alignment = 1
 vertical_alignment = 2
 
-[node name="Counters" type="VBoxContainer" parent="."]
-z_index = 4
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -96.0
-offset_top = 2.0
-offset_right = -2.0
-offset_bottom = 110.0
-mouse_filter = 2
-theme_override_constants/separation = 0
-
-[node name="TurnCount" parent="Counters" instance=ExtResource("2_action")]
-layout_mode = 2
-alignment = 2
-
-[node name="Icon" parent="Counters/TurnCount" index="0"]
-size_flags_horizontal = 8
-
-[node name="Amount" parent="Counters/TurnCount" index="1"]
-size_flags_horizontal = 8
-
 [node name="Vitals" type="VBoxContainer" parent="."]
 z_index = 4
 layout_mode = 1
 offset_left = 2.0
 offset_top = 2.0
 offset_right = 96.0
-offset_bottom = 110.0
+offset_bottom = 160.0
 mouse_filter = 2
 theme_override_constants/separation = 0
 
 [node name="HitPoints" parent="Vitals" instance=ExtResource("3_hp")]
+layout_mode = 2
+
+[node name="TurnCount" parent="Vitals" instance=ExtResource("2_action")]
 layout_mode = 2
 
 [node name="Barrier" parent="Vitals" instance=ExtResource("4_barrier")]

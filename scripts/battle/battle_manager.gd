@@ -21,6 +21,9 @@ const DAMAGE_COLOR := Color(1.0, 0.32, 0.28)
 const FLOAT_RISE := 72.0
 const FLOAT_TIME := 0.82
 const ACTIVATE_TEXT := "Activate Overdrive"
+const FIELD_ZOOM_STEP := 1.1
+## Hand and sidebar follow the board, once the overworld fade has finished.
+const HUD_REVEAL_SECONDS := 0.15
 
 var _attack_offered := false
 var _squad_fill: StyleBoxFlat
@@ -39,9 +42,21 @@ var _targeting := false
 var _play_step := ""
 var _followup_move := false
 var _moved_for_card := false
+## Step from a move-then card, still reversible until the follow-up resolves.
+var _step_undo := false
+var _step_origin := Vector2i(-1, -1)
+var _step_facing := 1
 var _move_targets: Dictionary = {}
 var _animating := false
 var _buttons: Dictionary = {}
+## View cells outside the 6x3. Keyed by view coordinates.
+var _scenery: Dictionary = {}
+## Living mechs standing on the scenery ring. Keyed by view coordinates.
+var _bystanders: Dictionary = {}
+## 1 keeps the 6x3 at today's size. Smaller values pull back until the 10x7 fits.
+var _field_zoom := 1.0
+var _touch_points := {}
+var _pinch_distance := -1.0
 var _deck: Array[CardData] = []
 ## Each mech's overdrive card. Counted in the deck, dealt only after Overdrive starts.
 var _specials: Array[CardData] = []
@@ -84,6 +99,9 @@ var _results_reason := ""
 @onready var results: BattleResults = %BattleResults
 @onready var hand_prompt: HandPrompt = %HandPrompt
 @onready var _info_note: InfoNote = %SpecialNote
+@onready var _hand_chrome: CanvasItem = $"Full Layout/Grid + Hand/Hand Margin"
+@onready var _side_chrome: CanvasItem = $"Full Layout/Sidebar Margin"
+@onready var _tip_host: CanvasItem = $TipLayer/TipHost
 
 
 func _ready() -> void:
@@ -102,6 +120,7 @@ func _ready() -> void:
 	_style_pile(deck_pile)
 	_style_squad_gauge()
 	_style_discard_close()
+	_hold_battle_hud()
 	_setup_battle()
 	_build_grid()
 	_log_opening()
@@ -113,6 +132,9 @@ func _ready() -> void:
 		_animating = true
 		_refresh()
 		await _wait_until_faded_in()
+		if not is_inside_tree() or state == null or _closing:
+			return
+		await _reveal_battle_hud()
 		if not is_inside_tree() or state == null or _closing:
 			return
 		await _announce_round()
@@ -302,30 +324,39 @@ func _build_grid() -> void:
 	for child in grid.get_children():
 		child.queue_free()
 	_buttons.clear()
-	grid.columns = state.grid.width
-	for y in state.grid.height:
-		for x in state.grid.width:
-			var coords := Vector2i(x, y)
+	_scenery.clear()
+	_bystanders.clear()
+	var view_size := BattleDeployment.view_size()
+	grid.columns = view_size.x
+	for y in view_size.y:
+		for x in view_size.x:
+			var view := Vector2i(x, y)
 			var button := CELL_SCENE.instantiate() as Button
-			button.pressed.connect(_on_cell_pressed.bind(coords))
 			button.resized.connect(_on_cell_resized.bind(button))
+			if BattleDeployment.is_play_cell(view):
+				var play := BattleDeployment.play_cell(view)
+				button.pressed.connect(_on_cell_pressed.bind(play))
+				_buttons[play] = button
+			else:
+				_scenery[view] = button
 			grid.add_child(button)
-			_buttons[coords] = button
+	_gather_bystanders()
 	_fit_grid()
 
 
 func _fit_grid() -> void:
 	if state == null or state.grid == null:
 		return
-	var columns := state.grid.width
-	var rows := state.grid.height
-	if columns <= 0 or rows <= 0 or grid_host.size.x <= 1.0 or grid_host.size.y <= 1.0:
+	var play_cols := state.grid.width
+	var play_rows := state.grid.height
+	var view := BattleDeployment.view_size()
+	if play_cols <= 0 or play_rows <= 0 or grid_host.size.x <= 1.0 or grid_host.size.y <= 1.0:
 		return
 	var h_sep := grid.get_theme_constant("h_separation")
 	var v_sep := grid.get_theme_constant("v_separation")
 	var pad := 8.0
-	var cell_w := (grid_host.size.x - pad * 2.0 - h_sep * (columns - 1)) / float(columns)
-	var cell_h := (grid_host.size.y - pad * 2.0 - v_sep * (rows - 1)) / float(rows)
+	var cell_w := (grid_host.size.x - pad * 2.0 - h_sep * (play_cols - 1)) / float(play_cols)
+	var cell_h := (grid_host.size.y - pad * 2.0 - v_sep * (play_rows - 1)) / float(play_rows)
 	var cell := floorf(minf(cell_w, cell_h))
 	if cell < 1.0:
 		return
@@ -333,25 +364,35 @@ func _fit_grid() -> void:
 	for child in grid.get_children():
 		if child is Control:
 			child.custom_minimum_size = side
-	var grid_size := Vector2(
-		cell * columns + h_sep * (columns - 1),
-		cell * rows + v_sep * (rows - 1)
+	var play_size := Vector2(
+		cell * play_cols + h_sep * (play_cols - 1),
+		cell * play_rows + v_sep * (play_rows - 1)
 	)
-	var board_size := grid_size + Vector2(pad * 2.0, pad * 2.0)
-	var origin := (grid_host.size - board_size) * 0.5
-	origin.x = maxf(origin.x, 0.0)
-	origin.y = maxf(origin.y, 0.0)
-	var board := grid.get_parent().get_node_or_null("Board") as ColorRect
+	var grid_size := Vector2(
+		cell * view.x + h_sep * (view.x - 1),
+		cell * view.y + v_sep * (view.y - 1)
+	)
+	var margin := float(BattleDeployment.VIEW_MARGIN)
+	var play_offset := Vector2(margin * (cell + h_sep), margin * (cell + v_sep))
+	var field := grid.get_parent() as Control
+	@warning_ignore("int_as_enum_without_cast", "int_as_enum_without_match")
+	grid.layout_mode = 0
+	grid.position = Vector2.ZERO
+	grid.size = grid_size
+	var board := field.get_node_or_null("Board") as ColorRect
 	if board != null:
 		@warning_ignore("int_as_enum_without_cast", "int_as_enum_without_match")
 		board.layout_mode = 0
-		board.position = origin
-		board.size = board_size
-	@warning_ignore("int_as_enum_without_cast", "int_as_enum_without_match")
-	grid.layout_mode = 0
-	grid.position = origin + Vector2(pad, pad)
-	grid.size = grid_size
+		board.position = Vector2.ZERO
+		board.size = grid_size
+	var play_center := play_offset + play_size * 0.5
+	field.pivot_offset = play_center
+	field.position = grid_host.size * 0.5 - play_center
+	field.size = grid_size
+	_place_scenery_shade(field, play_offset, play_size, grid_size)
 	_stamp_terrain(cell)
+	_field_zoom = clampf(_field_zoom, _field_zoom_floor(), 1.0)
+	_apply_field_zoom()
 	call_deferred("_place_status_tip")
 
 
@@ -396,13 +437,18 @@ func _refresh() -> void:
 			active_marked = true
 	if not active_marked:
 		_stop_active_cell_pulse()
+	_refresh_scenery()
 	_refresh_hand()
+	_sync_step_undo()
 	_refresh_discard()
 	_refresh_round()
 	_refresh_squad_gauge()
 
 
 func _input(event: InputEvent) -> void:
+	if _zoom_input(event):
+		get_viewport().set_input_as_handled()
+		return
 	if not event is InputEventMouseButton:
 		return
 	var mouse := event as InputEventMouseButton
@@ -413,11 +459,7 @@ func _input(event: InputEvent) -> void:
 		return
 	if stats_window != null and stats_window.visible and stats_window.get_global_rect().has_point(mouse.global_position):
 		return
-	var coords := _coords_at_global(mouse.global_position)
-	if coords.x < 0:
-		_hide_status_tip()
-		return
-	var unit := _unit_at(coords) if state != null else null
+	var unit := _unit_at_global(mouse.global_position)
 	if unit == null:
 		_hide_status_tip()
 		return
@@ -446,6 +488,177 @@ func _coords_at_global(point: Vector2) -> Vector2i:
 	return Vector2i(-1, -1)
 
 
+func _unit_at_global(point: Vector2) -> MechState:
+	if state == null or not _pointer_on_field(point):
+		return null
+	var coords := _coords_at_global(point)
+	if coords.x >= 0:
+		return _unit_at(coords)
+	for view in _scenery:
+		var button := _scenery[view] as Control
+		if button != null and button.get_global_rect().has_point(point):
+			return _bystanders.get(view) as MechState
+	return null
+
+
+func _gather_bystanders() -> void:
+	_bystanders.clear()
+	var encounter := GameManager.current_encounter
+	if encounter == null or state == null:
+		return
+	var fighting := {}
+	for unit in state.units:
+		if unit != null:
+			fighting[unit.id] = true
+	for unit in GameManager.all_mechs():
+		if unit == null or not unit.alive or fighting.has(unit.id):
+			continue
+		var view := BattleDeployment.view_cell_for_overworld(encounter, unit.overworld_position)
+		if not _scenery.has(view):
+			continue
+		_bystanders[view] = unit
+
+
+func _bystander_view(unit: MechState) -> Vector2i:
+	if unit == null:
+		return Vector2i(-1, -1)
+	for view in _bystanders:
+		var standing := _bystanders[view] as MechState
+		if standing != null and standing.id == unit.id:
+			return view
+	return Vector2i(-1, -1)
+
+
+func _refresh_scenery() -> void:
+	for view in _scenery:
+		var button := _scenery[view] as Button
+		if button == null:
+			continue
+		var unit := _bystanders.get(view) as MechState
+		var sprite := button.get_node("MechSprite") as AnimatedSprite2D
+		var caption := button.get_node("Caption") as Label
+		_show_turn_count(button, null)
+		_show_hit_points(button, null)
+		_show_barrier(button, null)
+		_show_guard(button, null)
+		_sync_overdrive_cell(button, null)
+		_paint_cell_mark(button, view, null)
+		if unit != null and unit.art_id != "" and _show_mech_sprite(sprite, unit):
+			button.text = ""
+			caption.visible = false
+			_place_sprite(button, sprite)
+		else:
+			_hide_mech_sprite(sprite, caption)
+			button.text = ""
+		_paint(button, Color(0.14, 0.16, 0.2))
+
+
+func _place_scenery_shade(field: Control, play_offset: Vector2, play_size: Vector2, grid_size: Vector2) -> void:
+	var shade := field.get_node_or_null("SceneryShade") as Control
+	if shade == null:
+		return
+	shade.position = Vector2.ZERO
+	shade.size = grid_size
+	var top := shade.get_node_or_null("Top") as ColorRect
+	var bottom := shade.get_node_or_null("Bottom") as ColorRect
+	var left := shade.get_node_or_null("Left") as ColorRect
+	var right := shade.get_node_or_null("Right") as ColorRect
+	if top != null:
+		top.position = Vector2.ZERO
+		top.size = Vector2(grid_size.x, play_offset.y)
+	if bottom != null:
+		bottom.position = Vector2(0.0, play_offset.y + play_size.y)
+		bottom.size = Vector2(grid_size.x, maxf(grid_size.y - bottom.position.y, 0.0))
+	if left != null:
+		left.position = Vector2(0.0, play_offset.y)
+		left.size = Vector2(play_offset.x, play_size.y)
+	if right != null:
+		right.position = Vector2(play_offset.x + play_size.x, play_offset.y)
+		right.size = Vector2(maxf(grid_size.x - right.position.x, 0.0), play_size.y)
+
+
+func _zoom_input(event: InputEvent) -> bool:
+	if grid_host == null or grid_host.size.x < 1.0:
+		return false
+	if results != null and results.visible:
+		return false
+	if discard_overlay != null and discard_overlay.visible:
+		return false
+	if hand_prompt != null and hand_prompt.visible:
+		return false
+	if event is InputEventMouseButton:
+		var mouse := event as InputEventMouseButton
+		if mouse.button_index != MOUSE_BUTTON_WHEEL_UP and mouse.button_index != MOUSE_BUTTON_WHEEL_DOWN:
+			return false
+		if not mouse.pressed or not _pointer_on_field(mouse.global_position):
+			return false
+		var step := FIELD_ZOOM_STEP if mouse.button_index == MOUSE_BUTTON_WHEEL_UP else 1.0 / FIELD_ZOOM_STEP
+		_zoom_field(step)
+		return true
+	if event is InputEventMagnifyGesture and _pointer_on_field(event.position):
+		_zoom_field(event.factor)
+		return true
+	if event is InputEventScreenTouch or event is InputEventScreenDrag:
+		return _pinch_field(event)
+	return false
+
+
+func _pointer_on_field(point: Vector2) -> bool:
+	return grid_host.get_global_rect().has_point(point)
+
+
+func _zoom_field(factor: float) -> void:
+	var next := clampf(_field_zoom * factor, _field_zoom_floor(), 1.0)
+	if is_equal_approx(next, _field_zoom):
+		return
+	_field_zoom = next
+	_apply_field_zoom()
+
+
+func _field_zoom_floor() -> float:
+	var field := grid.get_parent() as Control
+	if field == null or field.size.x < 1.0 or field.size.y < 1.0 or grid_host.size.x < 1.0:
+		return 1.0
+	return minf(grid_host.size.x / field.size.x, grid_host.size.y / field.size.y)
+
+
+func _apply_field_zoom() -> void:
+	var field := grid.get_parent() as Control
+	if field == null:
+		return
+	field.scale = Vector2(_field_zoom, _field_zoom)
+
+
+func _pinch_field(event: InputEvent) -> bool:
+	if event is InputEventScreenTouch:
+		var touch := event as InputEventScreenTouch
+		if touch.pressed:
+			if _pointer_on_field(touch.position):
+				_touch_points[touch.index] = touch.position
+		else:
+			_touch_points.erase(touch.index)
+		_pinch_distance = _touch_span() if _touch_points.size() >= 2 else -1.0
+		return _touch_points.size() >= 2
+	var drag := event as InputEventScreenDrag
+	if drag == null or not _touch_points.has(drag.index):
+		return false
+	_touch_points[drag.index] = drag.position
+	if _touch_points.size() < 2:
+		return false
+	var span := _touch_span()
+	if _pinch_distance > 1.0 and span > 1.0:
+		_zoom_field(span / _pinch_distance)
+	_pinch_distance = span
+	return true
+
+
+func _touch_span() -> float:
+	var points: Array = _touch_points.values()
+	if points.size() < 2:
+		return 0.0
+	return (points[0] as Vector2).distance_to(points[1] as Vector2)
+
+
 func _show_status_tip(unit: MechState) -> void:
 	if unit == null or stats_window == null or mech_panel == null:
 		return
@@ -467,7 +680,10 @@ func _sync_status_tip() -> void:
 		return
 	if _status_unit == null or stats_window == null or not stats_window.visible:
 		return
-	if state == null or state.unit_by_id(_status_unit.id) == null:
+	if _bystander_view(_status_unit).x < 0 and (state == null or state.unit_by_id(_status_unit.id) == null):
+		_hide_status_tip()
+		return
+	if _bystander_view(_status_unit).x >= 0 and not _status_unit.alive:
 		_hide_status_tip()
 		return
 	mech_panel.present_unit(_status_unit, false)
@@ -503,9 +719,6 @@ func _anchor_status_tip() -> void:
 
 
 func _battle_map_rect() -> Rect2:
-	var board := grid.get_parent().get_node_or_null("Board") as Control
-	if board != null and board.size.x > 1.0 and board.size.y > 1.0:
-		return board.get_global_rect()
 	return grid_host.get_global_rect()
 
 
@@ -515,16 +728,24 @@ func _on_cell_pressed(coords: Vector2i) -> void:
 	var unit := _unit_at(coords)
 	if _targeting:
 		if _play_step == "guard":
+			if _can_keep_step(unit):
+				await _keep_step()
+				return
 			await _on_guard_cell(unit)
 			return
 		if _play_step == "move":
 			await _on_move_cell(coords)
+			return
+		if _play_step == "breach":
+			await _on_breach_cell(coords)
 			return
 		if _play_step == "front":
 			await _try_front(coords)
 			return
 		if unit != null and unit.alive and unit.team == "player":
 			if _moved_for_card:
+				if _can_keep_step(unit):
+					await _keep_step()
 				return
 			if unit != _selected:
 				_chosen = null
@@ -532,6 +753,8 @@ func _on_cell_pressed(coords: Vector2i) -> void:
 			_targeting = false
 			_selected = unit
 			_refresh()
+			return
+		if _moved_for_card and (unit == null or not unit.alive or unit.team != "enemy"):
 			return
 		await _try_attack(unit)
 		return
@@ -581,6 +804,7 @@ func _try_attack(target: MechState) -> void:
 	attacker.face_toward_x(attacker_pos.x, target_pos.x)
 	_animating = true
 	_play_step = ""
+	_step_undo = false
 	_log("%s uses %s." % [attacker.display_name, card.display_name])
 	_spend(card)
 	_refresh()
@@ -1009,8 +1233,12 @@ func _clear_play() -> void:
 	_play_step = ""
 	_followup_move = false
 	_moved_for_card = false
+	_step_undo = false
+	_step_origin = Vector2i(-1, -1)
+	_step_facing = 1
 	_chosen = null
 	_move_targets.clear()
+	_sync_step_undo()
 
 
 func _on_move_cell(coords: Vector2i) -> void:
@@ -1018,6 +1246,7 @@ func _on_move_cell(coords: Vector2i) -> void:
 		return
 	var actor := _selected
 	var origin := state.position_of(actor)
+	var facing := actor.facing
 	if coords == origin:
 		if _followup_move:
 			await _finish_followup()
@@ -1050,14 +1279,18 @@ func _on_move_cell(coords: Vector2i) -> void:
 		return
 	if not await _commit_step(actor, coords):
 		return
-	if _chosen != null and _chosen.target_type == "enemies" and _chosen.moves_before():
-		await _play_breach(actor, _chosen)
-		return
 	if _chosen != null and _steps_before_guard(_chosen):
-		_moved_for_card = true
-		_play_step = "guard"
-		_targeting = true
-		_refresh()
+		if _guard_targets(actor).is_empty():
+			await _keep_step()
+		else:
+			_moved_for_card = true
+			_play_step = "guard"
+			_targeting = true
+			_refresh()
+		return
+	if _chosen != null and _chosen.steps_then_acts() and not _followup_move:
+		_arm_step_undo(origin, facing)
+		_offer_followup(actor)
 		return
 	if _chosen != null and _chosen.moves_only():
 		var stepped := _chosen
@@ -1115,19 +1348,162 @@ func _finish_followup() -> void:
 	_refresh()
 
 
+func _arm_step_undo(origin: Vector2i, facing: int) -> void:
+	_step_origin = origin
+	_step_facing = facing
+	_step_undo = true
+
+
+func _offer_followup(actor: MechState) -> void:
+	_moved_for_card = true
+	_targeting = true
+	if _chosen != null and _chosen.target_type == "enemies":
+		_play_step = "breach"
+	elif _steps_before_guard(_chosen):
+		_play_step = "guard"
+	else:
+		_play_step = "attack"
+	_note_followup(actor)
+	_refresh()
+
+
+func _note_followup(actor: MechState) -> void:
+	if actor == null or _chosen == null:
+		return
+	if _followup_ready(actor):
+		if _chosen.target_type == "enemies":
+			_log("Click %s to fire, or undo the move." % actor.display_name)
+		return
+	if _steps_before_guard(_chosen):
+		_log("No adjacent ally. Click %s to keep the step, or undo the move." % actor.display_name)
+	else:
+		_log("No enemy in range. Click %s to keep the step, or undo the move." % actor.display_name)
+
+
+func _followup_ready(actor: MechState) -> bool:
+	var card := _chosen
+	if actor == null or card == null or state == null:
+		return false
+	if _steps_before_guard(card):
+		return not _guard_targets(actor).is_empty()
+	return _can_strike_from(state.position_of(actor), card)
+
+
+func _can_keep_step(unit: MechState) -> bool:
+	return _step_undo and unit != null and unit == _selected and not _followup_ready(_selected)
+
+
+func _keep_step() -> void:
+	var card := _chosen
+	var actor := _selected
+	if card == null or actor == null or _animating:
+		return
+	_step_undo = false
+	_spend(card)
+	_log("%s uses %s." % [actor.display_name, card.display_name])
+	await _finish_followup()
+
+
+func _on_breach_cell(coords: Vector2i) -> void:
+	var card := _chosen
+	var actor := _selected
+	if card == null or actor == null or state == null:
+		return
+	var origin := state.position_of(actor)
+	if coords == origin:
+		if _followup_ready(actor):
+			await _play_breach(actor, card)
+		else:
+			await _keep_step()
+		return
+	var unit := _unit_at(coords)
+	if unit != null and unit.alive and unit.team == "enemy" and card.reaches(_manhattan(origin, state.position_of(unit))):
+		await _play_breach(actor, card)
+
+
+func _on_card_undo_drag(card: CardData) -> void:
+	if card != _chosen or not _step_undo or _animating or _prompting:
+		return
+	await _on_undo_step(true)
+
+
+func _can_undo_drag(card: CardData) -> bool:
+	return (
+		_step_undo
+		and card == _chosen
+		and not _animating
+		and not _prompting
+		and state != null
+		and state.battle_status == "active"
+		and state.phase == "player"
+	)
+
+
+func _on_undo_step(cancel_card := false) -> void:
+	if not _step_undo or _animating or _prompting or _selected == null or state == null:
+		return
+	var actor := _selected
+	var dest := _step_origin
+	var facing := _step_facing
+	_animating = true
+	_sync_step_undo()
+	if state.position_of(actor) != dest:
+		var walked := await _slide_unit(actor, dest, false)
+		if not is_inside_tree():
+			return
+		if not walked:
+			state.move_unit(actor, dest)
+	if not is_inside_tree() or state == null:
+		return
+	actor.facing = facing
+	_animating = false
+	_log("%s steps back." % actor.display_name)
+	if cancel_card:
+		_clear_play()
+		_refresh()
+		return
+	_step_undo = false
+	_step_origin = Vector2i(-1, -1)
+	_moved_for_card = false
+	_play_step = "move"
+	_targeting = true
+	_refresh()
+
+
+func _sync_step_undo() -> void:
+	if hand_box == null:
+		return
+	var show := (
+		_step_undo
+		and state != null
+		and state.battle_status == "active"
+		and state.phase == "player"
+		and not _closing
+	)
+	var chosen_view: MechCard = null
+	if show and _chosen != null:
+		chosen_view = _card_views.get(_chosen.get_instance_id()) as MechCard
+	for slot in hand_box.get_children():
+		var undo := slot.get_node_or_null("UndoMoveButton") as Button
+		if undo == null:
+			continue
+		var mine := (
+			show
+			and chosen_view != null
+			and is_instance_valid(chosen_view)
+			and chosen_view.get_parent() == slot
+		)
+		undo.visible = mine
+		undo.disabled = not mine or _animating or _prompting
+
+
 func _rebuild_move_targets() -> void:
 	_move_targets.clear()
 	if _play_step != "move" or _chosen == null or _selected == null:
 		return
 	var origin := state.position_of(_selected)
 	for coords in _reachable(origin, _chosen.movement):
-		if _steps_before_guard(_chosen):
-			if not _allies_beside(coords, _selected).is_empty():
-				_move_targets[coords] = true
-		elif _followup_move or not _chosen.moves_before():
-			_move_targets[coords] = true
-		elif _can_strike_from(coords, _chosen):
-			_move_targets[coords] = true
+		_move_targets[coords] = true
 
 
 func _can_strike_from(coords: Vector2i, card: CardData) -> bool:
@@ -1239,7 +1615,7 @@ func _path_between(origin: Vector2i, dest: Vector2i, steps: int) -> Array[Vector
 	return path
 
 
-func _slide_unit(unit: MechState, dest: Vector2i) -> bool:
+func _slide_unit(unit: MechState, dest: Vector2i, announce: bool = true) -> bool:
 	var origin := state.position_of(unit)
 	var path := _path_between(origin, dest, _chosen.movement if _chosen != null else 1)
 	if path.is_empty():
@@ -1257,8 +1633,7 @@ func _slide_unit(unit: MechState, dest: Vector2i) -> bool:
 		token.z_index = 30
 		token.scale = sprite.scale
 		token.flip_h = sprite.flip_h
-		if token.sprite_frames != null and token.sprite_frames.has_animation("idle"):
-			token.play("idle")
+		MechSprites.play_moving(token)
 		add_child(token)
 		token.global_position = sprite.global_position
 		_sync_barrier(token, unit)
@@ -1278,13 +1653,16 @@ func _slide_unit(unit: MechState, dest: Vector2i) -> bool:
 	if token != null:
 		token.queue_free()
 	state.move_unit(unit, dest)
-	_log("%s moves." % unit.display_name)
+	if announce:
+		_log("%s moves." % unit.display_name)
 	return true
 
 
 func _cell_color(coords: Vector2i) -> Color:
 	var idle := Color(0.14, 0.16, 0.2)
 	if _play_step == "guard" and _chosen != null and _chosen.guards_ally():
+		if _selected != null and _can_keep_step(_selected) and state.position_of(_selected) == coords:
+			return Color(0.16, 0.46, 0.78)
 		var holder := _owner_of(_chosen)
 		for ally in _guard_targets(holder):
 			if state.position_of(ally) == coords:
@@ -1301,8 +1679,19 @@ func _cell_color(coords: Vector2i) -> Color:
 		if unit != null and unit.alive and unit.team == "enemy" and _enemy_in_reach(unit):
 			return Color(0.45, 0.18, 0.18)
 		return idle
+	if _play_step == "breach":
+		var stood := state.position_of(_selected)
+		if coords == stood:
+			return Color(0.16, 0.46, 0.78)
+		if _chosen.reaches(_manhattan(stood, coords)):
+			var struck := _unit_at(coords)
+			if struck != null and struck.alive and struck.team == "enemy":
+				return Color(0.45, 0.18, 0.18)
+		return idle
 	if _play_step == "attack":
 		var current := state.position_of(_selected)
+		if coords == current and _can_keep_step(_selected):
+			return Color(0.16, 0.46, 0.78)
 		if _chosen.reaches(_manhattan(current, coords)):
 			return Color(0.45, 0.18, 0.18)
 	if _play_step == "front":
@@ -1333,9 +1722,12 @@ func _show_mech_sprite(sprite: AnimatedSprite2D, unit: MechState) -> bool:
 
 
 func _button_for(unit: MechState) -> Button:
-	if unit == null:
+	if unit == null or state == null:
 		return null
-	return _buttons.get(state.position_of(unit)) as Button
+	var button := _buttons.get(state.position_of(unit)) as Button
+	if button != null:
+		return button
+	return _scenery.get(_bystander_view(unit)) as Button
 
 
 func _sprite_for(unit: MechState) -> AnimatedSprite2D:
@@ -1496,8 +1888,8 @@ func _place_sprite(button: Button, sprite: AnimatedSprite2D) -> void:
 	var longest := maxf(frame.x, frame.y)
 	if longest <= 0.0:
 		return
-	sprite.position = Vector2(button.size.x * 0.5, button.size.y * 0.44)
-	var fit := minf(button.size.x, button.size.y) * 0.72 / longest
+	sprite.position = button.size * 0.5
+	var fit := minf(button.size.x, button.size.y) * 0.72 * 1.4 / longest
 	sprite.scale = Vector2(fit, fit)
 
 
@@ -1716,6 +2108,29 @@ func _wait_until_faded_in() -> void:
 		await get_tree().process_frame
 
 
+func _hold_battle_hud() -> void:
+	for node in [_hand_chrome, _side_chrome, _tip_host]:
+		if node == null:
+			continue
+		node.modulate.a = 0.0
+
+
+func _reveal_battle_hud() -> void:
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.set_trans(Tween.TRANS_CUBIC)
+	tween.set_ease(Tween.EASE_OUT)
+	var revealing := false
+	for node in [_hand_chrome, _side_chrome, _tip_host]:
+		if node == null:
+			continue
+		tween.tween_property(node, "modulate:a", 1.0, HUD_REVEAL_SECONDS)
+		revealing = true
+	if not revealing:
+		return
+	await tween.finished
+
+
 func _announce_round() -> void:
 	if mode_banner == null or state == null or _closing:
 		return
@@ -1764,8 +2179,12 @@ func _refresh_squad_gauge() -> void:
 	var squad_charge := mini(GameManager.player_attack_gauge, squad_max)
 	player_gauge.max_value = squad_max
 	player_gauge.value = squad_charge
-	OverdriveGauge.write(player_gauge, squad_charge, squad_max)
-	OverdriveGauge.pulse(player_gauge, _squad_fill, squad_max > 0 and squad_charge >= squad_max)
+	if GameManager.battle_offense:
+		OverdriveGauge.show_active(player_gauge, _squad_fill)
+	else:
+		OverdriveGauge.write(player_gauge, squad_charge, squad_max)
+		OverdriveGauge.celebrate(player_gauge, _squad_fill, squad_charge)
+		OverdriveGauge.pulse(player_gauge, _squad_fill, squad_max > 0 and squad_charge >= squad_max)
 	var can_activate := (
 		not _closing
 		and not _prompting
@@ -2101,18 +2520,6 @@ func _steps_before_guard(card: CardData) -> bool:
 	return card != null and card.guards_ally() and card.movement > 0 and card.move_timing == "Before"
 
 
-func _allies_beside(origin: Vector2i, holder: MechState) -> Array[MechState]:
-	var found: Array[MechState] = []
-	if holder == null or state == null:
-		return found
-	for unit in state.living_units("player"):
-		if unit == holder:
-			continue
-		if _manhattan(origin, state.position_of(unit)) == 1:
-			found.append(unit)
-	return found
-
-
 func _begin_breach_step(holder: MechState, card: CardData) -> void:
 	_selected = holder
 	if _chosen == card and _play_step == "move":
@@ -2202,7 +2609,8 @@ func _on_guard_cell(unit: MechState) -> void:
 		_refresh()
 		return
 	if unit == null or not _guard_targets(holder).has(unit):
-		_log("Choose an adjacent ally.")
+		if not (_step_undo and not _followup_ready(holder)):
+			_log("Choose an adjacent ally.")
 		_refresh()
 		return
 	await _grant_guard(holder, unit, card)
@@ -2254,6 +2662,9 @@ func _play_special(card: CardData) -> void:
 
 
 func _play_breach(holder: MechState, card: CardData) -> void:
+	_animating = true
+	_step_undo = false
+	_sync_step_undo()
 	var origin := state.position_of(holder)
 	var victims: Array[MechState] = []
 	for enemy in state.living_units("enemy"):
@@ -2285,6 +2696,7 @@ func _play_breach(holder: MechState, card: CardData) -> void:
 		await _show_finisher_kill()
 		if not is_inside_tree() or state == null:
 			return
+	_animating = false
 	_finish_if_over()
 	_clear_play()
 	if _closing or not is_inside_tree() or state == null or state.battle_status != "active":
@@ -2377,6 +2789,7 @@ func _update_hand_controls() -> void:
 			continue
 		view.set_drop_handler(_on_card_drop.bind(card, view))
 		view.set_pull_enabled(can_pull)
+		view.set_undo_drag_enabled(_can_undo_drag(card))
 		view.set_chosen(card == _chosen)
 		if not view.is_gliding():
 			view.settle(card == _chosen)
@@ -2443,7 +2856,11 @@ func _ensure_hand_slots() -> void:
 		hand_box.remove_child(extra)
 		extra.queue_free()
 	while hand_box.get_child_count() < needed:
-		hand_box.add_child(SLOT_SCENE.instantiate())
+		var slot := SLOT_SCENE.instantiate()
+		hand_box.add_child(slot)
+		var undo := slot.get_node_or_null("UndoMoveButton") as Button
+		if undo != null and not undo.pressed.is_connected(_on_undo_step):
+			undo.pressed.connect(_on_undo_step)
 
 
 func _park_slot_cards(slot: Node) -> void:
@@ -2501,6 +2918,7 @@ func _bind_hand_card(view: MechCard, card: CardData) -> void:
 	view.arm_press()
 	view.set_drop_handler(_on_card_drop.bind(card, view))
 	view.pulled.connect(_on_hand_card_pressed.bind(card))
+	view.undo_dragged.connect(_on_card_undo_drag.bind(card))
 
 
 func _spawn_deck_discard(card: CardData, order: int) -> void:
@@ -2586,7 +3004,7 @@ func _show_vital(button: Button, node_name: String, amount_value: int, shown: bo
 
 
 func _show_turn_count(button: Button, unit: MechState) -> void:
-	var turn_count := button.get_node_or_null("Counters/TurnCount") as HBoxContainer
+	var turn_count := button.get_node_or_null("Vitals/TurnCount") as HBoxContainer
 	if turn_count == null:
 		return
 	var counting := (
@@ -2743,28 +3161,39 @@ func _stamp_terrain(cell_px: float) -> void:
 	terrain.tile_set = source.tile_set
 	terrain.clear()
 	var painted := false
-	for y in state.grid.height:
-		for x in state.grid.width:
+	var view_size := BattleDeployment.view_size()
+	for y in view_size.y:
+		for x in view_size.x:
 			var battle := Vector2i(x, y)
-			var world := BattleDeployment.overworld_cell_for(encounter, battle)
+			var world := BattleDeployment.overworld_cell_for_view(encounter, battle)
 			if not StageMap.contains(world):
 				continue
-			var source_id := source.get_cell_source_id(world)
-			if source_id < 0:
-				continue
-			var atlas_coords := source.get_cell_atlas_coords(world)
-			var alternative := source.get_cell_alternative_tile(world)
-			if quarter != 0:
-				alternative = _turn_alternative(alternative, quarter < 0)
-			terrain.set_cell(battle, source_id, atlas_coords, alternative)
-			painted = true
+			var span := StageMap.mech_span()
+			var origin := world * span
+			# terrain_quarter is 1 when the tall window turns clockwise onto the board.
+			var clockwise := quarter > 0
+			for oy in span:
+				for ox in span:
+					var tile_coords := origin + Vector2i(ox, oy)
+					var source_id := source.get_cell_source_id(tile_coords)
+					if source_id < 0:
+						continue
+					var atlas_coords := source.get_cell_atlas_coords(tile_coords)
+					var alternative := source.get_cell_alternative_tile(tile_coords)
+					var placed := Vector2i(ox, oy)
+					if quarter != 0:
+						alternative = _turn_alternative(alternative, clockwise)
+						placed = _turn_block(placed, span, clockwise)
+					terrain.set_cell(battle * span + placed, source_id, atlas_coords, alternative)
+					painted = true
 	terrain.visible = painted
 	if not painted:
 		return
 	var tile := Vector2(source.tile_set.tile_size)
+	var step := tile * float(StageMap.mech_span())
 	var h_sep := grid.get_theme_constant("h_separation")
 	var v_sep := grid.get_theme_constant("v_separation")
-	terrain.scale = Vector2((cell_px + h_sep) / tile.x, (cell_px + v_sep) / tile.y)
+	terrain.scale = Vector2((cell_px + h_sep) / step.x, (cell_px + v_sep) / step.y)
 	terrain.position = grid.position
 	host.move_child(terrain, grid.get_index())
 	for coords in _buttons:
@@ -2778,48 +3207,36 @@ const _TILE_TRANSPOSE := 1 << 14
 const _TILE_ID_MASK := ~(1 << 12 | 1 << 13 | 1 << 14)
 
 
-## Turns a painted cell one quarter, keeping the flip it already had on the stage.
+## Turns a painted cell one quarter. Same rule as Godot's tile editor, so a tile that
+## was already flipped or transposed on the stage keeps that and turns with it.
+## Clockwise: (flip_h, flip_v, transpose) -> (!flip_v, flip_h, !transpose).
 func _turn_alternative(alternative: int, clockwise: bool) -> int:
 	var tile_id := alternative & _TILE_ID_MASK
 	var flip_h := (alternative & _TILE_FLIP_H) != 0
 	var flip_v := (alternative & _TILE_FLIP_V) != 0
 	var transpose := (alternative & _TILE_TRANSPOSE) != 0
-	var want := {}
-	for corner in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1)]:
-		var placed := _tile_place(corner, flip_h, flip_v, transpose)
-		want[corner] = _turn_place(placed, clockwise)
-	for next_transpose in [false, true]:
-		for next_h in [false, true]:
-			for next_v in [false, true]:
-				var matched := true
-				for corner in want:
-					if _tile_place(corner, next_h, next_v, next_transpose) != want[corner]:
-						matched = false
-						break
-				if not matched:
-					continue
-				if next_h:
-					tile_id |= _TILE_FLIP_H
-				if next_v:
-					tile_id |= _TILE_FLIP_V
-				if next_transpose:
-					tile_id |= _TILE_TRANSPOSE
-				return tile_id
-	return alternative
+	var next_h: bool
+	var next_v: bool
+	if clockwise:
+		next_h = not flip_v
+		next_v = flip_h
+	else:
+		next_h = flip_v
+		next_v = not flip_h
+	var next_t := not transpose
+	if next_h:
+		tile_id |= _TILE_FLIP_H
+	if next_v:
+		tile_id |= _TILE_FLIP_V
+	if next_t:
+		tile_id |= _TILE_TRANSPOSE
+	return tile_id
 
 
-func _tile_place(corner: Vector2i, flip_h: bool, flip_v: bool, transpose: bool) -> Vector2i:
-	var x := corner.x
-	var y := corner.y
-	if flip_h:
-		x = 1 - x
-	if flip_v:
-		y = 1 - y
-	if transpose:
-		var swap := x
-		x = y
-		y = swap
-	return Vector2i(x, y)
+func _turn_block(offset: Vector2i, span: int, clockwise: bool) -> Vector2i:
+	if clockwise:
+		return Vector2i(span - 1 - offset.y, offset.x)
+	return Vector2i(offset.y, span - 1 - offset.x)
 
 
 func _turn_place(placed: Vector2i, clockwise: bool) -> Vector2i:

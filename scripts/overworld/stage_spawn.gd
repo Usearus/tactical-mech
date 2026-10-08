@@ -4,10 +4,15 @@ extends Marker2D
 
 ## Slot 1 is the first mech the player picks, then 2, then 3.
 ## Leave this at 0 for an enemy, and assign that enemy in Mech.
+## Editor stand-ins for empty player slots. The match still picks the real mechs.
+const PLACEHOLDER_ART := ["purple", "red", "tan"]
+
 @export var slot: int = 0:
 	set(value):
 		slot = value
 		queue_redraw()
+		if is_inside_tree() and Engine.is_editor_hint():
+			_show_preview()
 
 @export var mech: MechData:
 	set(value):
@@ -26,9 +31,16 @@ func _enter_tree() -> void:
 
 func cell() -> Vector2i:
 	var map := get_parent() as TileMapLayer
-	if map == null:
+	if map == null or map.tile_set == null or map.tile_set.tile_size.x <= 0:
 		return Vector2i.ZERO
-	return map.local_to_map(position)
+	var tile := map.tile_set.tile_size
+	@warning_ignore("integer_division")
+	var span := maxi(1, MechSprites.FRAME_SIZE / tile.x)
+	# The marker is the sprite center. Stand on the mech cell under that sprite.
+	var sample := position - Vector2(tile) * float(span - 1) * 0.5
+	var tile_cell := map.local_to_map(sample)
+	@warning_ignore("integer_division")
+	return Vector2i(tile_cell.x / span, tile_cell.y / span)
 
 
 func _draw() -> void:
@@ -37,7 +49,7 @@ func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	if font == null:
 		return
-	draw_string(font, Vector2(-10, 12), str(slot), HORIZONTAL_ALIGNMENT_LEFT, -1, 32, Color(0.4, 0.85, 1.0))
+	draw_string(font, Vector2(-8, -36), str(slot), HORIZONTAL_ALIGNMENT_LEFT, -1, 32, Color(0.4, 0.85, 1.0))
 
 
 func _show_preview() -> void:
@@ -55,10 +67,17 @@ func _show_preview() -> void:
 
 
 func _idle_texture() -> Texture2D:
-	if mech == null or mech.art_id == "":
+	if mech != null and mech.art_id != "":
+		return _art_texture(mech.art_id)
+	if slot <= 0:
 		return null
+	var index := clampi(slot - 1, 0, PLACEHOLDER_ART.size() - 1)
+	return _art_texture(PLACEHOLDER_ART[index])
+
+
+func _art_texture(art_id: String) -> Texture2D:
 	for folder in ["player", "enemy"]:
-		var path := "res://art/mechs/%s/%s/idle.png" % [folder, mech.art_id]
+		var path := "res://art/mechs/%s/%s/idle.png" % [folder, art_id]
 		if ResourceLoader.exists(path):
 			return load(path) as Texture2D
 	return null

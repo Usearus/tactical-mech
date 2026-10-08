@@ -2,10 +2,10 @@
 
 [ext_resource type="Script" uid="uid://cxcmri3brorgm" path="res://scripts/select/mech_select.gd" id="1_select"]
 [ext_resource type="PackedScene" path="res://scenes/ui/roster_row.tscn" id="2_row"]
-[ext_resource type="PackedScene" path="res://scenes/ui/info_badge.tscn" id="3_badge"]
-[ext_resource type="Texture2D" uid="uid://wkanx7w3nqyu" path="res://art/mechs/player/purple/pilot.png" id="4_hi4pi"]
+[ext_resource type="PackedScene" path="res://scenes/ui/overdrive_preview.tscn" id="3_overdrive"]
+[ext_resource type="Texture2D" uid="uid://dtcn3mffw0nti" path="res://art/mechs/player/purple/pilot.png" id="4_hi4pi"]
 [ext_resource type="PackedScene" path="res://scenes/ui/info_note.tscn" id="4_note"]
-[ext_resource type="Texture2D" uid="uid://cge1goco58nhh" path="res://art/mechs/player/purple/idle.png" id="5_idle"]
+[ext_resource type="Texture2D" uid="uid://tf0wj5tn2i20" path="res://art/mechs/player/purple/idle.png" id="5_idle"]
 [ext_resource type="PackedScene" path="res://scenes/ui/menu_corner.tscn" id="5_menu"]
 [ext_resource type="Shader" uid="uid://d27gl6uwnvpj2" path="res://shaders/stage_dots.gdshader" id="6_dots"]
 [ext_resource type="Shader" uid="uid://cq4x1eey38sqy" path="res://shaders/card_edge_fade.gdshader" id="7_fade"]
@@ -276,12 +276,12 @@ theme_override_font_sizes/font_size = 26
 text = "D"
 horizontal_alignment = 2
 
-[node name="AtkName" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid"]
+[node name="AtkName" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=195541876]
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "ATK"
 
-[node name="AtkStat" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid"]
+[node name="AtkStat" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=941405940]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(72, 0)
 layout_mode = 2
@@ -289,26 +289,26 @@ theme_override_font_sizes/font_size = 26
 text = "0-0"
 horizontal_alignment = 2
 
-[node name="AtkGrade" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid"]
+[node name="AtkGrade" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=2124873572]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "D"
 horizontal_alignment = 2
 
-[node name="RngName" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid"]
+[node name="RngName" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=1975857546]
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "RNG"
 
-[node name="RngStat" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid"]
+[node name="RngStat" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=269597605]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "0-0"
 horizontal_alignment = 2
 
-[node name="RngGrade" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid"]
+[node name="RngGrade" type="Label" parent="Margin/Root/Body/Preview/Frame/Column/Identity/MarginContainer/Copy/Details/StatTable/StatGrid" unique_id=88218699]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
@@ -416,21 +416,9 @@ layout_mode = 2
 theme_override_constants/separation = 32
 alignment = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Margin/Root/Body/Preview/Footer" unique_id=1566814438]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="OverdriveTotal" type="Label" parent="Margin/Root/Body/Preview/Footer/HBoxContainer" unique_id=825177111]
+[node name="OverdrivePreview" parent="Margin/Root/Body/Preview/Footer" unique_id=1566814438 instance=ExtResource("3_overdrive")]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "Total Overdrive 0"
-vertical_alignment = 1
-
-[node name="OverdriveInfo" parent="Margin/Root/Body/Preview/Footer/HBoxContainer" unique_id=729039353 instance=ExtResource("3_badge")]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 4
 
 [node name="DeployButton" type="Button" parent="Margin/Root/Body/Preview/Footer" unique_id=1940760441]
 unique_name_in_owner = true

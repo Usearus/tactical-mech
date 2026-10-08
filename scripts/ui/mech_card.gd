@@ -15,27 +15,31 @@ const FOOTER_COLOR := Color(0.09, 0.1, 0.13)
 const POWER_BODY := Color(0.1, 0.3, 0.56)
 const POWER_HEADER := Color(0.16, 0.46, 0.84)
 const POWER_FOOTER := Color(0.07, 0.2, 0.4)
-const ATTACK_ICON: Texture2D = preload("res://art/icons/stats/attack.png")
-const RANGE_ICON: Texture2D = preload("res://art/icons/stats/range.png")
-const MOVE_ICON: Texture2D = preload("res://art/icons/stats/move.png")
-const DODGE_ICON: Texture2D = preload("res://art/icons/stats/dodge.png")
-const DEFEND_ICON: Texture2D = preload("res://art/icons/stats/defend.png")
-const BARRIER_ICON: Texture2D = preload("res://art/icons/stats/crescent.png")
+const ATTACK_ICON: Texture2D = preload("res://art/icons/stats/attack.svg")
+const RANGE_ICON: Texture2D = preload("res://art/icons/stats/range.svg")
+const MOVE_ICON: Texture2D = preload("res://art/icons/stats/move.svg")
+const DODGE_ICON: Texture2D = preload("res://art/icons/stats/dodge.svg")
+const DEFEND_ICON: Texture2D = preload("res://art/icons/stats/defend.svg")
+const BARRIER_ICON: Texture2D = preload("res://art/icons/stats/crescent.svg")
 const ENHANCED_COLOR := Color(0.45, 0.78, 1.0)
 const CHIP_SCENE := preload("res://scenes/ui/stat_chip.tscn")
 const INFO_BADGE := preload("res://scenes/ui/info_badge.tscn")
 const SPECIAL_NOTE := "Special card: Can only be used when in overdrive mode."
 
 signal pulled
+signal undo_dragged
 
 const PULL_DISTANCE := 72.0
 const HOVER_LIFT := -56.0
+## How far a lifted card must be dragged down before the step is undone.
+const UNDO_DROP := 36.0
 const DISCARD_PREVIEW_SCALE := 0.85
 const DEAL_TIME := 0.3
 const DEAL_STAGGER := 0.05
 const DEAL_SCALE := 0.22
 
 var _pull_enabled := false
+var _undo_drag := false
 var _dragging := false
 var _pulling := false
 var _press_global := Vector2.ZERO
@@ -192,11 +196,20 @@ func arm_press() -> void:
 
 func set_pull_enabled(enabled: bool) -> void:
 	_pull_enabled = enabled
-	if not _gliding and not _pulling:
+	if not _gliding and not _pulling and not _undo_drag:
 		mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
-	if not enabled and _dragging:
+	if not enabled and _dragging and not _undo_drag:
 		_dragging = false
 		settle(false)
+
+
+func set_undo_drag_enabled(enabled: bool) -> void:
+	_undo_drag = enabled
+	if enabled:
+		mouse_filter = Control.MOUSE_FILTER_STOP
+		_ignore_mouse(self)
+	elif not _pull_enabled and not _gliding and not _pulling and not _dragging:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 func set_drop_handler(handler: Callable) -> void:
@@ -319,7 +332,7 @@ func settle(lifted: bool) -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if not _pull_enabled:
+	if not _pull_enabled and not _undo_drag:
 		return
 	if _pulling:
 		return
@@ -342,16 +355,22 @@ func _input(event: InputEvent) -> void:
 func _begin_drag(global_pos: Vector2) -> void:
 	_cancel_glide()
 	z_as_relative = true
-	z_index = 0
 	_kill_preview_motion()
 	_discard_preview = false
 	_dragging = true
 	_start_position = position
 	_press_global = global_pos
+	z_index = 2 if _undo_drag else 0
 	_set_slot_z(20)
 
 
 func _follow_drag(global_pos: Vector2) -> void:
+	if _undo_drag:
+		var next_y := _start_position.y + (global_pos.y - _press_global.y)
+		next_y = clampf(next_y, _start_position.y, 8.0)
+		position = Vector2(_start_position.x, next_y)
+		rotation = 0.0
+		return
 	var delta := global_pos - _press_global
 	position = _start_position + delta
 	if not _discard_preview and not _preview_playing():
@@ -362,6 +381,9 @@ func _follow_drag(global_pos: Vector2) -> void:
 
 func _end_drag(global_pos: Vector2) -> void:
 	_dragging = false
+	if _undo_drag:
+		await _finish_undo_drag()
+		return
 	if _notify_drop(global_pos, true):
 		return
 	var delta := position - _start_position
@@ -373,6 +395,23 @@ func _end_drag(global_pos: Vector2) -> void:
 			pulled.emit()
 	else:
 		settle(_lifted)
+
+
+func _finish_undo_drag() -> void:
+	z_index = 0
+	var dropped := position.y - _start_position.y
+	if dropped < UNDO_DROP:
+		settle(true)
+		return
+	_undo_drag = false
+	_pulling = true
+	_tween_to(Vector2(_start_position.x, 0.0), Vector2.ONE, 0.0, false, 0.12)
+	if _motion != null:
+		await _motion.finished
+	_pulling = false
+	_lifted = false
+	if is_inside_tree():
+		undo_dragged.emit()
 
 
 func _notify_drop(global_pos: Vector2, released: bool) -> bool:

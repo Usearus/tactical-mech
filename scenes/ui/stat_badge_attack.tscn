@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Texture2D" uid="uid://cgi3jvk7dim1a" path="res://art/icons/stats/attack.png" id="1_icon"]
+[ext_resource type="Texture2D" path="res://art/icons/stats/attack.svg" id="1_icon"]
 
 [node name="StatBadgeAttack" type="HBoxContainer"]
 visible = false

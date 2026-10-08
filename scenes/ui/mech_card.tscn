@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/ui/mech_card.gd" id="1_card"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_chip.tscn" id="2_chip"]
-[ext_resource type="Texture2D" uid="uid://cgi3jvk7dim1a" path="res://art/icons/stats/attack.png" id="3_attack"]
-[ext_resource type="Texture2D" uid="uid://dalaeet41hfqs" path="res://art/icons/stats/defend.png" id="4_guard"]
+[ext_resource type="Texture2D" path="res://art/icons/stats/attack.svg" id="3_attack"]
+[ext_resource type="Texture2D" path="res://art/icons/stats/defend.svg" id="4_guard"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_frame"]
 resource_local_to_scene = true
