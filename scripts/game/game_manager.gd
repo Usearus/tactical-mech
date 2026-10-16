@@ -9,7 +9,7 @@ const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 const STORY1_SCENE := "res://scenes/story/story1.tscn"
 ## Side-by-side battle board, in columns then rows. North-south fights use the swapped size.
 const BATTLE_SIZE := Vector2i(6, 3)
-## Stage scene for the current mission. Each stage is a TileMapLayer.
+## Stage scene for the current mission. Each stage is a Node2D of tile layers.
 var stage_scene := "res://scenes/stage/stage1b.tscn"
 
 

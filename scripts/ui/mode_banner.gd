@@ -1,18 +1,11 @@
 class_name ModeBanner
 extends Control
 
-const ATTACK_BAR := Color(0.07, 0.16, 0.28)
-const DEFENCE_BAR := Color(0.12, 0.15, 0.18)
-const ATTACK_EDGE := Color(0.95, 0.46, 0.16)
-const DEFENCE_EDGE := Color(0.45, 0.78, 1.0)
-
 var _playing := false
 var _holding_world := false
 
 @onready var dim: ColorRect = %Dim
 @onready var stripe: Control = %Stripe
-@onready var bar: ColorRect = %Bar
-@onready var edge: ColorRect = %Edge
 @onready var title: Label = %Title
 
 
@@ -29,7 +22,7 @@ func _exit_tree() -> void:
 
 
 ## hold_world freezes the rest of the game until the stripe has left.
-func play(line: String, attack: bool, hold_world := false) -> void:
+func play(line: String, _attack: bool, hold_world := false) -> void:
 	if _playing:
 		return
 	_playing = true
@@ -41,8 +34,6 @@ func play(line: String, attack: bool, hold_world := false) -> void:
 	if hold_world:
 		_hold_world()
 	title.text = line
-	bar.color = ATTACK_BAR if attack else DEFENCE_BAR
-	edge.color = ATTACK_EDGE if attack else DEFENCE_EDGE
 	var stripe_w := clampf(size.x * 0.68, 520.0, 900.0)
 	var stripe_h := 132.0
 	stripe.size = Vector2(stripe_w, stripe_h)

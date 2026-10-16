@@ -11,25 +11,38 @@ const CARD_SIZE := Vector2(176, 268)
 const STACK_PIECE := Vector2(176, 56)
 const CARD_SLIDE_TIME := 0.24
 const CARD_STAGGER := MechCard.DEAL_STAGGER
+## Enemy turns and a resolving player card sink the hand by this share of a card, leaving the top in view.
+const HAND_DROP_RATIO := 0.3
+const HAND_TUCK_TIME := 0.28
 const CARD_SCENE := preload("res://scenes/ui/mech_card.tscn")
 const CELL_SCENE := preload("res://scenes/battle/battle_cell.tscn")
 const FLOAT_SCENE := preload("res://scenes/ui/float_number.tscn")
 const SLOT_SCENE := preload("res://scenes/ui/empty_card_slot.tscn")
 const BARRIER_SCENE: PackedScene = preload("res://scenes/props/barrier.tscn")
+const OVERDRIVE_SHADER: Shader = preload("res://shaders/overdrive_sprite.gdshader")
+const WeatherFitScript = preload("res://scripts/stage/weather_fit.gd")
 const GUARD_COLOR := Color(0.45, 0.78, 1.0)
 const DAMAGE_COLOR := Color(1.0, 0.32, 0.28)
+const CELL_FLOOR := Color(0.14, 0.16, 0.2)
+const MOVE_FILL := Color(0.16, 0.46, 0.78)
+const GUARD_FILL := Color(0.16, 0.4, 0.68)
+const ATTACK_FILL := Color(0.45, 0.18, 0.18)
 const FLOAT_RISE := 72.0
 const FLOAT_TIME := 0.82
 const ACTIVATE_TEXT := "Activate Overdrive"
 const FIELD_ZOOM_STEP := 1.1
+const FIELD_PAN_THRESHOLD := 8.0
+## 75% closer than the normal board. Attacks punch in this far, and the wheel can reach it too.
+const FIELD_ZOOM_MAX := 1.75
+const ATTACK_ZOOM_IN := 0.16
+const ATTACK_ZOOM_OUT := 0.22
 ## Hand and sidebar follow the board, once the overworld fade has finished.
 const HUD_REVEAL_SECONDS := 0.15
 
 var _attack_offered := false
-var _squad_fill: StyleBoxFlat
-var _activate_flash: Tween
 var _overdrive_pulse: Tween
 var _overdrive_glow := 0.2
+var _overdrive_material: ShaderMaterial
 var _active_cell_style: StyleBoxFlat
 var _active_cell_pulse: Tween
 
@@ -54,9 +67,22 @@ var _scenery: Dictionary = {}
 ## Living mechs standing on the scenery ring. Keyed by view coordinates.
 var _bystanders: Dictionary = {}
 ## 1 keeps the 6x3 at today's size. Smaller values pull back until the 10x7 fits.
+## FIELD_ZOOM_MAX is 75% closer than that close-up.
 var _field_zoom := 1.0
+## Field-local point kept at the middle of the board view.
+var _field_focus := Vector2.ZERO
+var _attack_zoom_active := false
+var _attack_zoom_from := 1.0
+var _attack_zoom_focus := Vector2.ZERO
+var _zoom_tween: Tween
 var _touch_points := {}
 var _pinch_distance := -1.0
+var _field_dragging := false
+var _field_drag_total := 0.0
+var _gesture_panned := false
+## Drag offset from the play-area center, in field pixels. Resize recenters, then reapplies this.
+var _field_pan := Vector2.ZERO
+var _play_center := Vector2.ZERO
 var _deck: Array[CardData] = []
 ## Each mech's overdrive card. Counted in the deck, dealt only after Overdrive starts.
 var _specials: Array[CardData] = []
@@ -69,6 +95,11 @@ var _deck_discards: Array[CardData] = []
 var _pile_view := ""
 var _hand_layout_pending := false
 var _hand_layout_tries := 0
+var _hand_tucked := false
+## True from the moment a player card is spent until that attack, breach, or fan finishes.
+var _resolving_card := false
+var _hand_drop_px := 0.0
+var _hand_drop_tween: Tween
 var _played_a_card := false
 ## Discard pile size when this player turn's hand was dealt. A larger pile means a card left the hand.
 var _discard_at_turn := 0
@@ -78,12 +109,14 @@ var _results_reason := ""
 
 @onready var grid_host: Control = %GridHost
 @onready var grid: GridContainer = %Grid
-@onready var mech_panel: MechPanel = $StatsWindow/StatsMargin/Actions
+@onready var shots: Node2D = %Shots
+@onready var mech_panel: MechPanel = $StatsWindow/Actions
 @onready var stats_window: PanelContainer = %StatsWindow
 @onready var battle_log: RichTextLabel = %BattleLog
-@onready var discard_pile: PanelContainer = %DiscardPile
+@onready var card_readout: CardReadout = %CardReadout
+@onready var discard_pile: Button = %DiscardPile
 @onready var discard_label: Label = %DiscardLabel
-@onready var deck_pile: PanelContainer = %DeckPile
+@onready var deck_pile: Button = %DeckPile
 @onready var deck_count: Label = %DeckCount
 @onready var discard_overlay: Control = %DiscardOverlay
 @onready var discard_scroll: ScrollContainer = %DiscardScroll
@@ -91,16 +124,18 @@ var _results_reason := ""
 @onready var discard_close: Button = %DiscardClose
 @onready var skip_button: Button = %SkipButton
 @onready var hand_box: HBoxContainer = %Hand
-@onready var player_gauge: ProgressBar = %PlayerGauge
-@onready var activate_button: Button = %ActivateButton
+@onready var _hand_anchor: Control = $"MarginContainer/Full Layout/Grid + Hand/Hand Margin/HandAnchor"
+@onready var _hand_row: Control = $"MarginContainer/Full Layout/Grid + Hand/Hand Margin/HandAnchor/HandRow"
+@onready var player_gauge: OverdriveMeter = %PlayerGauge
+@onready var activate_button: SciFlashingButton = %ActivateButton
 @onready var round_label: Label = %Title
 @onready var mode_banner: ModeBanner = %ModeBanner
 @onready var finisher_banner: FinisherBanner = %FinisherBanner
 @onready var results: BattleResults = %BattleResults
 @onready var hand_prompt: HandPrompt = %HandPrompt
 @onready var _info_note: InfoNote = %SpecialNote
-@onready var _hand_chrome: CanvasItem = $"Full Layout/Grid + Hand/Hand Margin"
-@onready var _side_chrome: CanvasItem = $"Full Layout/Sidebar Margin"
+@onready var _hand_chrome: CanvasItem = $"MarginContainer/Full Layout/Grid + Hand/Hand Margin"
+@onready var _side_chrome: CanvasItem = $"MarginContainer/Full Layout/SideBar"
 @onready var _tip_host: CanvasItem = $TipLayer/TipHost
 
 
@@ -115,6 +150,8 @@ func _ready() -> void:
 	hand_prompt.end_turn_chosen.connect(_on_confirm_end_turn)
 	hand_prompt.dismissed.connect(_close_hand_prompt)
 	grid_host.resized.connect(_fit_grid)
+	_hand_anchor.resized.connect(_place_hand_row)
+	_place_hand_row()
 	_style_end_turn()
 	_style_pile(discard_pile)
 	_style_pile(deck_pile)
@@ -142,10 +179,12 @@ func _ready() -> void:
 		return
 	if state.phase == "enemy" and state.battle_status == "active":
 		await _finish_enemy_side(false)
+	elif state.battle_status == "active" and state.phase == "player":
+		await _return_to_player(true)
 
 
 func _style_end_turn() -> void:
-	skip_button.text = "End round"
+	skip_button.text = ""
 	skip_button.custom_minimum_size = Vector2(0, STACK_PIECE.y)
 	skip_button.size_flags_horizontal = Control.SIZE_FILL
 	skip_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -154,16 +193,34 @@ func _style_end_turn() -> void:
 	skip_button.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0.35))
 
 
-func _style_pile(pile: PanelContainer, hot := false) -> void:
+func _style_pile(pile: Button, hot := false) -> void:
 	if pile == null:
 		return
-	pile.remove_theme_stylebox_override("panel")
-	pile.theme_type_variation = &"PileHot" if hot else &"Pile"
+	if hot:
+		var hover := pile.get_theme_stylebox("hover")
+		if hover != null:
+			pile.add_theme_stylebox_override("normal", hover)
+			pile.add_theme_stylebox_override("disabled", hover)
+		return
+	pile.remove_theme_stylebox_override("normal")
+	pile.remove_theme_stylebox_override("disabled")
 
 
 func _style_discard_close() -> void:
 	discard_close.text = "X"
 	discard_close.custom_minimum_size = Vector2(56, 56)
+
+
+func _sync_card_readout() -> void:
+	var card: CardData = _chosen
+	var showing := card != null
+	if battle_log != null:
+		battle_log.visible = not showing
+	if card_readout == null:
+		return
+	card_readout.visible = showing
+	if showing:
+		card_readout.present(card, GameManager.card_damage(card), GameManager.card_block(card))
 
 
 func _log_opening() -> void:
@@ -188,13 +245,46 @@ func _log(line: String) -> void:
 
 
 func _refresh_discard() -> void:
+	var discarded := _discard.size()
+	var remaining := _deck.size() + _specials.size()
 	if discard_label != null:
-		discard_label.text = str(_discard.size())
+		discard_label.text = str(discarded)
 	if deck_count != null:
-		deck_count.text = str(_deck.size() + _specials.size())
+		deck_count.text = str(remaining)
+	if discard_pile != null:
+		discard_pile.disabled = discarded < 1
+		_set_pile_caption_color(discard_pile, discard_pile.disabled)
+	_show_pile_stack(discard_pile, discarded > 1)
+	_show_pile_stack(deck_pile, remaining > 1)
+
+
+func _set_pile_caption_color(pile: Button, disabled: bool) -> void:
+	var color := pile.get_theme_color(&"font_disabled_color") if disabled else Color.WHITE
+	_tint_labels(pile, color)
+
+
+func _tint_labels(node: Node, color: Color) -> void:
+	for child in node.get_children():
+		if child is Label:
+			(child as Label).add_theme_color_override(&"font_color", color)
+		_tint_labels(child, color)
+
+
+func _show_pile_stack(pile: Button, stacked: bool) -> void:
+	if pile == null:
+		return
+	var stack := pile.get_parent()
+	if stack == null:
+		return
+	for child in stack.get_children():
+		if child == pile or not child is CanvasItem:
+			continue
+		(child as CanvasItem).visible = stacked
 
 
 func _on_discard_pile_input(event: InputEvent) -> void:
+	if discard_pile != null and discard_pile.disabled:
+		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		_open_pile_view("discard")
 		discard_pile.accept_event()
@@ -387,11 +477,14 @@ func _fit_grid() -> void:
 		board.size = grid_size
 	var play_center := play_offset + play_size * 0.5
 	field.pivot_offset = play_center
-	field.position = grid_host.size * 0.5 - play_center
 	field.size = grid_size
 	_place_scenery_shade(field, play_offset, play_size, grid_size)
 	_stamp_terrain(cell)
-	_field_zoom = clampf(_field_zoom, _field_zoom_floor(), 1.0)
+	_play_center = play_center
+	_field_zoom = clampf(_field_zoom, _field_zoom_floor(), FIELD_ZOOM_MAX)
+	if not _attack_zoom_active:
+		_field_focus = _clamp_field_focus(_play_center + _field_pan, _field_zoom)
+		_field_pan = _field_focus - _play_center
 	_apply_field_zoom()
 	call_deferred("_place_status_tip")
 
@@ -401,6 +494,9 @@ func _refresh() -> void:
 		return
 	var player_phase := state.battle_status == "active" and state.phase == "player" and not _animating
 	skip_button.disabled = not player_phase or _moved_for_card or _prompting
+	var end_label := skip_button.get_node_or_null("Content") as CanvasItem
+	if end_label != null:
+		end_label.modulate.a = 0.35 if skip_button.disabled else 1.0
 	_sync_status_tip()
 	if state.phase == "player" and not _animating:
 		_pull_specials()
@@ -415,6 +511,7 @@ func _refresh() -> void:
 		_show_hit_points(button, unit)
 		_show_barrier(button, unit)
 		_show_guard(button, unit)
+		_show_evade(button, unit)
 		if unit != null and unit.art_id != "" and _show_mech_sprite(sprite, unit):
 			button.text = ""
 			caption.visible = false
@@ -433,33 +530,90 @@ func _refresh() -> void:
 			_paint(button, _cell_color(coords))
 			_paint_cell_mark(button, coords, unit)
 		_sync_overdrive_cell(button, unit)
+		_sync_intercept_cell(button, _cell_in_intercept_zone(coords), unit)
 		if _is_active_unit(unit):
 			active_marked = true
 	if not active_marked:
 		_stop_active_cell_pulse()
 	_refresh_scenery()
 	_refresh_hand()
-	_sync_step_undo()
 	_refresh_discard()
 	_refresh_round()
 	_refresh_squad_gauge()
+	_sync_card_readout()
 
 
 func _input(event: InputEvent) -> void:
-	if _zoom_input(event):
+	if event is InputEventMouseButton:
+		_on_field_mouse_button(event)
+		return
+	if not _field_pointer_open():
+		return
+	if event is InputEventMouseMotion and _field_dragging:
+		_on_field_mouse_drag(event)
+	elif event is InputEventMagnifyGesture and _pointer_on_field(event.position):
+		_zoom_field(event.factor)
+		get_viewport().set_input_as_handled()
+	elif event is InputEventPanGesture and _pointer_on_field(event.position) and _field_can_pan():
+		_pan_field(event.delta)
+		_gesture_panned = true
+		get_viewport().set_input_as_handled()
+	elif event is InputEventScreenTouch or event is InputEventScreenDrag:
+		if _pinch_field(event):
+			get_viewport().set_input_as_handled()
+
+
+func _on_field_mouse_button(event: InputEventMouseButton) -> void:
+	if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+		if not _field_pointer_open() or not event.pressed or not _pointer_on_field(event.global_position):
+			return
+		var step := FIELD_ZOOM_STEP if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.0 / FIELD_ZOOM_STEP
+		_zoom_field(step)
 		get_viewport().set_input_as_handled()
 		return
-	if not event is InputEventMouseButton:
+	if event.button_index != MOUSE_BUTTON_LEFT and event.button_index != MOUSE_BUTTON_MIDDLE:
 		return
-	var mouse := event as InputEventMouseButton
-	if not mouse.pressed or mouse.button_index != MOUSE_BUTTON_LEFT:
+	if not _field_pointer_open():
+		if not event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			_try_field_status_click(event.global_position, false)
+		return
+	if event.pressed:
+		if stats_window != null and stats_window.visible and stats_window.get_global_rect().has_point(event.global_position):
+			return
+		_gesture_panned = false
+		_field_drag_total = 0.0
+		_field_dragging = _pointer_on_field(event.global_position) and (
+			event.button_index == MOUSE_BUTTON_MIDDLE or _field_can_pan()
+		)
+	else:
+		var panned := _gesture_panned
+		_field_dragging = false
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			_try_field_status_click(event.global_position, panned)
+
+
+func _on_field_mouse_drag(event: InputEventMouseMotion) -> void:
+	if _touch_points.size() >= 2:
+		return
+	if not _field_can_pan() and not Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE):
+		return
+	_field_drag_total += event.relative.length()
+	if _field_drag_total < FIELD_PAN_THRESHOLD:
+		return
+	_gesture_panned = true
+	_pan_field(event.relative)
+	get_viewport().set_input_as_handled()
+
+
+func _try_field_status_click(point: Vector2, panned: bool) -> void:
+	if panned:
 		return
 	if _status_click_blocked():
 		_hide_status_tip()
 		return
-	if stats_window != null and stats_window.visible and stats_window.get_global_rect().has_point(mouse.global_position):
+	if stats_window != null and stats_window.visible and stats_window.get_global_rect().has_point(point):
 		return
-	var unit := _unit_at_global(mouse.global_position)
+	var unit := _unit_at_global(point)
 	if unit == null:
 		_hide_status_tip()
 		return
@@ -541,7 +695,9 @@ func _refresh_scenery() -> void:
 		_show_hit_points(button, null)
 		_show_barrier(button, null)
 		_show_guard(button, null)
+		_show_evade(button, null)
 		_sync_overdrive_cell(button, null)
+		_sync_intercept_cell(button, false, null)
 		_paint_cell_mark(button, view, null)
 		if unit != null and unit.art_id != "" and _show_mech_sprite(sprite, unit):
 			button.text = ""
@@ -550,7 +706,7 @@ func _refresh_scenery() -> void:
 		else:
 			_hide_mech_sprite(sprite, caption)
 			button.text = ""
-		_paint(button, Color(0.14, 0.16, 0.2))
+		_paint(button, CELL_FLOOR)
 
 
 func _place_scenery_shade(field: Control, play_offset: Vector2, play_size: Vector2, grid_size: Vector2) -> void:
@@ -577,7 +733,7 @@ func _place_scenery_shade(field: Control, play_offset: Vector2, play_size: Vecto
 		right.size = Vector2(maxf(grid_size.x - right.position.x, 0.0), play_size.y)
 
 
-func _zoom_input(event: InputEvent) -> bool:
+func _field_pointer_open() -> bool:
 	if grid_host == null or grid_host.size.x < 1.0:
 		return false
 	if results != null and results.visible:
@@ -586,21 +742,7 @@ func _zoom_input(event: InputEvent) -> bool:
 		return false
 	if hand_prompt != null and hand_prompt.visible:
 		return false
-	if event is InputEventMouseButton:
-		var mouse := event as InputEventMouseButton
-		if mouse.button_index != MOUSE_BUTTON_WHEEL_UP and mouse.button_index != MOUSE_BUTTON_WHEEL_DOWN:
-			return false
-		if not mouse.pressed or not _pointer_on_field(mouse.global_position):
-			return false
-		var step := FIELD_ZOOM_STEP if mouse.button_index == MOUSE_BUTTON_WHEEL_UP else 1.0 / FIELD_ZOOM_STEP
-		_zoom_field(step)
-		return true
-	if event is InputEventMagnifyGesture and _pointer_on_field(event.position):
-		_zoom_field(event.factor)
-		return true
-	if event is InputEventScreenTouch or event is InputEventScreenDrag:
-		return _pinch_field(event)
-	return false
+	return true
 
 
 func _pointer_on_field(point: Vector2) -> bool:
@@ -608,10 +750,32 @@ func _pointer_on_field(point: Vector2) -> bool:
 
 
 func _zoom_field(factor: float) -> void:
-	var next := clampf(_field_zoom * factor, _field_zoom_floor(), 1.0)
+	if _attack_zoom_active:
+		return
+	var next := clampf(_field_zoom * factor, _field_zoom_floor(), FIELD_ZOOM_MAX)
 	if is_equal_approx(next, _field_zoom):
 		return
 	_field_zoom = next
+	_field_focus = _clamp_field_focus(_field_focus, _field_zoom)
+	_field_pan = _field_focus - _play_center
+	_apply_field_zoom()
+
+
+func _field_can_pan() -> bool:
+	var field := grid.get_parent() as Control
+	if field == null or grid_host == null or _attack_zoom_active:
+		return false
+	var visual := field.size * _field_zoom
+	var slack := visual - grid_host.size
+	return slack.x > 1.0 or slack.y > 1.0 or _field_zoom > _field_zoom_floor()
+
+
+func _pan_field(delta: Vector2) -> void:
+	if _attack_zoom_active or _field_zoom <= 0.0:
+		return
+	_field_focus -= delta / _field_zoom
+	_field_focus = _clamp_field_focus(_field_focus, _field_zoom)
+	_field_pan = _field_focus - _play_center
 	_apply_field_zoom()
 
 
@@ -624,9 +788,12 @@ func _field_zoom_floor() -> float:
 
 func _apply_field_zoom() -> void:
 	var field := grid.get_parent() as Control
-	if field == null:
+	if field == null or grid_host == null:
 		return
 	field.scale = Vector2(_field_zoom, _field_zoom)
+	var pivot := field.pivot_offset
+	var host_center := grid_host.size * 0.5
+	field.position = host_center - pivot - (_field_focus - pivot) * _field_zoom
 
 
 func _pinch_field(event: InputEvent) -> bool:
@@ -635,6 +802,9 @@ func _pinch_field(event: InputEvent) -> bool:
 		if touch.pressed:
 			if _pointer_on_field(touch.position):
 				_touch_points[touch.index] = touch.position
+				if _touch_points.size() == 1:
+					_gesture_panned = false
+					_field_drag_total = 0.0
 		else:
 			_touch_points.erase(touch.index)
 		_pinch_distance = _touch_span() if _touch_points.size() >= 2 else -1.0
@@ -649,6 +819,7 @@ func _pinch_field(event: InputEvent) -> bool:
 	if _pinch_distance > 1.0 and span > 1.0:
 		_zoom_field(span / _pinch_distance)
 	_pinch_distance = span
+	_gesture_panned = true
 	return true
 
 
@@ -723,10 +894,16 @@ func _battle_map_rect() -> Rect2:
 
 
 func _on_cell_pressed(coords: Vector2i) -> void:
+	if _gesture_panned:
+		_gesture_panned = false
+		return
 	if _animating or _prompting or state.battle_status != "active" or state.phase != "player":
 		return
 	var unit := _unit_at(coords)
 	if _targeting:
+		if _play_step == "confirm":
+			await _on_confirm_cell(unit)
+			return
 		if _play_step == "guard":
 			if _can_keep_step(unit):
 				await _keep_step()
@@ -807,17 +984,24 @@ func _try_attack(target: MechState) -> void:
 	_step_undo = false
 	_log("%s uses %s." % [attacker.display_name, card.display_name])
 	_spend(card)
+	_resolving_card = true
 	_refresh()
+	var shoots := WeaponVolley.has_profile(attacker.art_id)
 	var finishing := _is_winning_blow(attacker, [target], card)
 	if finishing:
 		await _play_finisher(attacker)
 		if not is_inside_tree() or state == null:
 			return
-		await _play_attack(_sprite_for(attacker), _button_for(target))
-		if not is_inside_tree() or state == null:
-			return
-	var result := _strike(attacker, target, card)
-	if not finishing:
+		if not shoots:
+			await _play_attack(_sprite_for(attacker), _button_for(target))
+			if not is_inside_tree() or state == null:
+				return
+	var result := _strike(attacker, target, card, not shoots)
+	if not is_inside_tree() or state == null:
+		return
+	if shoots:
+		await _play_attack(_sprite_for(attacker), _button_for(_struck(result, target)), attacker, result)
+	elif not finishing:
 		await _play_attack(_sprite_for(attacker), _button_for(_struck(result, target)))
 	if not is_inside_tree() or state == null:
 		return
@@ -832,14 +1016,17 @@ func _try_attack(target: MechState) -> void:
 			return
 	_finish_if_over()
 	if _closing or state == null or state.battle_status != "active":
+		_resolving_card = false
 		_clear_play()
 		_refresh()
 		return
 	if not attacker.alive:
 		_clear_play()
 		await _after_card_played()
+		await _return_to_player()
 		return
 	if card.moves_after():
+		_resolving_card = false
 		_followup_move = true
 		_play_step = "move"
 		_targeting = true
@@ -848,12 +1035,7 @@ func _try_attack(target: MechState) -> void:
 		return
 	_clear_play()
 	await _after_card_played()
-	if _closing or state == null or state.battle_status != "active":
-		return
-	if _next_ready_player() == null and not _guard_waiting():
-		await _complete_player_side()
-		return
-	_refresh()
+	await _return_to_player()
 
 
 func _try_front(coords: Vector2i) -> void:
@@ -896,6 +1078,7 @@ func _try_front(coords: Vector2i) -> void:
 	_play_step = ""
 	_log("%s uses %s." % [attacker.display_name, card.display_name])
 	_spend(card)
+	_resolving_card = true
 	_refresh()
 	var finishing := _is_winning_blow(attacker, victims, card)
 	if finishing:
@@ -927,17 +1110,13 @@ func _try_front(coords: Vector2i) -> void:
 			return
 	_finish_if_over()
 	if _closing or state == null or state.battle_status != "active":
+		_resolving_card = false
 		_clear_play()
 		_refresh()
 		return
 	_clear_play()
 	await _after_card_played()
-	if _closing or state == null or state.battle_status != "active":
-		return
-	if _next_ready_player() == null and not _guard_waiting():
-		await _complete_player_side()
-		return
-	_refresh()
+	await _return_to_player()
 
 
 func _front_cells(origin: Vector2i, direction: int) -> Array[Vector2i]:
@@ -1059,6 +1238,7 @@ func _complete_player_side() -> void:
 	_log("Your turn.")
 	_refresh()
 	await _announce_round()
+	await _return_to_player(true)
 
 
 func _next_ready_player() -> MechState:
@@ -1097,6 +1277,7 @@ func _finish_enemy_side(advance_round: bool) -> void:
 	_refresh()
 	if advance_round:
 		await _announce_round()
+	await _return_to_player(true)
 
 
 func _execute_enemy_phase() -> void:
@@ -1111,6 +1292,7 @@ func _arm_enemy_turns() -> void:
 
 ## One step on every enemy clock. A played card does this, and so does ending the round.
 func _after_card_played() -> void:
+	_resolving_card = false
 	if _closing or not is_inside_tree() or state == null or state.battle_status != "active":
 		return
 	var due: Array[MechState] = []
@@ -1183,7 +1365,7 @@ func _finish_if_over(round_limit := false) -> void:
 	_targeting = false
 	_clear_play()
 	if activate_button != null:
-		activate_button.visible = false
+		activate_button.disabled = true
 		_stop_activate_flash()
 	_stop_overdrive_pulse()
 	_stop_active_cell_pulse()
@@ -1238,7 +1420,6 @@ func _clear_play() -> void:
 	_step_facing = 1
 	_chosen = null
 	_move_targets.clear()
-	_sync_step_undo()
 
 
 func _on_move_cell(coords: Vector2i) -> void:
@@ -1340,12 +1521,7 @@ func _commit_step(actor: MechState, coords: Vector2i) -> bool:
 func _finish_followup() -> void:
 	_clear_play()
 	await _after_card_played()
-	if _closing or not is_inside_tree() or state == null or state.battle_status != "active":
-		return
-	if _next_ready_player() == null and not _guard_waiting():
-		await _complete_player_side()
-		return
-	_refresh()
+	await _return_to_player()
 
 
 func _arm_step_undo(origin: Vector2i, facing: int) -> void:
@@ -1424,7 +1600,7 @@ func _on_breach_cell(coords: Vector2i) -> void:
 func _on_card_undo_drag(card: CardData) -> void:
 	if card != _chosen or not _step_undo or _animating or _prompting:
 		return
-	await _on_undo_step(true)
+	await _on_undo_step()
 
 
 func _can_undo_drag(card: CardData) -> bool:
@@ -1439,14 +1615,13 @@ func _can_undo_drag(card: CardData) -> bool:
 	)
 
 
-func _on_undo_step(cancel_card := false) -> void:
+func _on_undo_step() -> void:
 	if not _step_undo or _animating or _prompting or _selected == null or state == null:
 		return
 	var actor := _selected
 	var dest := _step_origin
 	var facing := _step_facing
 	_animating = true
-	_sync_step_undo()
 	if state.position_of(actor) != dest:
 		var walked := await _slide_unit(actor, dest, false)
 		if not is_inside_tree():
@@ -1458,43 +1633,8 @@ func _on_undo_step(cancel_card := false) -> void:
 	actor.facing = facing
 	_animating = false
 	_log("%s steps back." % actor.display_name)
-	if cancel_card:
-		_clear_play()
-		_refresh()
-		return
-	_step_undo = false
-	_step_origin = Vector2i(-1, -1)
-	_moved_for_card = false
-	_play_step = "move"
-	_targeting = true
+	_clear_play()
 	_refresh()
-
-
-func _sync_step_undo() -> void:
-	if hand_box == null:
-		return
-	var show := (
-		_step_undo
-		and state != null
-		and state.battle_status == "active"
-		and state.phase == "player"
-		and not _closing
-	)
-	var chosen_view: MechCard = null
-	if show and _chosen != null:
-		chosen_view = _card_views.get(_chosen.get_instance_id()) as MechCard
-	for slot in hand_box.get_children():
-		var undo := slot.get_node_or_null("UndoMoveButton") as Button
-		if undo == null:
-			continue
-		var mine := (
-			show
-			and chosen_view != null
-			and is_instance_valid(chosen_view)
-			and chosen_view.get_parent() == slot
-		)
-		undo.visible = mine
-		undo.disabled = not mine or _animating or _prompting
 
 
 func _rebuild_move_targets() -> void:
@@ -1502,8 +1642,13 @@ func _rebuild_move_targets() -> void:
 	if _play_step != "move" or _chosen == null or _selected == null:
 		return
 	var origin := state.position_of(_selected)
-	for coords in _reachable(origin, _chosen.movement):
+	var cells := _reachable(origin, _chosen.movement)
+	if cells.is_empty():
+		return
+	for coords in cells:
 		_move_targets[coords] = true
+	# Staying put is a legal step whenever the unit can move at least one space.
+	_move_targets[origin] = true
 
 
 func _can_strike_from(coords: Vector2i, card: CardData) -> bool:
@@ -1630,9 +1775,12 @@ func _slide_unit(unit: MechState, dest: Vector2i, announce: bool = true) -> bool
 		token.sprite_frames = sprite.sprite_frames
 		token.centered = true
 		token.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		token.z_index = 30
+		# Same band as a standing sprite, under StageMap.SHADOW_Z.
+		token.z_index = 4
 		token.scale = sprite.scale
 		token.flip_h = sprite.flip_h
+		if sprite.material == _overdrive_material:
+			token.material = _overdrive_material
 		MechSprites.play_moving(token)
 		add_child(token)
 		token.global_position = sprite.global_position
@@ -1659,46 +1807,61 @@ func _slide_unit(unit: MechState, dest: Vector2i, announce: bool = true) -> bool
 
 
 func _cell_color(coords: Vector2i) -> Color:
-	var idle := Color(0.14, 0.16, 0.2)
+	var idle := CELL_FLOOR
+	if _play_step == "confirm" and _chosen != null:
+		var owner := _owner_of(_chosen)
+		if owner != null and state.position_of(owner) == coords:
+			return MOVE_FILL
+		return idle
 	if _play_step == "guard" and _chosen != null and _chosen.guards_ally():
 		if _selected != null and _can_keep_step(_selected) and state.position_of(_selected) == coords:
-			return Color(0.16, 0.46, 0.78)
+			return MOVE_FILL
 		var holder := _owner_of(_chosen)
 		for ally in _guard_targets(holder):
 			if state.position_of(ally) == coords:
-				return Color(0.16, 0.4, 0.68)
+				return GUARD_FILL
 		return idle
 	if _selected == null or state.battle_status != "active":
 		return idle
 	if _play_step == "move" and _move_targets.has(coords):
-		return Color(0.16, 0.46, 0.78)
+		return MOVE_FILL
 	if not _targeting or _chosen == null:
 		return idle
 	if _play_step == "move" and _chosen.moves_before() and not _followup_move:
 		var unit := _unit_at(coords)
 		if unit != null and unit.alive and unit.team == "enemy" and _enemy_in_reach(unit):
-			return Color(0.45, 0.18, 0.18)
+			return ATTACK_FILL
 		return idle
 	if _play_step == "breach":
 		var stood := state.position_of(_selected)
 		if coords == stood:
-			return Color(0.16, 0.46, 0.78)
+			return MOVE_FILL
 		if _chosen.reaches(_manhattan(stood, coords)):
 			var struck := _unit_at(coords)
 			if struck != null and struck.alive and struck.team == "enemy":
-				return Color(0.45, 0.18, 0.18)
+				return ATTACK_FILL
 		return idle
 	if _play_step == "attack":
 		var current := state.position_of(_selected)
 		if coords == current and _can_keep_step(_selected):
-			return Color(0.16, 0.46, 0.78)
-		if _chosen.reaches(_manhattan(current, coords)):
-			return Color(0.45, 0.18, 0.18)
+			return MOVE_FILL
+		if _chosen.reaches(_manhattan(current, coords)) and _shows_strike_square(coords):
+			return ATTACK_FILL
 	if _play_step == "front":
 		var origin := state.position_of(_selected)
 		if _front_cells(origin, 1).has(coords) or _front_cells(origin, -1).has(coords):
-			return Color(0.45, 0.18, 0.18)
+			return ATTACK_FILL
 	return idle
+
+
+## Range squares stay off allied mechs unless this attack hits them too.
+func _shows_strike_square(coords: Vector2i) -> bool:
+	if _selected == null or _selected.team != "player":
+		return true
+	if _chosen != null and _chosen.hits_front():
+		return true
+	var unit := _unit_at(coords)
+	return unit == null or not unit.alive or unit.team != "player"
 
 
 func _manhattan(a: Vector2i, b: Vector2i) -> int:
@@ -1737,7 +1900,23 @@ func _sprite_for(unit: MechState) -> AnimatedSprite2D:
 	return button.get_node_or_null("MechSprite") as AnimatedSprite2D
 
 
-func _play_attack(attacker: AnimatedSprite2D, target_button: Button) -> void:
+func _play_attack(
+	attacker: AnimatedSprite2D,
+	target_button: Button,
+	unit: MechState = null,
+	held: Dictionary = {},
+) -> void:
+	if unit != null and WeaponVolley.has_profile(unit.art_id):
+		var buttons: Array[Button] = []
+		var results: Array[Dictionary] = []
+		if target_button != null:
+			buttons.append(target_button)
+			results.append(held)
+		elif not held.is_empty():
+			_show_strike_numbers(_struck(held, null), held)
+		await _play_projectile_attack(attacker, unit, buttons, results)
+		return
+	var zoom_in := _begin_attack_zoom(attacker, [target_button])
 	var waits: Array[AnimatedSprite2D] = []
 	if attacker != null and attacker.sprite_frames != null and attacker.sprite_frames.has_animation("attack"):
 		attacker.play("attack")
@@ -1760,9 +1939,121 @@ func _play_attack(attacker: AnimatedSprite2D, target_button: Button) -> void:
 			attacker.play("idle")
 	if is_instance_valid(impact):
 		impact.visible = false
+	await _finish_attack_zoom(zoom_in)
+
+
+## Fire pose, then real rounds. The floating number waits until a round arrives.
+func _play_projectile_attack(
+	attacker: AnimatedSprite2D,
+	unit: MechState,
+	buttons: Array[Button],
+	results: Array[Dictionary],
+) -> void:
+	var aimed: Array = []
+	for button in buttons:
+		if button != null:
+			aimed.append(button)
+	var zoom_in := _begin_attack_zoom(attacker, aimed)
+	if attacker != null and unit != null:
+		attacker.flip_h = unit.facing < 0
+	var posed := false
+	if attacker != null and attacker.sprite_frames != null and attacker.sprite_frames.has_animation("attack"):
+		attacker.play("attack")
+		posed = true
+	var delay := WeaponVolley.muzzle_delay(unit.art_id) if unit != null else 0.0
+	if delay > 0.0 and is_inside_tree():
+		await get_tree().create_timer(delay).timeout
+	if not is_inside_tree():
+		return
+	var impacts: Array[AnimatedSprite2D] = []
+	var flashes: Array[Tween] = []
+	if shots != null and attacker != null and unit != null and not buttons.is_empty():
+		var centers: Array[Vector2] = []
+		var dodged: Array[bool] = []
+		for i in buttons.size():
+			centers.append(_aim_global(buttons[i]))
+			var result: Dictionary = results[i] if i < results.size() else {}
+			dodged.append(str(result.get("defense_kind", "")) == "Dodge")
+		await WeaponVolley.play(shots, attacker, centers, dodged, unit.art_id, func(index: int) -> void:
+			var landed: Dictionary = results[index] if index < results.size() else {}
+			var button: Button = buttons[index] if index < buttons.size() else null
+			var spawned := _land_projectile(button, landed)
+			var impact: AnimatedSprite2D = spawned.get("impact") as AnimatedSprite2D
+			if impact != null:
+				impacts.append(impact)
+			var flash: Tween = spawned.get("flash") as Tween
+			if flash != null:
+				flashes.append(flash)
+		)
+	if not is_inside_tree():
+		return
+	while posed and is_instance_valid(attacker) and attacker.animation == "attack" and attacker.is_playing():
+		if not is_inside_tree():
+			return
+		await get_tree().process_frame
+	var waiting := true
+	while waiting:
+		waiting = false
+		for flash in flashes:
+			if flash != null and flash.is_valid() and flash.is_running():
+				waiting = true
+				break
+		if waiting:
+			if not is_inside_tree():
+				return
+			await get_tree().process_frame
+	waiting = true
+	while waiting:
+		waiting = false
+		for impact in impacts:
+			if is_instance_valid(impact) and impact.is_playing():
+				waiting = true
+				break
+		if waiting:
+			if not is_inside_tree():
+				return
+			await get_tree().process_frame
+	if is_instance_valid(attacker) and attacker.sprite_frames != null and attacker.sprite_frames.has_animation("idle"):
+		if attacker.animation == "attack":
+			attacker.play("idle")
+	for impact in impacts:
+		if is_instance_valid(impact):
+			impact.visible = false
+	await _finish_attack_zoom(zoom_in)
+
+
+func _land_projectile(button: Button, result: Dictionary) -> Dictionary:
+	var spawned := {"impact": null, "flash": null}
+	var dodged := str(result.get("defense_kind", "")) == "Dodge"
+	if button != null and not dodged:
+		var flash := _begin_hit_flash(button)
+		if flash != null:
+			spawned["flash"] = flash
+		var impact := _begin_impact(button)
+		if impact != null:
+			impact.play("impact")
+			spawned["impact"] = impact
+	if not result.is_empty():
+		_show_strike_numbers(_struck(result, null), result)
+	return spawned
+
+
+func _aim_global(button: Button) -> Vector2:
+	if button == null or not is_instance_valid(button):
+		return Vector2.ZERO
+	var sprite := button.get_node_or_null("MechSprite") as AnimatedSprite2D
+	if sprite != null:
+		return sprite.global_position
+	return button.get_global_rect().get_center()
 
 
 func _play_area(attacker: AnimatedSprite2D, cells: Array[Vector2i]) -> void:
+	var aimed: Array[Node] = []
+	for coords in cells:
+		var aimed_button := _buttons.get(coords) as Button
+		if aimed_button != null:
+			aimed.append(aimed_button)
+	var zoom_in := _begin_attack_zoom(attacker, aimed)
 	var waits: Array[AnimatedSprite2D] = []
 	if attacker != null and attacker.sprite_frames != null and attacker.sprite_frames.has_animation("attack"):
 		attacker.play("attack")
@@ -1795,6 +2086,121 @@ func _play_area(attacker: AnimatedSprite2D, cells: Array[Vector2i]) -> void:
 	for impact in impacts:
 		if is_instance_valid(impact):
 			impact.visible = false
+	await _finish_attack_zoom(zoom_in)
+
+
+func _begin_attack_zoom(attacker: Node, targets: Array) -> Tween:
+	var points: Array[Vector2] = []
+	_add_focus_point(attacker, points)
+	for node in targets:
+		_add_focus_point(node as Node, points)
+	if not _attack_zoom_active:
+		_attack_zoom_from = _field_zoom
+		_attack_zoom_focus = _field_focus
+		_attack_zoom_active = true
+	var to_zoom := minf(_attack_zoom_from * FIELD_ZOOM_MAX, FIELD_ZOOM_MAX)
+	var to_focus := _attack_zoom_focus
+	if not points.is_empty() and grid_host != null:
+		var min_p := points[0]
+		var max_p := points[0]
+		for point in points:
+			min_p.x = minf(min_p.x, point.x)
+			min_p.y = minf(min_p.y, point.y)
+			max_p.x = maxf(max_p.x, point.x)
+			max_p.y = maxf(max_p.y, point.y)
+		to_focus = (min_p + max_p) * 0.5
+		var pad := _cell_span() * 1.45
+		var span := (max_p - min_p) + Vector2(pad, pad)
+		if span.x > 1.0 and span.y > 1.0:
+			var fit := minf(grid_host.size.x / span.x, grid_host.size.y / span.y)
+			to_zoom = clampf(minf(to_zoom, fit), _attack_zoom_from, to_zoom)
+		to_focus = _clamp_field_focus(to_focus, to_zoom)
+	if to_zoom <= _attack_zoom_from + 0.001:
+		to_zoom = _attack_zoom_from
+		to_focus = _attack_zoom_focus
+	return _tween_field_view(to_zoom, to_focus, ATTACK_ZOOM_IN, Tween.EASE_OUT)
+
+
+func _finish_attack_zoom(zoom_in: Tween) -> void:
+	if zoom_in != null and zoom_in.is_valid() and zoom_in.is_running():
+		await zoom_in.finished
+	if not is_inside_tree():
+		_attack_zoom_active = false
+		return
+	if not _attack_zoom_active:
+		return
+	var back := _tween_field_view(_attack_zoom_from, _attack_zoom_focus, ATTACK_ZOOM_OUT, Tween.EASE_IN_OUT)
+	if back != null and back.is_valid() and back.is_running():
+		await back.finished
+	_attack_zoom_active = false
+
+
+func _tween_field_view(to_zoom: float, to_focus: Vector2, seconds: float, ease: Tween.EaseType) -> Tween:
+	var from_zoom := _field_zoom
+	var from_focus := _field_focus
+	if is_equal_approx(from_zoom, to_zoom) and from_focus.distance_to(to_focus) < 1.0:
+		_field_zoom = to_zoom
+		_field_focus = to_focus
+		_apply_field_zoom()
+		return null
+	if _zoom_tween != null and _zoom_tween.is_valid():
+		_zoom_tween.kill()
+	_zoom_tween = create_tween()
+	_zoom_tween.set_trans(Tween.TRANS_CUBIC).set_ease(ease)
+	_zoom_tween.tween_method(_step_field_view.bind(from_zoom, to_zoom, from_focus, to_focus), 0.0, 1.0, seconds)
+	return _zoom_tween
+
+
+func _step_field_view(t: float, from_zoom: float, to_zoom: float, from_focus: Vector2, to_focus: Vector2) -> void:
+	_field_zoom = lerpf(from_zoom, to_zoom, t)
+	_field_focus = _clamp_field_focus(from_focus.lerp(to_focus, t), _field_zoom)
+	_apply_field_zoom()
+
+
+func _add_focus_point(node: Node, points: Array[Vector2]) -> void:
+	if node == null or not is_instance_valid(node):
+		return
+	var field := grid.get_parent() as Control
+	if field == null:
+		return
+	var control := node as Control
+	if control == null:
+		control = node.get_parent() as Control
+	var global_point := Vector2.ZERO
+	if control != null:
+		global_point = control.get_global_rect().get_center()
+	elif node is CanvasItem:
+		global_point = (node as CanvasItem).get_global_transform().origin
+	else:
+		return
+	points.append(field.get_global_transform().affine_inverse() * global_point)
+
+
+func _cell_span() -> float:
+	for coords in _buttons:
+		var button := _buttons[coords] as Control
+		if button != null and button.size.x > 1.0:
+			return maxf(button.size.x, button.size.y)
+	return 64.0
+
+
+func _clamp_field_focus(focus: Vector2, zoom: float) -> Vector2:
+	var field := grid.get_parent() as Control
+	if field == null or grid_host == null or zoom <= 0.0:
+		return focus
+	var visible := grid_host.size / zoom
+	var pivot := field.pivot_offset
+	return Vector2(
+		_clamp_focus_axis(focus.x, visible.x, field.size.x, pivot.x),
+		_clamp_focus_axis(focus.y, visible.y, field.size.y, pivot.y)
+	)
+
+
+func _clamp_focus_axis(value: float, visible: float, length: float, fallback: float) -> float:
+	if visible >= length - 0.5:
+		return fallback
+	var half := visible * 0.5
+	return clampf(value, half, maxf(half, length - half))
 
 
 func _begin_hit_flash(button: Button) -> Tween:
@@ -1808,7 +2214,7 @@ func _begin_hit_flash(button: Button) -> Tween:
 	if glow != null:
 		glow.visible = false
 	var lit := Color(0.95, 0.62, 0.62)
-	var dim := Color(0.14, 0.16, 0.2)
+	var dim := CELL_FLOOR
 	var tween := create_tween()
 	tween.tween_callback(_paint_hit_flash.bind(button, lit))
 	tween.tween_interval(0.12)
@@ -2046,7 +2452,7 @@ func _commit_discard(card: CardData, view: MechCard) -> void:
 	view.set_gauge_pitch_visible(gained)
 	_log("Discarded %s." % card.display_name)
 	_launch_discard(view, 0.0)
-	_refresh()
+	await _return_to_player()
 
 
 func _on_activate_pressed() -> void:
@@ -2092,13 +2498,16 @@ func _play_overdrive_waves() -> void:
 
 
 func _style_squad_gauge() -> void:
-	_squad_fill = OverdriveGauge.claim_fill(player_gauge)
-	OverdriveGauge.dress(player_gauge)
-	if player_gauge != null:
-		player_gauge.custom_minimum_size.y = STACK_PIECE.y
-		var face := player_gauge.get_parent() as Control
-		if face != null:
-			face.custom_minimum_size.y = STACK_PIECE.y
+	if player_gauge == null:
+		_style_activate_button()
+		return
+	var parent := player_gauge.get_parent() as Control
+	var face := parent.get_parent() as Control if parent != null else null
+	if face != null:
+		face.custom_minimum_size.y = STACK_PIECE.y
+	if player_gauge.info_badge != null and _info_note != null:
+		player_gauge.info_badge.set_meta("tip_width", 480.0)
+		_info_note.attach(player_gauge.info_badge, OverdriveMeter.NOTE)
 	_style_activate_button()
 
 
@@ -2156,20 +2565,15 @@ func _style_activate_button() -> void:
 		return
 	activate_button.text = ACTIVATE_TEXT
 	activate_button.add_theme_font_size_override("font_size", OverdriveGauge.TEXT_SIZE)
-	AccentPulse.clear(activate_button)
+	activate_button.stop_pulse()
 
 
 func _start_activate_flash() -> void:
-	if _activate_flash != null and _activate_flash.is_valid() and _activate_flash.is_running():
-		return
-	_activate_flash = AccentPulse.start(self, activate_button)
+	activate_button.start_pulse()
 
 
 func _stop_activate_flash() -> void:
-	if _activate_flash != null and _activate_flash.is_valid():
-		_activate_flash.kill()
-	_activate_flash = null
-	AccentPulse.clear(activate_button)
+	activate_button.stop_pulse()
 
 
 func _refresh_squad_gauge() -> void:
@@ -2177,14 +2581,7 @@ func _refresh_squad_gauge() -> void:
 		return
 	var squad_max := GameManager.player_attack_max
 	var squad_charge := mini(GameManager.player_attack_gauge, squad_max)
-	player_gauge.max_value = squad_max
-	player_gauge.value = squad_charge
-	if GameManager.battle_offense:
-		OverdriveGauge.show_active(player_gauge, _squad_fill)
-	else:
-		OverdriveGauge.write(player_gauge, squad_charge, squad_max)
-		OverdriveGauge.celebrate(player_gauge, _squad_fill, squad_charge)
-		OverdriveGauge.pulse(player_gauge, _squad_fill, squad_max > 0 and squad_charge >= squad_max)
+	player_gauge.show_charge(squad_charge, squad_max, GameManager.battle_offense)
 	var can_activate := (
 		not _closing
 		and not _prompting
@@ -2194,7 +2591,8 @@ func _refresh_squad_gauge() -> void:
 		and GameManager.attack_ready("player")
 	)
 	if activate_button != null:
-		activate_button.visible = can_activate
+		activate_button.visible = true
+		activate_button.disabled = not can_activate
 		if can_activate:
 			_start_activate_flash()
 			if not _attack_offered:
@@ -2305,7 +2703,7 @@ func _show_finisher_kill() -> void:
 		await get_tree().create_timer(0.45).timeout
 
 
-func _strike(attacker: MechState, defender: MechState, card: CardData) -> Dictionary:
+func _strike(attacker: MechState, defender: MechState, card: CardData, announce := true) -> Dictionary:
 	var catcher := _interceptor_for(defender)
 	if catcher != null:
 		catcher.intercepting = false
@@ -2313,7 +2711,8 @@ func _strike(attacker: MechState, defender: MechState, card: CardData) -> Dictio
 		defender = catcher
 	var result := CombatResolver.resolve_attack(attacker, defender, card, _take_dodge(defender))
 	result["struck"] = defender
-	_show_strike_numbers(defender, result)
+	if announce:
+		_show_strike_numbers(defender, result)
 	if result.get("destroyed", false):
 		_discard_unit_cards(defender)
 		if defender.team == "player":
@@ -2437,7 +2836,11 @@ func _float_number(unit: MechState, text: String, color: Color, slot: int) -> vo
 	var label := FLOAT_SCENE.instantiate() as Label
 	label.text = text
 	label.add_theme_color_override("font_color", color)
-	add_child(label)
+	var field := grid.get_parent() as Control
+	if field != null:
+		field.add_child(label)
+	else:
+		add_child(label)
 	var box := label.get_combined_minimum_size()
 	if box.x < 1.0 or box.y < 1.0:
 		box = Vector2(72, 48)
@@ -2477,10 +2880,8 @@ func _on_hand_card_pressed(card: CardData) -> void:
 		return
 	if state == null or state.battle_status != "active" or state.phase != "player":
 		return
-	if card.is_dodge():
-		_played_a_card = true
-		_log("%s stays in hand and dodges the next attack on its mech." % card.display_name)
-		_refresh()
+	if _needs_owner_confirm(card):
+		_arm_owner_confirm(card)
 		return
 	if card.moves_only():
 		_begin_move(card)
@@ -2598,7 +2999,63 @@ func _begin_guard(card: CardData) -> void:
 			_play_step = "guard"
 		_refresh()
 		return
-	await _grant_guard(holder, holder, card)
+	_arm_owner_confirm(card)
+
+
+func _needs_owner_confirm(card: CardData) -> bool:
+	if card == null:
+		return false
+	if card.is_dodge():
+		return true
+	if card.is_guard() and not card.guards_ally():
+		return true
+	if card.target_type == "squad" or card.target_type == "team":
+		return true
+	return card.target_type == "enemies" and not card.moves_before() and not card.hits_front()
+
+
+## These cards used to resolve on the card tap. The owner's tile is the confirm.
+func _arm_owner_confirm(card: CardData) -> void:
+	var holder := _owner_of(card)
+	if holder == null or not holder.alive:
+		_log("That mech can't act.")
+		_refresh()
+		return
+	if card.target_type == "squad" and not GameManager.battle_offense:
+		_log("%s can only be used in Overdrive." % card.display_name)
+		_refresh()
+		return
+	_selected = holder
+	if _chosen == card and _play_step == "confirm":
+		_clear_play()
+	else:
+		_chosen = card
+		_targeting = true
+		_play_step = "confirm"
+	_refresh()
+
+
+func _on_confirm_cell(unit: MechState) -> void:
+	var card := _chosen
+	var holder := _owner_of(card)
+	if card == null or holder == null:
+		_clear_play()
+		_refresh()
+		return
+	if unit != holder:
+		_log("Tap %s to use %s." % [holder.display_name, card.display_name])
+		_refresh()
+		return
+	if card.is_dodge():
+		_played_a_card = true
+		_log("%s stays in hand and dodges the next attack on its mech." % card.display_name)
+		_clear_play()
+		_refresh()
+		return
+	if card.is_guard() and not card.guards_ally():
+		await _grant_guard(holder, holder, card)
+		return
+	await _play_special(card)
 
 
 func _on_guard_cell(unit: MechState) -> void:
@@ -2644,6 +3101,7 @@ func _play_special(card: CardData) -> void:
 		_log("%s gives every teammate %d barrier." % [card.display_name, amount])
 		_clear_play()
 		await _after_card_played()
+		await _return_to_player()
 		return
 	if card.target_type == "squad":
 		if not GameManager.battle_offense:
@@ -2656,6 +3114,7 @@ func _play_special(card: CardData) -> void:
 		_log("%s adds %d charge to the next gauge." % [card.display_name, banked])
 		_clear_play()
 		await _after_card_played()
+		await _return_to_player()
 		return
 	_log("%s isn't coded yet." % card.display_name)
 	_refresh()
@@ -2664,32 +3123,54 @@ func _play_special(card: CardData) -> void:
 func _play_breach(holder: MechState, card: CardData) -> void:
 	_animating = true
 	_step_undo = false
-	_sync_step_undo()
 	var origin := state.position_of(holder)
 	var victims: Array[MechState] = []
 	for enemy in state.living_units("enemy"):
 		if card.reaches(_manhattan(origin, state.position_of(enemy))):
 			victims.append(enemy)
 	_spend(card)
+	_resolving_card = true
+	_update_hand_controls()
 	_log("%s uses %s." % [holder.display_name, card.display_name])
+	var shoots := holder != null and WeaponVolley.has_profile(holder.art_id)
 	var finishing := _is_winning_blow(holder, victims, card)
 	if finishing:
 		await _play_finisher(holder)
 		if not is_inside_tree() or state == null:
 			return
-		var lead: Button = null
-		if not victims.is_empty():
-			lead = _button_for(victims[0])
-		await _play_attack(_sprite_for(holder), lead)
-		if not is_inside_tree() or state == null:
-			return
+		if not shoots:
+			var lead: Button = null
+			if not victims.is_empty():
+				lead = _button_for(victims[0])
+			await _play_attack(_sprite_for(holder), lead)
+			if not is_inside_tree() or state == null:
+				return
 	if victims.is_empty():
 		_log("%s hits no one." % card.display_name)
+	var outcomes: Array[Dictionary] = []
 	for enemy in victims:
 		if not holder.alive or not enemy.alive:
 			continue
-		var result := _strike(holder, enemy, card)
+		var result := _strike(holder, enemy, card, not shoots)
+		outcomes.append(result)
 		_log(_hit_notice(holder, _struck(result, enemy), result))
+	if shoots:
+		if not victims.is_empty() and state != null:
+			var aim := state.position_of(victims[0])
+			holder.face_toward_x(float(origin.x), float(aim.x))
+		var buttons: Array[Button] = []
+		var flown: Array[Dictionary] = []
+		for result in outcomes:
+			var struck := _struck(result, null)
+			var button := _button_for(struck)
+			if button == null:
+				_show_strike_numbers(struck, result)
+				continue
+			buttons.append(button)
+			flown.append(result)
+		await _play_projectile_attack(_sprite_for(holder), holder, buttons, flown)
+		if not is_inside_tree() or state == null:
+			return
 	state.sync_occupants()
 	state.check_outcome()
 	if finishing:
@@ -2702,6 +3183,7 @@ func _play_breach(holder: MechState, card: CardData) -> void:
 	if _closing or not is_inside_tree() or state == null or state.battle_status != "active":
 		return
 	await _after_card_played()
+	await _return_to_player()
 
 
 func _grant_guard(holder: MechState, target: MechState, card: CardData) -> void:
@@ -2738,6 +3220,35 @@ func _grant_guard(holder: MechState, target: MechState, card: CardData) -> void:
 		return
 	_clear_play()
 	await _after_card_played()
+	await _return_to_player()
+
+
+## An empty hand has nothing left to play, so End Round runs on its own once any attack from the last card is done.
+## A round that just opened only checks the new hand. It does not advance again.
+func _return_to_player(round_opened: bool = false) -> void:
+	if _closing or not is_inside_tree() or state == null or state.battle_status != "active":
+		return
+	if await _end_round_if_no_cards():
+		return
+	if round_opened:
+		return
+	if _next_ready_player() == null and not _guard_waiting():
+		await _complete_player_side()
+		return
+	_refresh()
+
+
+func _end_round_if_no_cards() -> bool:
+	if state == null or state.battle_status != "active" or state.phase != "player":
+		return false
+	if _animating or _prompting or _moved_for_card or _followup_move or _chosen != null or _play_step != "":
+		return false
+	_pull_specials()
+	if not _hand.is_empty():
+		return false
+	_log("No cards left.")
+	await _finish_player_turn()
+	return true
 
 
 func _guard_targets(holder: MechState) -> Array[MechState]:
@@ -2790,9 +3301,53 @@ func _update_hand_controls() -> void:
 		view.set_drop_handler(_on_card_drop.bind(card, view))
 		view.set_pull_enabled(can_pull)
 		view.set_undo_drag_enabled(_can_undo_drag(card))
+		view.set_enemy_dim(_hand_aside())
 		view.set_chosen(card == _chosen)
 		if not view.is_gliding():
 			view.settle(card == _chosen)
+	_sync_hand_tuck()
+
+
+func _enemy_turn() -> bool:
+	return state != null and state.battle_status == "active" and state.phase == "enemy"
+
+
+func _hand_aside() -> bool:
+	return _enemy_turn() or _resolving_card
+
+
+func _sync_hand_tuck() -> void:
+	var tuck := _hand_aside()
+	if tuck == _hand_tucked:
+		return
+	_hand_tucked = tuck
+	var target := CARD_SIZE.y * HAND_DROP_RATIO if tuck else 0.0
+	if _hand_drop_tween != null and _hand_drop_tween.is_valid():
+		_hand_drop_tween.kill()
+	_hand_drop_tween = create_tween()
+	_hand_drop_tween.set_trans(Tween.TRANS_CUBIC)
+	_hand_drop_tween.set_ease(Tween.EASE_OUT)
+	_hand_drop_tween.tween_method(_set_hand_drop, _hand_drop_px, target, HAND_TUCK_TIME)
+
+
+func _set_hand_drop(px: float) -> void:
+	_hand_drop_px = px
+	_place_hand_row()
+
+
+func _place_hand_row() -> void:
+	if _hand_anchor == null or _hand_row == null:
+		return
+	_hand_row.position = Vector2(0.0, _hand_drop_px)
+	_hand_row.size = _hand_anchor.size
+
+
+func _sync_hand_min_size() -> void:
+	if _hand_anchor == null or _hand_row == null:
+		return
+	var needed := _hand_row.get_combined_minimum_size()
+	if _hand_anchor.custom_minimum_size != needed:
+		_hand_anchor.custom_minimum_size = needed
 
 
 func _finish_pending_hand_layout() -> void:
@@ -2813,6 +3368,7 @@ func _layout_hand() -> void:
 		return
 	_hand_layout_pending = false
 	_hand_layout_tries = 0
+	_cluster_hand()
 	_ensure_hand_slots()
 	var keep := {}
 	for card in _hand:
@@ -2844,12 +3400,56 @@ func _layout_hand() -> void:
 	_deck_discards.clear()
 	for i in dumped.size():
 		_spawn_deck_discard(dumped[i], i)
+	_place_hand_row()
+	_sync_hand_min_size()
+	_sync_locked_slots()
+	_mark_owner_badges()
 	_refresh_discard()
 
 
+## Pull each mech's cards into one run, keeping the order those mechs first showed up.
+func _cluster_hand() -> void:
+	var order: Array = []
+	var buckets: Dictionary = {}
+	for card in _hand:
+		if card == null:
+			continue
+		var holder := _owner_of(card)
+		var key := holder.id if holder != null else "card:%d" % card.get_instance_id()
+		if not buckets.has(key):
+			var pile: Array[CardData] = []
+			buckets[key] = pile
+			order.append(key)
+		(buckets[key] as Array[CardData]).append(card)
+	var clustered: Array[CardData] = []
+	for key in order:
+		for card in buckets[key]:
+			clustered.append(card)
+	_hand = clustered
+
+
+## The first card of each mech carries that mech's head. A single card still does.
+func _mark_owner_badges() -> void:
+	var seen := {}
+	for index in _hand.size():
+		var card := _hand[index]
+		if card == null:
+			continue
+		var view := _card_views.get(card.get_instance_id()) as MechCard
+		if view == null or not is_instance_valid(view):
+			continue
+		var holder := _owner_of(card)
+		var key := holder.id if holder != null else ""
+		var lead := holder != null and key != "" and not seen.has(key)
+		if lead:
+			seen[key] = true
+			view.set_owner_badge(holder.art_id, MechCard.stroke_for(holder.data), _hand_slot(index))
+		else:
+			view.clear_owner_badge()
+
+
 func _ensure_hand_slots() -> void:
-	var needed := maxi(_hand_limit(), _hand.size())
-	hand_box.clip_contents = false
+	var needed := maxi(HAND_CAP, _hand.size())
 	while hand_box.get_child_count() > needed:
 		var extra := hand_box.get_child(hand_box.get_child_count() - 1)
 		_park_slot_cards(extra)
@@ -2857,10 +3457,32 @@ func _ensure_hand_slots() -> void:
 		extra.queue_free()
 	while hand_box.get_child_count() < needed:
 		var slot := SLOT_SCENE.instantiate()
+		slot.name = "CardSlot%d" % (hand_box.get_child_count() + 1)
 		hand_box.add_child(slot)
-		var undo := slot.get_node_or_null("UndoMoveButton") as Button
-		if undo != null and not undo.pressed.is_connected(_on_undo_step):
-			undo.pressed.connect(_on_undo_step)
+
+
+## The 4th and 5th seats stay in the row. A short squad never draws into them, so those blanks show a lock.
+func _sync_locked_slots() -> void:
+	if hand_box == null:
+		return
+	var limit := _hand_limit()
+	for index in hand_box.get_child_count():
+		var slot := hand_box.get_child(index)
+		var lock_icon := slot.get_node_or_null("Lock") as Control
+		if lock_icon == null:
+			continue
+		var locked := index >= 3 and index >= limit and not _slot_holds_card(slot)
+		lock_icon.visible = locked
+		if locked and _info_note != null:
+			var mechs := index - HAND_BASE + 1
+			_info_note.watch(lock_icon, "Fight with %d mechs to unlock slot" % mechs)
+
+
+func _slot_holds_card(slot: Node) -> bool:
+	for child in slot.get_children():
+		if child is MechCard:
+			return true
+	return false
 
 
 func _park_slot_cards(slot: Node) -> void:
@@ -2916,6 +3538,7 @@ func _bind_hand_card(view: MechCard, card: CardData) -> void:
 	_present_card(view, card, stroke)
 	_shine_if_special(view, card)
 	view.arm_press()
+	view.set_enemy_dim(_hand_tucked, true)
 	view.set_drop_handler(_on_card_drop.bind(card, view))
 	view.pulled.connect(_on_hand_card_pressed.bind(card))
 	view.undo_dragged.connect(_on_card_undo_drag.bind(card))
@@ -2991,6 +3614,11 @@ func _show_guard(button: Button, unit: MechState) -> void:
 	_show_vital(button, "Guard", unit.guard if active else 0, active)
 
 
+func _show_evade(button: Button, unit: MechState) -> void:
+	var active := unit != null and unit.alive and unit.intercepting
+	_show_vital(button, "Evade", 1, active)
+
+
 func _show_vital(button: Button, node_name: String, amount_value: int, shown: bool) -> void:
 	var badge := button.get_node_or_null("Vitals/" + node_name) as HBoxContainer
 	if badge == null:
@@ -3046,12 +3674,30 @@ func _by_speed(units: Array[MechState]) -> Array[MechState]:
 	return ordered
 
 
+## Pale yellow wash on the four cells beside a mech who will catch the next hit.
+func _sync_intercept_cell(button: Button, in_zone: bool, _unit: MechState) -> void:
+	var fill := button.get_node_or_null("InterceptFill") as CanvasItem
+	if fill != null:
+		fill.visible = in_zone
+
+
+func _cell_in_intercept_zone(coords: Vector2i) -> bool:
+	if state == null:
+		return false
+	for unit in state.living_units("player"):
+		if unit == null or not unit.intercepting:
+			continue
+		if _manhattan(state.position_of(unit), coords) == 1:
+			return true
+	return false
+
+
 func _sync_overdrive_cell(button: Button, unit: MechState) -> void:
 	var glow := button.get_node_or_null("OverdriveGlow") as ColorRect
-	if glow == null:
-		return
-	if button.has_meta("hit_flash"):
+	if glow != null:
 		glow.visible = false
+	var sprite := button.get_node_or_null("MechSprite") as AnimatedSprite2D
+	if sprite == null:
 		return
 	var active := (
 		GameManager.battle_offense
@@ -3060,15 +3706,11 @@ func _sync_overdrive_cell(button: Button, unit: MechState) -> void:
 		and unit.alive
 		and unit.team == "player"
 	)
-	glow.visible = active
-	var inset := 3.0 if unit != null and unit == _selected else 0.0
-	glow.offset_left = inset
-	glow.offset_top = inset
-	glow.offset_right = -inset
-	glow.offset_bottom = -inset
 	if not active:
+		_clear_overdrive_sprite(sprite)
 		return
-	_paint_overdrive_glow(glow)
+	sprite.material = _overdrive_sheet()
+	_apply_overdrive_glow()
 	_start_overdrive_pulse()
 
 
@@ -3098,21 +3740,31 @@ func _stop_overdrive_pulse() -> void:
 		var glow := button.get_node_or_null("OverdriveGlow") as ColorRect
 		if glow != null:
 			glow.visible = false
+		var sprite := button.get_node_or_null("MechSprite") as AnimatedSprite2D
+		_clear_overdrive_sprite(sprite)
 
 
 func _set_overdrive_glow(amount: float) -> void:
 	_overdrive_glow = amount
-	for coords in _buttons:
-		var button: Button = _buttons[coords]
-		var glow := button.get_node_or_null("OverdriveGlow") as ColorRect
-		if glow != null and glow.visible:
-			_paint_overdrive_glow(glow)
+	_apply_overdrive_glow()
 
 
-func _paint_overdrive_glow(glow: ColorRect) -> void:
-	var dim := Color(0.08, 0.2, 0.34)
-	var hot := Color(0.32, 0.74, 1.0)
-	glow.color = dim.lerp(hot, _overdrive_glow)
+func _apply_overdrive_glow() -> void:
+	var sheet := _overdrive_sheet()
+	sheet.set_shader_parameter("amount", _overdrive_glow)
+
+
+func _overdrive_sheet() -> ShaderMaterial:
+	if _overdrive_material == null:
+		_overdrive_material = ShaderMaterial.new()
+		_overdrive_material.shader = OVERDRIVE_SHADER
+		_overdrive_material.set_shader_parameter("amount", _overdrive_glow)
+	return _overdrive_material
+
+
+func _clear_overdrive_sprite(sprite: AnimatedSprite2D) -> void:
+	if sprite != null and sprite.material == _overdrive_material:
+		sprite.material = null
 
 
 func _show_active_reticule(unit: MechState) -> bool:
@@ -3142,62 +3794,231 @@ func _paint_cell_mark(button: Button, _coords: Vector2i, unit: MechState) -> voi
 		mark.show_reticule(Color(0, 0, 0, 0))
 
 
-## Copies the stage cells this fight was cut from onto a tile layer behind the board.
+## Copies the stage layers this fight was cut from onto a stack behind the board.
 func _stamp_terrain(cell_px: float) -> void:
 	var host := grid.get_parent()
-	var terrain := host.get_node_or_null("Terrain") as TileMapLayer
+	var existing := host.get_node_or_null("Terrain")
+	if existing is TileMapLayer:
+		host.remove_child(existing)
+		existing.free()
+		existing = null
+	var terrain := existing as Node2D
 	if terrain == null:
-		terrain = TileMapLayer.new()
+		terrain = Node2D.new()
 		terrain.name = "Terrain"
 		terrain.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		host.add_child(terrain)
+	var stale: Array[Node] = []
+	for child in terrain.get_children():
+		stale.append(child)
+	for child in stale:
+		terrain.remove_child(child)
+		child.free()
 	StageMap.ensure()
-	var source := StageMap.layer
-	if source == null or source.tile_set == null or state == null or state.grid == null:
+	var sources := StageMap.visual_layers()
+	var ground := StageMap.layer
+	if ground == null or ground.tile_set == null or sources.is_empty() or state == null or state.grid == null:
 		terrain.visible = false
 		return
 	var encounter := GameManager.current_encounter
 	var quarter := BattleDeployment.terrain_quarter(encounter)
-	terrain.tile_set = source.tile_set
-	terrain.clear()
-	var painted := false
+	# terrain_quarter is 1 when the tall window turns clockwise onto the board.
+	var clockwise := quarter > 0
 	var view_size := BattleDeployment.view_size()
-	for y in view_size.y:
-		for x in view_size.x:
-			var battle := Vector2i(x, y)
-			var world := BattleDeployment.overworld_cell_for_view(encounter, battle)
-			if not StageMap.contains(world):
-				continue
-			var span := StageMap.mech_span()
-			var origin := world * span
-			# terrain_quarter is 1 when the tall window turns clockwise onto the board.
-			var clockwise := quarter > 0
-			for oy in span:
-				for ox in span:
-					var tile_coords := origin + Vector2i(ox, oy)
-					var source_id := source.get_cell_source_id(tile_coords)
-					if source_id < 0:
-						continue
-					var atlas_coords := source.get_cell_atlas_coords(tile_coords)
-					var alternative := source.get_cell_alternative_tile(tile_coords)
-					var placed := Vector2i(ox, oy)
-					if quarter != 0:
-						alternative = _turn_alternative(alternative, clockwise)
-						placed = _turn_block(placed, span, clockwise)
-					terrain.set_cell(battle * span + placed, source_id, atlas_coords, alternative)
-					painted = true
-	terrain.visible = painted
-	if not painted:
+	var painted_any := false
+	for source in sources:
+		var copy := TileMapLayer.new()
+		copy.name = source.name
+		copy.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		copy.tile_set = source.tile_set
+		copy.rendering_quadrant_size = source.rendering_quadrant_size
+		copy.physics_quadrant_size = source.physics_quadrant_size
+		terrain.add_child(copy)
+		if source.tile_set == null:
+			copy.visible = false
+			continue
+		var painted := false
+		for y in view_size.y:
+			for x in view_size.x:
+				var battle := Vector2i(x, y)
+				var world := BattleDeployment.overworld_cell_for_view(encounter, battle)
+				if not StageMap.contains(world):
+					continue
+				var span := StageMap.mech_span()
+				var origin := world * span
+				for oy in span:
+					for ox in span:
+						var tile_coords := origin + Vector2i(ox, oy)
+						var source_id := source.get_cell_source_id(tile_coords)
+						if source_id < 0:
+							continue
+						var atlas_coords := source.get_cell_atlas_coords(tile_coords)
+						var alternative := source.get_cell_alternative_tile(tile_coords)
+						var placed := Vector2i(ox, oy)
+						if quarter != 0:
+							alternative = _turn_alternative(alternative, clockwise)
+							placed = _turn_block(placed, span, clockwise)
+						copy.set_cell(battle * span + placed, source_id, atlas_coords, alternative)
+						painted = true
+		copy.visible = painted
+		painted_any = painted_any or painted
+	terrain.visible = painted_any
+	if not painted_any:
 		return
-	var tile := Vector2(source.tile_set.tile_size)
+	var tile := Vector2(ground.tile_set.tile_size)
 	var step := tile * float(StageMap.mech_span())
+	_stamp_shadows(terrain, encounter, step)
+	_stamp_weather(terrain, step)
 	var h_sep := grid.get_theme_constant("h_separation")
 	var v_sep := grid.get_theme_constant("v_separation")
 	terrain.scale = Vector2((cell_px + h_sep) / step.x, (cell_px + v_sep) / step.y)
 	terrain.position = grid.position
-	host.move_child(terrain, grid.get_index())
+	_seat_terrain(host, terrain)
 	for coords in _buttons:
 		_paint(_buttons[coords], _cell_color(coords))
+
+
+## Keeps the stage art under the cells. Godot removes a child before inserting it and
+## does not shift the target index down, so moving the tiles to the grid's index while
+## they are already behind the grid draws them on top and hides move and attack colors.
+func _seat_terrain(host: Node, terrain: Node) -> void:
+	var grid_at := grid.get_index()
+	var terrain_at := terrain.get_index()
+	if terrain_at == grid_at - 1:
+		return
+	var slot := grid_at
+	if terrain_at < grid_at:
+		slot = grid_at - 1
+	host.move_child(terrain, slot)
+
+
+## Cuts the stage Shadows polygons into the same window as the tiles, including a quarter turn.
+func _stamp_shadows(terrain: Node2D, encounter: EncounterData, mech_px: Vector2) -> void:
+	if encounter == null or encounter.attacker == null or StageMap.root == null:
+		return
+	if mech_px.x <= 0.0 or mech_px.y <= 0.0:
+		return
+	var source := StageMap.root.get_node_or_null("Shadows") as Node2D
+	if source == null:
+		return
+	var view := BattleDeployment.view_size()
+	var bounds := Rect2(Vector2.ZERO, Vector2(view) * mech_px)
+	var host := Node2D.new()
+	host.name = "Shadows"
+	host.z_index = StageMap.SHADOW_Z
+	var kept := false
+	var polygons: Array[Polygon2D] = []
+	_collect_shadows(source, polygons)
+	for poly in polygons:
+		var mapped := PackedVector2Array()
+		for point in poly.polygon:
+			mapped.append(BattleDeployment.terrain_point(encounter, _stage_shadow_point(poly, point), mech_px))
+		var clipped := _clip_polygon(mapped, bounds)
+		if clipped.size() < 3:
+			continue
+		var copy := poly.duplicate() as Polygon2D
+		copy.transform = Transform2D.IDENTITY
+		copy.modulate = _shadow_tint(poly)
+		copy.polygon = clipped
+		host.add_child(copy)
+		kept = true
+	if kept:
+		terrain.add_child(host)
+
+
+## Stage weather covers the whole map. The copy is refit to this fight's view.
+func _stamp_weather(terrain: Node2D, mech_px: Vector2) -> void:
+	if StageMap.root == null or mech_px.x <= 0.0 or mech_px.y <= 0.0:
+		return
+	var view := BattleDeployment.view_size()
+	var area := Rect2(Vector2.ZERO, Vector2(view) * mech_px)
+	var host := Node2D.new()
+	host.name = StageMap.WEATHER_NODE
+	var kept := false
+	for child in WeatherFitScript.layers(StageMap.root):
+		var copy := child.duplicate(Node.DUPLICATE_GROUPS | Node.DUPLICATE_SCRIPTS)
+		host.add_child(copy)
+		WeatherFitScript.apply(copy, area)
+		kept = true
+	if not kept:
+		host.free()
+		return
+	terrain.add_child(host)
+
+
+func _collect_shadows(node: Node, into: Array[Polygon2D]) -> void:
+	for child in node.get_children():
+		if child is CanvasItem and not (child as CanvasItem).visible:
+			continue
+		if child is Polygon2D:
+			into.append(child)
+		_collect_shadows(child, into)
+
+
+## Polygon point in stage pixels, before the overworld scales the stage root.
+func _stage_shadow_point(poly: Polygon2D, local: Vector2) -> Vector2:
+	var point := local
+	var node: Node = poly
+	while node is Node2D and node != StageMap.root:
+		point = (node as Node2D).transform * point
+		node = node.get_parent()
+	return point
+
+
+func _shadow_tint(poly: Polygon2D) -> Color:
+	var tint := poly.modulate
+	var node := poly.get_parent()
+	while node is CanvasItem and node != StageMap.root:
+		tint *= (node as CanvasItem).modulate
+		node = node.get_parent()
+	return tint
+
+
+func _clip_polygon(points: PackedVector2Array, rect: Rect2) -> PackedVector2Array:
+	var clipped := _clip_axis(points, rect.position.x, true, true)
+	clipped = _clip_axis(clipped, rect.end.x, true, false)
+	clipped = _clip_axis(clipped, rect.position.y, false, true)
+	clipped = _clip_axis(clipped, rect.end.y, false, false)
+	return clipped
+
+
+func _clip_axis(points: PackedVector2Array, limit: float, on_x: bool, keep_greater: bool) -> PackedVector2Array:
+	if points.size() < 3:
+		return PackedVector2Array()
+	var output := PackedVector2Array()
+	var previous: Vector2 = points[points.size() - 1]
+	var previous_in := _clip_inside(previous, limit, on_x, keep_greater)
+	for point in points:
+		var current_in := _clip_inside(point, limit, on_x, keep_greater)
+		if current_in:
+			if not previous_in:
+				output.append(_clip_cross(previous, point, limit, on_x))
+			output.append(point)
+		elif previous_in:
+			output.append(_clip_cross(previous, point, limit, on_x))
+		previous = point
+		previous_in = current_in
+	return output
+
+
+func _clip_inside(point: Vector2, limit: float, on_x: bool, keep_greater: bool) -> bool:
+	var value := point.x if on_x else point.y
+	if keep_greater:
+		return value >= limit - 0.001
+	return value <= limit + 0.001
+
+
+func _clip_cross(a: Vector2, b: Vector2, limit: float, on_x: bool) -> Vector2:
+	var delta := b - a
+	if on_x:
+		if is_zero_approx(delta.x):
+			return Vector2(limit, a.y)
+		var t := (limit - a.x) / delta.x
+		return Vector2(limit, a.y + delta.y * t)
+	if is_zero_approx(delta.y):
+		return Vector2(a.x, limit)
+	var ty := (limit - a.y) / delta.y
+	return Vector2(a.x + delta.x * ty, limit)
 
 
 ## Godot stores a cell's flip in the alternative id, above the tile index.
@@ -3250,19 +4071,54 @@ func _paint(button: Button, color: Color, selected: bool = false) -> void:
 	if selected:
 		style = _ensure_active_cell_style()
 		_start_active_cell_pulse()
+		_set_range_fill(button, "Shade", Color(0, 0, 0, 0))
+		_set_range_fill(button, "AttackShade", Color(0, 0, 0, 0))
 	else:
 		style = _owned_cell_style(button)
-		var terrain := grid.get_parent().get_node_or_null("Terrain") as TileMapLayer
+		var floor := color
+		var move_fill := Color(0, 0, 0, 0)
+		var attack_fill := Color(0, 0, 0, 0)
+		if color.is_equal_approx(ATTACK_FILL):
+			attack_fill = color
+			floor = CELL_FLOOR
+		elif color.is_equal_approx(MOVE_FILL) or color.is_equal_approx(GUARD_FILL):
+			move_fill = color
+			floor = Color(0, 0, 0, 0)
+		var terrain := grid.get_parent().get_node_or_null("Terrain") as Node2D
 		if terrain != null and terrain.visible:
-			if color.is_equal_approx(Color(0.14, 0.16, 0.2)):
-				color = Color(0, 0, 0, 0)
-			else:
-				color.a = 0.45
-		style.bg_color = color
+			if floor.is_equal_approx(CELL_FLOOR):
+				floor = Color(0, 0, 0, 0)
+			elif floor.a > 0.0:
+				floor.a = 0.45
+			if move_fill.a > 0.0:
+				move_fill.a = 0.45
+			if attack_fill.a > 0.0:
+				attack_fill.a = 0.45
+		style.bg_color = floor
+		_set_range_fill(button, "Shade", move_fill)
+		_set_range_fill(button, "AttackShade", attack_fill)
 	button.add_theme_stylebox_override("normal", style)
 	button.add_theme_stylebox_override("hover", style)
 	button.add_theme_stylebox_override("pressed", style)
 	button.add_theme_color_override("font_color", Color.WHITE)
+
+
+func _set_range_fill(button: Button, node_name: String, color: Color) -> void:
+	var panel := button.get_node_or_null(node_name) as Panel
+	if panel == null:
+		return
+	var style := _owned_panel_style(panel)
+	style.bg_color = color
+
+
+func _owned_panel_style(panel: Panel) -> StyleBoxFlat:
+	var style: StyleBoxFlat = panel.get_meta("fill_style") as StyleBoxFlat if panel.has_meta("fill_style") else null
+	if style != null:
+		return style
+	style = (panel.get_theme_stylebox("panel") as StyleBoxFlat).duplicate() as StyleBoxFlat
+	panel.add_theme_stylebox_override("panel", style)
+	panel.set_meta("fill_style", style)
+	return style
 
 
 func _owned_cell_style(button: Button) -> StyleBoxFlat:

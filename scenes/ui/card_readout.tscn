@@ -1,0 +1,79 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/card_readout.gd" id="1_readout"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_action.tscn" id="2_action"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_chip.tscn" id="3_chip"]
+
+[node name="CardReadout" type="VBoxContainer"]
+mouse_filter = 2
+theme_override_constants/separation = 12
+script = ExtResource("1_readout")
+
+[node name="Title" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 36
+text = "Card"
+autowrap_mode = 3
+
+[node name="Meta" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Kind" type="Label" parent="Meta"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.78, 0.8, 0.84, 1)
+theme_override_font_sizes/font_size = 24
+text = "Attack · 1 action"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="ActionCost" parent="Meta" instance=ExtResource("2_action")]
+unique_name_in_owner = true
+visible = true
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Special" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.78, 1, 1)
+theme_override_font_sizes/font_size = 22
+text = "Special card: Can only be used when in overdrive mode."
+autowrap_mode = 3
+
+[node name="Body" type="RichTextLabel" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_colors/default_color = Color(0.9, 0.91, 0.94, 1)
+theme_override_constants/line_separation = 6
+theme_override_font_sizes/normal_font_size = 24
+bbcode_enabled = false
+text = "Instruction"
+scroll_active = true
+autowrap_mode = 3
+selection_enabled = false
+
+[node name="Stats" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="Stat1" parent="Stats" instance=ExtResource("3_chip")]
+layout_mode = 2
+
+[node name="Stat2" parent="Stats" instance=ExtResource("3_chip")]
+layout_mode = 2
+
+[node name="Stat3" parent="Stats" instance=ExtResource("3_chip")]
+layout_mode = 2
+
+[node name="Stat4" parent="Stats" instance=ExtResource("3_chip")]
+layout_mode = 2

@@ -7,7 +7,6 @@ const SEGMENT_SCENE := preload("res://scenes/ui/overdrive_segment.tscn")
 const ARRIVE_STAGGER := 0.045
 
 @onready var segments: HBoxContainer = %Segments
-@onready var length_label: Label = %Length
 @onready var info_badge: TextureButton = %OverdriveInfo
 @onready var _mark: Control = %Mark
 
@@ -18,6 +17,7 @@ func _ready() -> void:
 	for child in segments.get_children():
 		var segment := child as OverdriveSegment
 		if segment != null:
+			segment.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			_segments.append(segment)
 
 
@@ -29,6 +29,7 @@ func show_squad(charge: int, floor_size: int) -> void:
 	var accounted := mini(owed, minimum)
 	while _segments.size() < length:
 		var segment := SEGMENT_SCENE.instantiate() as OverdriveSegment
+		segment.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		segment.visible = false
 		segments.add_child(segment)
 		_segments.append(segment)
@@ -50,7 +51,6 @@ func show_squad(charge: int, floor_size: int) -> void:
 	var spill := length > minimum and minimum > 0
 	_mark.visible = spill
 	_order(length, minimum, spill)
-	length_label.text = str(length)
 
 
 func _order(length: int, minimum: int, spill: bool) -> void:

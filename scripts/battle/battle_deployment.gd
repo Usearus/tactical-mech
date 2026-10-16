@@ -7,8 +7,10 @@ const WIDE := Vector2i(6, 3)
 const VIEW_MARGIN := 2
 ## Fights stacked north to south use 3 columns by 6 rows.
 const TALL := Vector2i(3, 6)
-## D2 on the wide board. The mech being attacked always stands here.
+## D2 on the wide board when the attacker stands to the west. The pair then fills C2 and D2.
 const WIDE_EAST := Vector2i(3, 1)
+## C2 when the attacker stands to the east, so that pair still fills C2 and D2.
+const WIDE_WEST := Vector2i(2, 1)
 ## Tall-board cells that rotate onto D2. North when the target is above the attacker.
 const TALL_NORTH := Vector2i(1, 2)
 const TALL_SOUTH := Vector2i(1, 3)
@@ -57,7 +59,7 @@ static func window_size(from_pos: Vector2i, to_pos: Vector2i) -> Vector2i:
 	return TALL if _vertical(from_pos, to_pos) else WIDE
 
 
-## Overworld cells the battle camera zooms in from. The mech being attacked is on D2.
+## Overworld cells the battle camera zooms in from. An east-west pair sits on C2 and D2.
 static func overworld_cells(from_pos: Vector2i, to_pos: Vector2i, _map_size: Vector2i) -> Array[Vector2i]:
 	var size := window_size(from_pos, to_pos)
 	var origin: Vector2i = _layout_from(from_pos, to_pos)["origin"]
@@ -79,6 +81,21 @@ static func terrain_quarter(encounter: EncounterData) -> int:
 	if not bool(layout["vertical"]):
 		return 0
 	return 1 if bool(layout["clockwise"]) else -1
+
+
+## Stage pixel mapped onto the terrain stamp, in that node's local pixels.
+## A north-south fight turns the point the same way the tiles turn.
+static func terrain_point(encounter: EncounterData, stage_pixel: Vector2, mech_px: Vector2) -> Vector2:
+	var layout := _battle_layout(encounter)
+	var origin: Vector2i = layout["origin"]
+	var q := stage_pixel / mech_px - Vector2(origin)
+	var battle := q
+	if bool(layout["vertical"]):
+		if bool(layout["clockwise"]):
+			battle = Vector2(float(TALL.y) - q.y, q.x)
+		else:
+			battle = Vector2(q.y, float(TALL.x) - q.x)
+	return (battle + Vector2(VIEW_MARGIN, VIEW_MARGIN)) * mech_px
 
 
 ## Overworld cell this battle cell was cut from. Off the map when the window hangs past the stage.
@@ -220,7 +237,8 @@ static func _nearest_open(
 	return best
 
 
-## Puts the mech being attacked on D2. Everyone else keeps their offset from that mech.
+## Puts an east-west pair on C2 and D2. A target west of its attacker is anchored on C2.
+## Everyone else keeps their offset from that mech.
 static func _layout_from(from_pos: Vector2i, to_pos: Vector2i) -> Dictionary:
 	var vertical := _vertical(from_pos, to_pos)
 	var clockwise := vertical and to_pos.y < from_pos.y
@@ -229,6 +247,8 @@ static func _layout_from(from_pos: Vector2i, to_pos: Vector2i) -> Dictionary:
 		anchor = TALL_NORTH
 	elif vertical:
 		anchor = TALL_SOUTH
+	elif from_pos.x > to_pos.x:
+		anchor = WIDE_WEST
 	var origin := to_pos - anchor
 	return {
 		"vertical": vertical,

@@ -9,38 +9,8 @@
 [ext_resource type="Texture2D" path="res://art/icons/stats/range.svg" id="7_range"]
 [ext_resource type="Texture2D" path="res://art/icons/stats/move.svg" id="8_move"]
 [ext_resource type="Texture2D" path="res://art/icons/stats/dodge.svg" id="9_dodge"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu"]
-content_margin_left = 8.0
-content_margin_top = 8.0
-content_margin_right = 8.0
-content_margin_bottom = 8.0
-bg_color = Color(0.08, 0.09, 0.12, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.35, 0.38, 0.42, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_page"]
-content_margin_left = 16.0
-content_margin_top = 16.0
-content_margin_right = 16.0
-content_margin_bottom = 16.0
-bg_color = Color(0.08, 0.09, 0.12, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.35, 0.38, 0.42, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
+[ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="10_btn"]
+[ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="11_theme"]
 
 [node name="GameMenu" type="CanvasLayer"]
 layer = 90
@@ -79,66 +49,94 @@ offset_bottom = -16.0
 grow_horizontal = 0
 grow_vertical = 2
 mouse_filter = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_page")
+theme = ExtResource("11_theme")
+theme_type_variation = &"SecondaryPanel"
 
-[node name="Column" type="VBoxContainer" parent="Root/MenuPage"]
+[node name="Margin" type="MarginContainer" parent="Root/MenuPage"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="Column" type="VBoxContainer" parent="Root/MenuPage/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Tabs" type="HBoxContainer" parent="Root/MenuPage/Column"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="LogTab" type="Button" parent="Root/MenuPage/Column/Tabs"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-toggle_mode = true
-theme_override_font_sizes/font_size = 32
-text = "Mission Log"
-
-[node name="LegendTab" type="Button" parent="Root/MenuPage/Column/Tabs"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-toggle_mode = true
-theme_override_font_sizes/font_size = 32
-text = "Legend"
-
-[node name="LogBody" type="RichTextLabel" parent="Root/MenuPage/Column"]
+[node name="LogBody" type="VBoxContainer" parent="Root/MenuPage/Margin/Column"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/normal_font_size = 28
-text = "No statuses yet."
-scroll_following = true
+theme_override_constants/separation = 20
 
-[node name="Legend" type="VBoxContainer" parent="Root/MenuPage/Column"]
+[node name="Title" type="Label" parent="Root/MenuPage/Margin/Column/LogBody"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "Mission Log"
+
+[node name="Win" type="VBoxContainer" parent="Root/MenuPage/Margin/Column/LogBody"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Heading" type="Label" parent="Root/MenuPage/Margin/Column/LogBody/Win"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 32
+text = "Win"
+
+[node name="Body" type="Label" parent="Root/MenuPage/Margin/Column/LogBody/Win"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "Clear every hostile."
+autowrap_mode = 3
+
+[node name="Lose" type="VBoxContainer" parent="Root/MenuPage/Margin/Column/LogBody"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Heading" type="Label" parent="Root/MenuPage/Margin/Column/LogBody/Lose"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 32
+text = "Lose"
+
+[node name="Body" type="Label" parent="Root/MenuPage/Margin/Column/LogBody/Lose"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "Every mech in your squad is destroyed."
+autowrap_mode = 3
+
+[node name="Legend" type="VBoxContainer" parent="Root/MenuPage/Margin/Column"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 14
 
-[node name="Scroll" type="ScrollContainer" parent="Root/MenuPage/Column/Legend"]
+[node name="Title" type="Label" parent="Root/MenuPage/Margin/Column/Legend"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "Legend"
+
+[node name="Scroll" type="ScrollContainer" parent="Root/MenuPage/Margin/Column/Legend"]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="List" type="VBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll"]
+[node name="List" type="VBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 16
 
-[node name="Heart" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+[node name="Heart" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Heart"]
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Heart"]
 texture_filter = 0
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
@@ -148,7 +146,7 @@ texture = ExtResource("2_heart")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Heart"]
+[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Heart"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -157,12 +155,12 @@ text = "Hit points left before this mech is destroyed."
 autowrap_mode = 3
 vertical_alignment = 1
 
-[node name="Defend" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+[node name="Defend" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Defend"]
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Defend"]
 texture_filter = 0
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
@@ -172,7 +170,7 @@ texture = ExtResource("3_defend")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Defend"]
+[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Defend"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -181,12 +179,12 @@ text = "Guard that absorbs hits before hit points. Only active during a battle."
 autowrap_mode = 3
 vertical_alignment = 1
 
-[node name="Crescent" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+[node name="Crescent" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Crescent"]
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Crescent"]
 texture_filter = 0
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
@@ -196,7 +194,7 @@ texture = ExtResource("4_crescent")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Crescent"]
+[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Crescent"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -205,12 +203,12 @@ text = "Barrier that absorbs hits after guard, before hit points. Remains after 
 autowrap_mode = 3
 vertical_alignment = 1
 
-[node name="Clock" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+[node name="Clock" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Clock"]
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Clock"]
 texture_filter = 0
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
@@ -220,7 +218,7 @@ texture = ExtResource("5_clock")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Clock"]
+[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Clock"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -229,12 +227,12 @@ text = "Cards left before this enemy takes a turn."
 autowrap_mode = 3
 vertical_alignment = 1
 
-[node name="Attack" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+[node name="Attack" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Attack"]
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Attack"]
 texture_filter = 0
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
@@ -244,7 +242,7 @@ texture = ExtResource("6_attack")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Attack"]
+[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Attack"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -253,12 +251,12 @@ text = "Damage this card deals."
 autowrap_mode = 3
 vertical_alignment = 1
 
-[node name="Range" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+[node name="Range" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Range"]
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Range"]
 texture_filter = 0
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
@@ -268,7 +266,7 @@ texture = ExtResource("7_range")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Range"]
+[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Range"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -277,12 +275,12 @@ text = "How far this card can reach."
 autowrap_mode = 3
 vertical_alignment = 1
 
-[node name="Move" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+[node name="Move" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Move"]
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Move"]
 texture_filter = 0
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
@@ -292,7 +290,7 @@ texture = ExtResource("8_move")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Move"]
+[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Move"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -301,12 +299,12 @@ text = "Cells this card moves."
 autowrap_mode = 3
 vertical_alignment = 1
 
-[node name="Dodge" type="HBoxContainer" parent="Root/MenuPage/Column/Legend/Scroll/List"]
+[node name="Dodge" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="Icon" type="TextureRect" parent="Root/MenuPage/Column/Legend/Scroll/List/Dodge"]
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Dodge"]
 texture_filter = 0
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
@@ -316,7 +314,7 @@ texture = ExtResource("9_dodge")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Column/Legend/Scroll/List/Dodge"]
+[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Dodge"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -338,18 +336,26 @@ offset_bottom = -16.0
 grow_horizontal = 0
 grow_vertical = 2
 mouse_filter = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_page")
+theme = ExtResource("11_theme")
+theme_type_variation = &"SecondaryPanel"
 
-[node name="Column" type="VBoxContainer" parent="Root/HowTo"]
+[node name="Margin" type="MarginContainer" parent="Root/HowTo"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="Column" type="VBoxContainer" parent="Root/HowTo/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Pages" type="Control" parent="Root/HowTo/Column"]
+[node name="Pages" type="Control" parent="Root/HowTo/Margin/Column"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Loadout" type="VBoxContainer" parent="Root/HowTo/Column/Pages"]
+[node name="Loadout" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Pages"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -358,11 +364,11 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 16
 
-[node name="Header" type="HBoxContainer" parent="Root/HowTo/Column/Pages/Loadout"]
+[node name="Header" type="HBoxContainer" parent="Root/HowTo/Margin/Column/Pages/Loadout"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="Root/HowTo/Column/Pages/Loadout/Header"]
+[node name="Title" type="Label" parent="Root/HowTo/Margin/Column/Pages/Loadout/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -371,7 +377,7 @@ text = "Choosing a Loadout"
 vertical_alignment = 1
 autowrap_mode = 3
 
-[node name="Count" type="Label" parent="Root/HowTo/Column/Pages/Loadout/Header"]
+[node name="Count" type="Label" parent="Root/HowTo/Margin/Column/Pages/Loadout/Header"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/font_size = 40
@@ -379,22 +385,22 @@ text = "1/7"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="Body" type="Label" parent="Root/HowTo/Column/Pages/Loadout"]
+[node name="Body" type="Label" parent="Root/HowTo/Margin/Column/Pages/Loadout"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/font_size = 36
-text = "Choose mechs before starting a mission. Mechs have individual stats to look out for, including their Overdrive (OVD) value, which determines how many actions it will take to activate the Overdrive mechanic and create bonus' for your team during battle.
+text = "Choose mechs before starting a mission. Mechs have individual stats to look out for, including their Charge (CHG) value, which determines how many actions it will take to activate the Overdrive mechanic and create bonus' for your team during battle.
 
 HP = Hit points at start of mission
 ATK = Attack power from deck
 RNG = Attack range from deck. Also initiate attack distance.
 MOV = Movement range on map
 SPD = Higher speed moves first on map
-OVD = Additional actions needed to activate Overdrive"
+CHG = Additional actions needed to activate Overdrive"
 autowrap_mode = 3
 
-[node name="Map" type="VBoxContainer" parent="Root/HowTo/Column/Pages"]
+[node name="Map" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Pages"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -404,11 +410,11 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 16
 
-[node name="Header" type="HBoxContainer" parent="Root/HowTo/Column/Pages/Map"]
+[node name="Header" type="HBoxContainer" parent="Root/HowTo/Margin/Column/Pages/Map"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="Root/HowTo/Column/Pages/Map/Header"]
+[node name="Title" type="Label" parent="Root/HowTo/Margin/Column/Pages/Map/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -417,7 +423,7 @@ text = "The Map"
 vertical_alignment = 1
 autowrap_mode = 3
 
-[node name="Count" type="Label" parent="Root/HowTo/Column/Pages/Map/Header"]
+[node name="Count" type="Label" parent="Root/HowTo/Margin/Column/Pages/Map/Header"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/font_size = 40
@@ -425,7 +431,7 @@ text = "2/7"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="Body" type="Label" parent="Root/HowTo/Column/Pages/Map"]
+[node name="Body" type="Label" parent="Root/HowTo/Margin/Column/Pages/Map"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -433,7 +439,7 @@ theme_override_font_sizes/font_size = 36
 text = "Your mechs take turns on the map. On a mech's turn, move it, then end the turn or attack an enemy within your ATR. Most mechs must stand next to the target. Destroy every hostile to finish the mission."
 autowrap_mode = 3
 
-[node name="Fight" type="VBoxContainer" parent="Root/HowTo/Column/Pages"]
+[node name="Fight" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Pages"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -443,11 +449,11 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 16
 
-[node name="Header" type="HBoxContainer" parent="Root/HowTo/Column/Pages/Fight"]
+[node name="Header" type="HBoxContainer" parent="Root/HowTo/Margin/Column/Pages/Fight"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="Root/HowTo/Column/Pages/Fight/Header"]
+[node name="Title" type="Label" parent="Root/HowTo/Margin/Column/Pages/Fight/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -456,7 +462,7 @@ text = "Starting a Fight"
 vertical_alignment = 1
 autowrap_mode = 3
 
-[node name="Count" type="Label" parent="Root/HowTo/Column/Pages/Fight/Header"]
+[node name="Count" type="Label" parent="Root/HowTo/Margin/Column/Pages/Fight/Header"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/font_size = 40
@@ -464,7 +470,7 @@ text = "3/7"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="Body" type="Label" parent="Root/HowTo/Column/Pages/Fight"]
+[node name="Body" type="Label" parent="Root/HowTo/Margin/Column/Pages/Fight"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -472,7 +478,7 @@ theme_override_font_sizes/font_size = 36
 text = "Stand next to an enemy to attack. Fights are not just 1 on 1 in this game. Mechs inside the highlighted area join the battle. There are big disadvantages to going in battle with one mech, so prioritize keeping your squad nearby when you attack or are attacked by the enemy."
 autowrap_mode = 3
 
-[node name="Cards" type="VBoxContainer" parent="Root/HowTo/Column/Pages"]
+[node name="Cards" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Pages"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -482,11 +488,11 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 16
 
-[node name="Header" type="HBoxContainer" parent="Root/HowTo/Column/Pages/Cards"]
+[node name="Header" type="HBoxContainer" parent="Root/HowTo/Margin/Column/Pages/Cards"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="Root/HowTo/Column/Pages/Cards/Header"]
+[node name="Title" type="Label" parent="Root/HowTo/Margin/Column/Pages/Cards/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -495,7 +501,7 @@ text = "Cards"
 vertical_alignment = 1
 autowrap_mode = 3
 
-[node name="Count" type="Label" parent="Root/HowTo/Column/Pages/Cards/Header"]
+[node name="Count" type="Label" parent="Root/HowTo/Margin/Column/Pages/Cards/Header"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/font_size = 40
@@ -503,7 +509,7 @@ text = "4/7"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="Body" type="Label" parent="Root/HowTo/Column/Pages/Cards"]
+[node name="Body" type="Label" parent="Root/HowTo/Margin/Column/Pages/Cards"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -511,7 +517,7 @@ theme_override_font_sizes/font_size = 36
 text = "Each mech has a unique deck of cards that are brought into battle. More mechs in the fight means more cards. Play a card, then choose its target. Attacks deal damage within their range. Move cards step that mech. A battle lasts two rounds."
 autowrap_mode = 3
 
-[node name="Defense" type="VBoxContainer" parent="Root/HowTo/Column/Pages"]
+[node name="Defense" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Pages"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -521,11 +527,11 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 16
 
-[node name="Header" type="HBoxContainer" parent="Root/HowTo/Column/Pages/Defense"]
+[node name="Header" type="HBoxContainer" parent="Root/HowTo/Margin/Column/Pages/Defense"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="Root/HowTo/Column/Pages/Defense/Header"]
+[node name="Title" type="Label" parent="Root/HowTo/Margin/Column/Pages/Defense/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -534,7 +540,7 @@ text = "Defense"
 vertical_alignment = 1
 autowrap_mode = 3
 
-[node name="Count" type="Label" parent="Root/HowTo/Column/Pages/Defense/Header"]
+[node name="Count" type="Label" parent="Root/HowTo/Margin/Column/Pages/Defense/Header"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/font_size = 40
@@ -542,7 +548,7 @@ text = "5/7"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="Body" type="Label" parent="Root/HowTo/Column/Pages/Defense"]
+[node name="Body" type="Label" parent="Root/HowTo/Margin/Column/Pages/Defense"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -550,7 +556,7 @@ theme_override_font_sizes/font_size = 36
 text = "Cards that add Guard to a mech will absorb hits during that battle, then drops afterwards. Cards that add Barrier absorbs hits as well, however it stays when you return to the map. Cards that Dodge stay in hand and negates one incoming attack."
 autowrap_mode = 3
 
-[node name="Timers" type="VBoxContainer" parent="Root/HowTo/Column/Pages"]
+[node name="Timers" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Pages"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -560,11 +566,11 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 16
 
-[node name="Header" type="HBoxContainer" parent="Root/HowTo/Column/Pages/Timers"]
+[node name="Header" type="HBoxContainer" parent="Root/HowTo/Margin/Column/Pages/Timers"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="Root/HowTo/Column/Pages/Timers/Header"]
+[node name="Title" type="Label" parent="Root/HowTo/Margin/Column/Pages/Timers/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -573,7 +579,7 @@ text = "Enemy Timers"
 vertical_alignment = 1
 autowrap_mode = 3
 
-[node name="Count" type="Label" parent="Root/HowTo/Column/Pages/Timers/Header"]
+[node name="Count" type="Label" parent="Root/HowTo/Margin/Column/Pages/Timers/Header"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/font_size = 40
@@ -581,7 +587,7 @@ text = "6/7"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="Body" type="Label" parent="Root/HowTo/Column/Pages/Timers"]
+[node name="Body" type="Label" parent="Root/HowTo/Margin/Column/Pages/Timers"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -589,7 +595,7 @@ theme_override_font_sizes/font_size = 36
 text = "Each enemy shows how many cards are left before it acts. Playing a card, or ending the turn, counts every timer down. At zero, that enemy takes a turn. Discarding a card does not count down enemy action timers."
 autowrap_mode = 3
 
-[node name="Overdrive" type="VBoxContainer" parent="Root/HowTo/Column/Pages"]
+[node name="Overdrive" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Pages"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -599,11 +605,11 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 16
 
-[node name="Header" type="HBoxContainer" parent="Root/HowTo/Column/Pages/Overdrive"]
+[node name="Header" type="HBoxContainer" parent="Root/HowTo/Margin/Column/Pages/Overdrive"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="Root/HowTo/Column/Pages/Overdrive/Header"]
+[node name="Title" type="Label" parent="Root/HowTo/Margin/Column/Pages/Overdrive/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -612,7 +618,7 @@ text = "Overdrive"
 vertical_alignment = 1
 autowrap_mode = 3
 
-[node name="Count" type="Label" parent="Root/HowTo/Column/Pages/Overdrive/Header"]
+[node name="Count" type="Label" parent="Root/HowTo/Margin/Column/Pages/Overdrive/Header"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/font_size = 40
@@ -620,7 +626,7 @@ text = "7/7"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="Body" type="Label" parent="Root/HowTo/Column/Pages/Overdrive"]
+[node name="Body" type="Label" parent="Root/HowTo/Margin/Column/Pages/Overdrive"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
@@ -628,10 +634,10 @@ theme_override_font_sizes/font_size = 36
 text = "Moving on the map and discarding cards in battle fills the squad's Overdrive gauge. When the Overdrive gauge is full, press Activate Overdrive in battle to enable Overdrive for the remainder of the battle. Attacks hit harder, guards block more, and each mech's overdrive card can enter the hand. The gauge is spent when the fight ends."
 autowrap_mode = 3
 
-[node name="Nav" type="HBoxContainer" parent="Root/HowTo/Column"]
+[node name="Nav" type="HBoxContainer" parent="Root/HowTo/Margin/Column"]
 layout_mode = 2
 
-[node name="HowToBack" type="Button" parent="Root/HowTo/Column/Nav"]
+[node name="HowToBack" parent="Root/HowTo/Margin/Column/Nav" instance=ExtResource("10_btn")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 64)
 layout_mode = 2
@@ -639,12 +645,12 @@ focus_mode = 0
 theme_override_font_sizes/font_size = 32
 text = "< Back"
 
-[node name="Gap" type="Control" parent="Root/HowTo/Column/Nav"]
+[node name="Gap" type="Control" parent="Root/HowTo/Margin/Column/Nav"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="HowToNext" type="Button" parent="Root/HowTo/Column/Nav"]
+[node name="HowToNext" parent="Root/HowTo/Margin/Column/Nav" instance=ExtResource("10_btn")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 64)
 layout_mode = 2
@@ -658,19 +664,20 @@ visible = false
 layout_mode = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -248.0
+offset_left = -260.0
 offset_top = 72.0
 offset_right = -12.0
-offset_bottom = 304.0
+offset_bottom = 312.0
 grow_horizontal = 0
 mouse_filter = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_menu")
+theme = ExtResource("11_theme")
+theme_type_variation = &"SecondaryPanel"
 
 [node name="Column" type="VBoxContainer" parent="Root/MenuPanel"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="MissionLog" type="Button" parent="Root/MenuPanel/Column"]
+[node name="MissionLog" parent="Root/MenuPanel/Column" instance=ExtResource("10_btn")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 64)
 layout_mode = 2
@@ -678,7 +685,7 @@ focus_mode = 0
 theme_override_font_sizes/font_size = 32
 text = "Mission Log"
 
-[node name="LegendButton" type="Button" parent="Root/MenuPanel/Column"]
+[node name="LegendButton" parent="Root/MenuPanel/Column" instance=ExtResource("10_btn")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 64)
 layout_mode = 2
@@ -686,7 +693,7 @@ focus_mode = 0
 theme_override_font_sizes/font_size = 32
 text = "Legend"
 
-[node name="QuitButton" type="Button" parent="Root/MenuPanel/Column"]
+[node name="QuitButton" parent="Root/MenuPanel/Column" instance=ExtResource("10_btn")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 64)
 layout_mode = 2

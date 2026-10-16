@@ -18,7 +18,7 @@ extends Resource
 @export var turn_count: int = 3
 ## How much this mech adds to the squad attack gauge's length. Player mechs only.
 @export var charge: int = 1
-## Shown on the select screen. Grades are S, A, B, C, or D. Charge is labeled OVD there.
+## Shown on the select screen. Grades are S, A, B, C, or D. Charge is labeled CHG there.
 @export_multiline var blurb: String = ""
 @export var hp_grade: String = ""
 @export var atk_grade: String = ""
@@ -36,5 +36,5 @@ const STAT_TIPS := {
 	"Rng": "RNG = Attack range from deck. Also initiate attack distance.",
 	"Mov": "MOV = Movement range on map",
 	"Spd": "SPD = Higher speed moves first on map",
-	"Ovd": "OVD = Additional actions needed to activate Overdrive",
+	"Ovd": "CHG = Increases size of charge gauge, when full activates Overdrive",
 }

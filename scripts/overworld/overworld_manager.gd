@@ -10,8 +10,12 @@ const ATTACK_RANGE_SHADE := Color(1.0, 0.64, 0.58, 0.42)
 const TIMELINE_DIM := 0.38
 const TIMELINE_LEAD_SIZE := 80.0
 const TIMELINE_QUEUE_SIZE := 40.0
+const HUD_MARGIN := Vector2(12, 8)
+const HUD_GAP := 12.0
 const MAP_ZOOM_MIN := 1.0
-const MAP_ZOOM_MAX := 2.0
+## Where the opening shot lands. The wheel and pinch can go closer than this.
+const MAP_ZOOM_INTRO := 2.0
+const MAP_ZOOM_MAX := 4.0
 const MAP_ZOOM_STEP := 1.1
 const MAP_PAN_THRESHOLD := 8.0
 const BATTLE_WINDOW_LINE := Color(1.0, 0.94, 0.72, 0.96)
@@ -26,18 +30,18 @@ const COMMENCE_TEXT := "COMMENCE"
 const ATTACK_TEXT := "ATTACK"
 const ACTION_BUTTON_SIZE := Vector2(180, 96)
 const PORTRAIT_SCENE := preload("res://scenes/ui/confirm_portrait.tscn")
+const COMMS_PORTRAIT := preload("res://art/characters/misc/comms.png")
 const APPROACH_BOX_SCENE := preload("res://scenes/ui/approach_box.tscn")
+const TURN_CHEVRON_SCENE := preload("res://scenes/ui/turn_chevron.tscn")
+const TURN_CHEVRON_BOB := 0.28
 const APPROACH_NONE := Vector2i(-99999, -99999)
 
 var _selected: MechState
-var _undo_button: Button
-var _undo_unit: MechState
-var _undo_origin := Vector2i.ZERO
-var _undo_facing := 1
+## A step this turn has not yet added its charge. Attacking spends it.
+var _move_charge_pending := false
 ## Squares this mech can still step to, fixed at the start of its turn.
 var _step_actor_id := ""
 var _step_home := Vector2i.ZERO
-var _step_home_facing := 1
 var _step_distances: Dictionary = {}
 var _status_unit: MechState
 var _moving_unit: MechState
@@ -61,14 +65,13 @@ var _touch_points: Dictionary = {}
 var _pinch_distance := -1.0
 var _status_override := ""
 var _buttons: Dictionary = {}
-var _stage: TileMapLayer
+var _stage: Node2D
 var _cell_px := 1.0
 var _round: Array[MechState] = []
 var _turn_busy := false
 var _head_windows: Dictionary = {}
 var _timeline_key := ""
 var _rotated_id := ""
-var _squad_fill: StyleBoxFlat
 var _ally_pulse: Tween
 var _ally_pulse_frame: CanvasItem
 var _ally_pulse_id := ""
@@ -78,6 +81,7 @@ var _select_id := ""
 var _turn_pulse: Tween
 var _turn_sprite: AnimatedSprite2D
 var _turn_id := ""
+var _turn_chevron
 var _preview_pulse: Tween
 var _preview_glows: Array[AnimatedSprite2D] = []
 var _preview_key := ""
@@ -89,17 +93,20 @@ var _cancel_button: Button
 var _engage_pulse: Tween
 var _engage_shades: Array[StyleBoxFlat] = []
 var _engage_key := ""
+var _inspecting := false
 var _approach_from := APPROACH_NONE
 var _approach_enemy_id := ""
 var _approach_boxes: Array[ApproachBox] = []
 var _confirm_key := ""
-var _header_row: HBoxContainer
+var _header_row: Control
+var _timeline_panel: PanelContainer
+var _gauges: Control
+var _menu_corner: Control
+var _confirm_panel: PanelContainer
 var _confirm_strip: HBoxContainer
-var _confirm_squad_gauge: ProgressBar
-var _confirm_squad_fill: StyleBoxFlat
+var _confirm_buttons: VBoxContainer
 var _confirm_players: HBoxContainer
 var _confirm_enemies: HBoxContainer
-var _commence_flash: Tween
 var _players_before_battle := 0
 var _enemies_before_battle := 0
 var _campaign_over := false
@@ -111,20 +118,23 @@ var _opening := true
 @onready var approach_layer: Control = %ApproachLayer
 @onready var status_label: Label = %StatusLabel
 @onready var end_turn_button: Button = %EndTurnButton
-@onready var attack_button: Button = %AttackButton
+@onready var attack_button: SciFlashingButton = %AttackButton
 @onready var target_note: PanelContainer = %TargetNote
 @onready var cancel_button: Button = %CancelButton
-@onready var undo_button: Button = %UndoMoveButton
 @onready var action_bar: Control = $Actions
 @onready var stats_window: PanelContainer = %StatsWindow
-@onready var mech_panel: MechPanel = %StatsBody
+@onready var mech_panel: MechPanel = %StatsWindow/StatsBody
 @onready var deck_overlay: DeckOverlay = %DeckOverlay
 @onready var timeline_column: HBoxContainer = %TimelineColumn
 @onready var turn_lead: HBoxContainer = %TurnLead
 @onready var timeline_queue: GridContainer = %TimelineQueue
 @onready var turn_timeline: HBoxContainer = %TurnTimeline
-@onready var player_gauge: ProgressBar = %PlayerGauge
+@onready var player_gauge: OverdriveMeter = %PlayerGauge
 @onready var next_gauge_label: Label = %NextGaugeLabel
+@onready var _charge_gain: Label = %ChargeGain
+@onready var _overdrive_note: InfoNote = %OverdriveNote
+
+var _charge_gain_tween: Tween
 @onready var resolution_overlay: Control = %Resolution
 @onready var resolution_title: Label = %ResolutionTitle
 @onready var back_to_title_button: Button = %BackToTitleButton
@@ -158,20 +168,26 @@ func _ready() -> void:
 	attack_button.pressed.connect(_on_attack_pressed)
 	back_to_title_button.pressed.connect(_on_back_to_title_pressed)
 	mech_panel.deck_pressed.connect(_on_deck_pressed)
+	mech_panel.inspect_pressed.connect(_on_inspect_pressed)
 	resolution_overlay.visible = false
 	grid_host.resized.connect(_fit_grid)
 	GameManager.battle_finished.connect(_close_battle)
 	StageMap.use(GameManager.stage_scene)
-	_stage = StageMap.layer
+	_stage = StageMap.root
 	grid.add_child(_stage)
 	_stage.z_as_relative = true
 	_stage.z_index = 0
 	_stage.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_style_gauge(player_gauge)
+	_attach_overdrive_note(player_gauge)
 	_style_attack_button()
 	_size_action_button(attack_button)
 	_size_action_button(end_turn_button)
 	_build_confirm_strip()
+	resized.connect(func() -> void:
+		_pin_hud.call_deferred()
+		_pin_confirm_panel.call_deferred()
+		_pin_target_note.call_deferred()
+	)
 	_fill_round()
 	_rebuild()
 	await GameManager.wait_until_shown()
@@ -309,6 +325,7 @@ func _refresh_timeline() -> void:
 	if timeline_queue != null:
 		timeline_queue.visible = turn_timeline.get_child_count() > 0
 	_apply_timeline_focus()
+	_pin_hud.call_deferred()
 
 
 func _timeline_chip_count() -> int:
@@ -428,27 +445,19 @@ func _refresh_gauges() -> void:
 		return
 	var squad_charge := GameManager.player_attack_gauge
 	var squad_max := GameManager.player_attack_max
-	player_gauge.max_value = squad_max
-	player_gauge.value = squad_charge
-	OverdriveGauge.write(player_gauge, squad_charge, squad_max)
-	OverdriveGauge.celebrate(player_gauge, _squad_fill, squad_charge)
+	player_gauge.show_charge(squad_charge, squad_max)
 	if next_gauge_label != null:
 		var banked := GameManager.player_banked_gauge
 		next_gauge_label.visible = banked > 0
 		next_gauge_label.text = "Next Gauge +%d" % banked
 		next_gauge_label.add_theme_color_override("font_color", SELECT_BLUE)
-	_update_squad_flash()
-	_sync_confirm_gauges()
 
 
-func _style_gauge(bar: ProgressBar) -> void:
-	OverdriveGauge.dress(bar)
-	if bar == player_gauge:
-		_squad_fill = OverdriveGauge.claim_fill(bar)
-
-
-func _update_squad_flash() -> void:
-	OverdriveGauge.pulse(player_gauge, _squad_fill, GameManager.attack_ready("player"))
+func _attach_overdrive_note(meter: OverdriveMeter) -> void:
+	if meter == null or meter.info_badge == null or _overdrive_note == null:
+		return
+	meter.info_badge.set_meta("tip_width", 480.0)
+	_overdrive_note.attach(meter.info_badge, OverdriveMeter.NOTE)
 
 
 func _sync_ally_pulse(actor: MechState) -> void:
@@ -492,7 +501,6 @@ func _stop_ally_pulse() -> void:
 
 func _note_status(text: String) -> void:
 	status_label.text = text
-	GameMenu.note_status(text)
 
 
 func _quit_stage() -> void:
@@ -505,7 +513,7 @@ func _on_back_to_title_pressed() -> void:
 
 
 func _style_attack_button() -> void:
-	AccentPulse.clear(attack_button)
+	attack_button.stop_pulse()
 
 
 func _size_action_button(button: Button) -> void:
@@ -515,7 +523,7 @@ func _size_action_button(button: Button) -> void:
 
 ## Keep the action buttons pinned to the bottom-right corner, over the map.
 func _pin_actions() -> void:
-	var box := attack_button.get_parent() as Control
+	var box := action_bar
 	if box == null:
 		return
 	var box_size := box.get_combined_minimum_size()
@@ -523,46 +531,85 @@ func _pin_actions() -> void:
 	box.offset_bottom = -8.0
 	box.offset_left = box.offset_right - box_size.x
 	box.offset_top = box.offset_bottom - box_size.y
+	_pin_target_note()
+
+
+func _pin_target_note() -> void:
+	if target_note == null or size.y < 2.0:
+		return
+	var box := target_note.get_combined_minimum_size()
+	target_note.size = box
+	target_note.position = Vector2((size.x - box.x) * 0.5, size.y - 8.0 - box.y)
 
 
 func _build_confirm_strip() -> void:
-	_header_row = get_node("Layout/TopBar/Chrome/TopStack/HeaderRow") as HBoxContainer
-	_confirm_strip = get_node("Layout/TopBar/Chrome/TopStack/ConfirmStrip") as HBoxContainer
+	_header_row = get_node("Chrome/HeaderRow") as Control
+	_timeline_panel = _header_row.get_node("TimelinePanel") as PanelContainer
+	_gauges = _header_row.get_node("Gauges") as Control
+	_menu_corner = get_node("Chrome/MenuCorner") as Control
+	_confirm_panel = get_node("%ConfirmPanel") as PanelContainer
+	_confirm_strip = _confirm_panel.get_node("ConfirmStrip") as HBoxContainer
+	_confirm_buttons = _confirm_strip.get_node("ConfirmButtons") as VBoxContainer
 	_confirm_players = _confirm_strip.get_node("Players") as HBoxContainer
 	_confirm_enemies = _confirm_strip.get_node("Enemies") as HBoxContainer
-	_confirm_squad_gauge = _confirm_strip.get_node("SquadGauge") as ProgressBar
-	_confirm_squad_fill = OverdriveGauge.claim_fill(_confirm_squad_gauge)
-	OverdriveGauge.dress(_confirm_squad_gauge)
 	_cancel_button = cancel_button
-	_undo_button = undo_button
 	if not _cancel_button.pressed.is_connected(_on_cancel_pressed):
 		_cancel_button.pressed.connect(_on_cancel_pressed)
-	if not _undo_button.pressed.is_connected(_on_undo_move):
-		_undo_button.pressed.connect(_on_undo_move)
+	_pin_hud.call_deferred()
+
+
+## Timeline, gauge, and menu sit on top of the full-screen stage.
+func _pin_hud() -> void:
+	if _menu_corner == null or size.x < 2.0:
+		return
+	var menu_size := _menu_corner.get_combined_minimum_size()
+	_menu_corner.size = menu_size
+	_menu_corner.position = Vector2(size.x - HUD_MARGIN.x - menu_size.x, HUD_MARGIN.y)
+	var right := _menu_corner.position.x - HUD_GAP
+	_place_from_right(_gauges, right, HUD_MARGIN.y)
+	if _timeline_panel != null and _gauges != null:
+		var timeline_size := _timeline_panel.get_combined_minimum_size()
+		var room := _gauges.position.x - HUD_GAP - HUD_MARGIN.x
+		timeline_size.x = minf(timeline_size.x, maxf(room, 80.0))
+		_timeline_panel.position = HUD_MARGIN
+		_timeline_panel.size = timeline_size
+
+
+func _place_from_right(node: Control, right: float, top: float) -> void:
+	if node == null:
+		return
+	var box := node.get_combined_minimum_size()
+	if box.x < 1.0:
+		box = node.size
+	node.size = box
+	node.position = Vector2(right - box.x, top)
 
 
 func _apply_confirm_bar() -> void:
 	var confirming := _confirming and _confirm_target != null
 	var actor := _current_actor()
 	var choosing := _targeting and actor != null and actor.team == "player"
-	end_turn_button.visible = not confirming
+	end_turn_button.visible = not confirming and not choosing
 	if _cancel_button != null:
 		_cancel_button.visible = (confirming or choosing) and actor != null and actor.team == "player"
-	if _confirm_strip != null and _confirm_strip.visible != confirming:
-		_confirm_strip.visible = confirming
-		_place_confirm_chrome(confirming)
+	_seat_commence_button(confirming)
+	if _confirm_panel != null and _confirm_panel.visible != confirming:
+		_confirm_panel.visible = confirming
 	if not confirming:
+		attack_button.visible = false
 		if attack_button.text != ATTACK_TEXT:
 			attack_button.text = ATTACK_TEXT
-			_stop_commence_flash()
 		_confirm_key = ""
 		_pin_actions()
+		_sync_attack_pulse()
 		return
 	attack_button.text = COMMENCE_TEXT
 	attack_button.visible = true
 	_pin_actions()
+	_pin_confirm_panel()
 	_fill_confirm_bar()
-	_start_commence_flash()
+	_pin_confirm_panel.call_deferred()
+	_sync_attack_pulse()
 
 
 func _fill_confirm_bar() -> void:
@@ -588,6 +635,7 @@ func _fill_confirm_bar() -> void:
 	_confirm_key = key
 	_fill_portrait_row(_confirm_players, players)
 	_fill_portrait_row(_confirm_enemies, enemies)
+	_pin_confirm_panel.call_deferred()
 
 
 func _order_side(units: Array[MechState], lead: MechState) -> void:
@@ -609,24 +657,60 @@ func _side_ids(units: Array[MechState]) -> String:
 	return "|".join(ids)
 
 
-func _sync_confirm_gauges() -> void:
-	if _confirm_squad_gauge == null:
+func _seat_commence_button(in_panel: bool) -> void:
+	if attack_button == null or _confirm_strip == null or action_bar == null:
 		return
-	var squad_charge := GameManager.player_attack_gauge
-	var squad_max := GameManager.player_attack_max
-	_confirm_squad_gauge.max_value = squad_max
-	_confirm_squad_gauge.value = squad_charge
-	OverdriveGauge.write(_confirm_squad_gauge, squad_charge, squad_max)
-	OverdriveGauge.celebrate(_confirm_squad_gauge, _confirm_squad_fill, squad_charge)
-	OverdriveGauge.pulse(
-		_confirm_squad_gauge,
-		_confirm_squad_fill,
-		squad_max > 0 and squad_charge >= squad_max
+	var home: Node = _confirm_buttons if in_panel else action_bar
+	if home == null:
+		return
+	var cancel_home := _cancel_button == null or _cancel_button.get_parent() == home
+	if attack_button.get_parent() == home and cancel_home and _confirm_buttons_ordered(in_panel):
+		return
+	if in_panel:
+		# Commence sits above Cancel.
+		_append_child(home, attack_button)
+		if _cancel_button != null:
+			_append_child(home, _cancel_button)
+		return
+	_append_child(action_bar, attack_button)
+	if _cancel_button != null:
+		_append_child(action_bar, _cancel_button)
+	_append_child(action_bar, end_turn_button)
+
+
+func _append_child(parent: Node, child: Node) -> void:
+	if child == null or parent == null:
+		return
+	var current := child.get_parent()
+	if current != null:
+		current.remove_child(child)
+	parent.add_child(child)
+
+
+func _confirm_buttons_ordered(in_panel: bool) -> bool:
+	if in_panel:
+		if _cancel_button == null:
+			return true
+		return attack_button.get_index() + 1 == _cancel_button.get_index()
+	if _cancel_button == null or end_turn_button == null:
+		return true
+	return (
+		attack_button.get_index() < _cancel_button.get_index()
+		and _cancel_button.get_index() < end_turn_button.get_index()
 	)
 
 
-func _place_confirm_chrome(confirming: bool) -> void:
-	_header_row.visible = not confirming
+func _pin_confirm_panel() -> void:
+	if _confirm_panel == null or size.y < 2.0:
+		return
+	var box := _confirm_panel.get_combined_minimum_size()
+	_confirm_panel.size = box
+	var right_limit := size.x - 12.0
+	if action_bar != null:
+		right_limit = minf(right_limit, action_bar.position.x - 12.0)
+	var span := maxf(right_limit - 12.0, box.x)
+	var x := 12.0 + maxf(span - box.x, 0.0) * 0.5
+	_confirm_panel.position = Vector2(x, size.y - 8.0 - box.y)
 
 
 func _fill_portrait_row(row: HBoxContainer, units: Array[MechState]) -> void:
@@ -663,17 +747,11 @@ func _make_confirm_portrait(unit: MechState) -> Panel:
 	return chip
 
 
-func _start_commence_flash() -> void:
-	if _commence_flash != null and _commence_flash.is_valid() and _commence_flash.is_running():
-		return
-	_commence_flash = AccentPulse.start(self, attack_button)
-
-
-func _stop_commence_flash() -> void:
-	if _commence_flash != null and _commence_flash.is_valid():
-		_commence_flash.kill()
-	_commence_flash = null
-	AccentPulse.clear(attack_button)
+func _sync_attack_pulse() -> void:
+	if attack_button.visible:
+		attack_button.start_pulse()
+	else:
+		attack_button.stop_pulse()
 
 
 func _enemies_in_range(unit: MechState) -> Array[MechState]:
@@ -799,7 +877,8 @@ func _fit_grid() -> void:
 	var h_sep := grid.get_theme_constant("h_separation")
 	var v_sep := grid.get_theme_constant("v_separation")
 	var cell_h := (grid_host.size.y - v_sep * (rows - 1)) / float(rows)
-	var cell := floorf(cell_h)
+	var cell_w := (grid_host.size.x - h_sep * (columns - 1)) / float(columns)
+	var cell := floorf(maxf(cell_h, cell_w))
 	if cell < 1.0:
 		return
 	var side := Vector2(cell, cell)
@@ -843,9 +922,9 @@ func _apply_map_view() -> void:
 
 
 func _sync_stage() -> void:
-	if _stage == null or _stage.tile_set == null:
+	if _stage == null or StageMap.layer == null or StageMap.layer.tile_set == null:
 		return
-	var tile := Vector2(_stage.tile_set.tile_size)
+	var tile := Vector2(StageMap.layer.tile_set.tile_size)
 	var step := tile * float(StageMap.mech_span())
 	_stage.scale = Vector2(_cell_px / step.x, _cell_px / step.y)
 	_stage.position = -Vector2(StageMap.bounds.position) * _cell_px
@@ -916,10 +995,12 @@ func _approach_steps() -> Array[Vector2i]:
 
 func _sync_approach_owner() -> void:
 	if not _scouting():
+		_inspecting = false
 		_approach_from = APPROACH_NONE
 		_approach_enemy_id = ""
 		return
 	if _approach_enemy_id != _selected.id:
+		_inspecting = false
 		_approach_from = APPROACH_NONE
 		_approach_enemy_id = _selected.id
 
@@ -933,7 +1014,7 @@ func _approach_open() -> bool:
 
 
 func _is_approach_cell(coords: Vector2i) -> bool:
-	if not _scouting():
+	if not _scouting() or not _inspecting:
 		return false
 	var step := coords - _selected.overworld_position
 	return absi(step.x) + absi(step.y) == 1
@@ -952,6 +1033,7 @@ func _leave_scout() -> void:
 	if not _scouting():
 		return
 	_selected = null
+	_inspecting = false
 	_approach_from = APPROACH_NONE
 	_approach_enemy_id = ""
 	_hide_status_tip()
@@ -1008,7 +1090,7 @@ func _sync_approach_boxes() -> void:
 	approach_layer.rotation = 0.0
 	var spots: Array[Vector2i] = []
 	var anchor: Control = null
-	if _scouting():
+	if _scouting() and _inspecting:
 		anchor = _buttons.get(_selected.overworld_position) as Control
 		if anchor != null:
 			for step in _approach_steps():
@@ -1308,7 +1390,7 @@ func _refresh() -> void:
 		and not _animating
 		and not _turn_busy
 		and not _opening
-		and not _selected.has_moved
+		and (_selected.team == "enemy" or not _selected.has_moved)
 	)
 	if show_reach and _selected != null:
 		if placing:
@@ -1326,6 +1408,9 @@ func _refresh() -> void:
 	var attack_cells := {}
 	if show_reach and _selected != null and _selected.team == "player":
 		attack_cells = _attack_reach_cells(_selected)
+	var threat_cells := {}
+	if show_reach and _selected != null and _selected.team == "enemy":
+		threat_cells = OverworldAi.threat_zone(distances, _selected.attack_range, _selected.overworld_position)
 	for coords in _buttons:
 		var button: Button = _buttons[coords]
 		var unit := _unit_at(coords)
@@ -1335,7 +1420,6 @@ func _refresh() -> void:
 		var sprite := button.get_node_or_null("MechSprite") as AnimatedSprite2D
 		var border := Color(0, 0, 0, 0)
 		var shade := Color(0, 0, 0, 0)
-		var ally_turn := unit == actor and actor != null and actor.team == "player"
 		if _map_locked and not focus:
 			shade = Color(0.02, 0.02, 0.03, 0.72)
 		if unit == null:
@@ -1343,7 +1427,7 @@ func _refresh() -> void:
 				sprite.visible = false
 			button.text = ""
 			button.disabled = _map_locked
-			if move_cells.has(coords):
+			if move_cells.has(coords) or threat_cells.has(coords):
 				shade = range_tint
 			_paint(button, Color(0, 0, 0, 0), border)
 			_set_shade(button, shade)
@@ -1355,13 +1439,13 @@ func _refresh() -> void:
 			button.disabled = _map_locked
 			if involved.has(unit.id):
 				shade = _engage_color(unit)
-			elif ally_turn:
-				shade = _selection_color(unit)
 			elif _targeting and unit.team == "enemy" and _in_attack_range(actor, unit):
 				border = Color(0.85, 0.28, 0.22)
 				shade = ATTACK_SHADE
 			elif _confirming and unit.team == "enemy" and _in_attack_range(actor, unit):
 				border = SELECT_RED if unit == _confirm_target else Color(0.85, 0.28, 0.22)
+			elif unit.team == "player" and (move_cells.has(coords) or threat_cells.has(coords)):
+				shade = range_tint
 			_paint(button, Color(0, 0, 0, 0), border)
 			_set_shade(button, shade)
 			_set_attack_inset(button, ATTACK_RANGE_SHADE if attack_cells.has(coords) else Color(0, 0, 0, 0))
@@ -1383,10 +1467,10 @@ func _refresh() -> void:
 				tint = tint.lerp(Color(0.02, 0.02, 0.03), 0.72)
 			if involved.has(unit.id):
 				shade = _engage_color(unit)
-			elif ally_turn:
-				shade = _selection_color(unit)
 			elif _targeting and unit.team == "enemy" and _in_attack_range(actor, unit):
 				shade = ATTACK_SHADE
+			elif unit.team == "player" and (move_cells.has(coords) or threat_cells.has(coords)):
+				shade = range_tint
 			_paint(button, tint, border)
 			_set_shade(button, shade)
 			_set_attack_inset(button, ATTACK_RANGE_SHADE if attack_cells.has(coords) else Color(0, 0, 0, 0))
@@ -1398,6 +1482,7 @@ func _refresh() -> void:
 	_sync_selection_pulse(actor)
 	_sync_preview_tint()
 	_sync_turn_tint(actor)
+	_sync_turn_chevron(actor)
 	_sync_engage_pulse()
 	_sync_approach_boxes()
 	var report := GameManager.battle_report
@@ -1422,10 +1507,7 @@ func _refresh() -> void:
 	end_turn_button.disabled = (
 		_opening or _animating or _turn_busy or actor == null or actor.team != "player"
 	)
-	if _undo_button != null:
-		_undo_button.visible = _can_undo() and not _confirming
-		_undo_button.disabled = _opening or _animating or _turn_busy
-	attack_button.visible = _can_attack() and not _targeting
+	attack_button.visible = false
 	target_note.visible = _prompt_enemy_choice()
 	_sync_status_tip()
 	_apply_confirm_bar()
@@ -1511,9 +1593,18 @@ func _show_status_tip(unit: MechState) -> void:
 	if _status_unit != unit:
 		_close_deck_overlay()
 	_status_unit = unit
+	_dress_status_panel(unit)
 	stats_window.visible = true
 	mech_panel.present_unit(unit, false)
 	_place_status_tip()
+
+
+func _dress_status_panel(unit: MechState) -> void:
+	var variation := &"SecondaryPanelEnemy" if unit.team == "enemy" else &"SecondaryPanel"
+	stats_window.theme_type_variation = variation
+	var portrait := stats_window.get_node_or_null("StatsBody/PortraitHost") as Panel
+	if portrait != null:
+		portrait.theme_type_variation = variation
 
 
 func _hide_status_tip() -> void:
@@ -1527,6 +1618,16 @@ func _on_deck_pressed() -> void:
 	if _status_unit == null or _status_unit.team != "player" or deck_overlay == null:
 		return
 	deck_overlay.open_for(_status_unit)
+
+
+func _on_inspect_pressed() -> void:
+	if _status_unit == null or _status_unit.team != "enemy" or not _status_unit.alive:
+		return
+	_selected = _status_unit
+	_inspecting = true
+	_approach_enemy_id = _status_unit.id
+	_approach_from = APPROACH_NONE
+	_refresh()
 
 
 func _deck_overlay_open() -> bool:
@@ -1595,12 +1696,15 @@ func _on_cell_pressed(coords: Vector2i) -> void:
 	if _gesture_panned:
 		_gesture_panned = false
 		return
-	if _confirming:
-		return
 	if _turn_busy or _animating:
 		return
 	var actor := _current_actor()
 	var unit := _unit_at(coords)
+	if _confirming:
+		if _stands_on_attack_tile(actor, unit) and unit != _confirm_target:
+			_hide_status_tip()
+			_arm_attack(actor, unit)
+		return
 	if _targeting:
 		if unit != null and unit.alive and unit.team == "player":
 			_targeting = false
@@ -1617,6 +1721,10 @@ func _on_cell_pressed(coords: Vector2i) -> void:
 			return
 		_arm_attack(actor, unit)
 		return
+	if _enemy_on_attack_tile(actor, unit):
+		_hide_status_tip()
+		_arm_attack(actor, unit)
+		return
 	if _scouting() and _is_approach_cell(coords):
 		_pick_approach(coords)
 		return
@@ -1626,6 +1734,7 @@ func _on_cell_pressed(coords: Vector2i) -> void:
 		return
 	if _scouting():
 		_selected = null
+		_inspecting = false
 		_approach_from = APPROACH_NONE
 		_approach_enemy_id = ""
 		_hide_status_tip()
@@ -1707,6 +1816,19 @@ func _chosen_attack_target(enemies: Array[MechState]) -> MechState:
 	return null
 
 
+## The acting player is placing, and this enemy stands on one of their red attack tiles.
+func _enemy_on_attack_tile(actor: MechState, unit: MechState) -> bool:
+	return _player_can_reposition(actor) and _stands_on_attack_tile(actor, unit)
+
+
+func _stands_on_attack_tile(actor: MechState, unit: MechState) -> bool:
+	if actor == null or not actor.alive or actor.team != "player":
+		return false
+	if unit == null or not unit.alive or unit.team != "enemy":
+		return false
+	return _attack_reach_cells(actor).has(unit.overworld_position)
+
+
 func _arm_attack(actor: MechState, target: MechState) -> void:
 	_targeting = false
 	_confirming = true
@@ -1725,9 +1847,9 @@ func _try_attack(unit: MechState) -> void:
 	if not _in_attack_range(actor, unit):
 		_note_status("Get within range of %s before attacking." % unit.display_name)
 		return
-	if _undo_unit == actor:
+	if _move_charge_pending:
 		GameManager.note_move("player")
-	_clear_undo()
+		_move_charge_pending = false
 	_targeting = false
 	_animating = true
 	actor.face_toward_x(actor.overworld_position.x, unit.overworld_position.x)
@@ -1755,14 +1877,8 @@ func _move_player_to(coords: Vector2i) -> void:
 		return
 	await _animate_move(mover, path)
 	var home := _step_home if _step_actor_id == mover.id else origin
-	var home_facing := _step_home_facing if _step_actor_id == mover.id else mover.facing
 	mover.has_moved = mover.overworld_position != home
-	if mover.has_moved:
-		_undo_unit = mover
-		_undo_origin = home
-		_undo_facing = home_facing
-	else:
-		_clear_undo()
+	_move_charge_pending = mover.has_moved
 	_animating = false
 	_status_override = ""
 	_refresh()
@@ -1776,16 +1892,39 @@ func _on_end_turn() -> void:
 		return
 	_targeting = false
 	_clear_confirm()
-	_clear_undo()
+	_move_charge_pending = false
 	GameManager.battle_report = ""
 	var already_ready := GameManager.attack_ready("player")
+	var before_charge := GameManager.player_attack_gauge
 	GameManager.note_move("player")
+	if GameManager.player_attack_gauge > before_charge:
+		_show_turn_charge()
+		_refresh_gauges()
 	actor.has_moved = true
 	if not already_ready and GameManager.attack_ready("player"):
 		_refresh()
 		return
 	_advance_actor()
 	await _begin_actor_turn()
+
+
+func _show_turn_charge() -> void:
+	if _charge_gain == null:
+		return
+	_charge_gain.text = "+1 charge"
+	_charge_gain.visible = true
+	_pin_hud.call_deferred()
+	_charge_gain.modulate.a = 1.0
+	if _charge_gain_tween != null and _charge_gain_tween.is_valid():
+		_charge_gain_tween.kill()
+	_charge_gain_tween = create_tween()
+	_charge_gain_tween.tween_interval(OverdriveGauge.GAIN_HOLD)
+	_charge_gain_tween.tween_property(_charge_gain, "modulate:a", 0.0, OverdriveGauge.GAIN_FADE)
+	_charge_gain_tween.finished.connect(func() -> void:
+		if is_instance_valid(_charge_gain):
+			_charge_gain.visible = false
+			_pin_hud.call_deferred()
+	)
 
 
 func _map_zoom_floor() -> float:
@@ -1805,7 +1944,7 @@ func _zoom_from_overview() -> Tween:
 		_settle_intro_view()
 		return null
 	var from_zoom := _overview_zoom()
-	var to_zoom := MAP_ZOOM_MAX
+	var to_zoom := MAP_ZOOM_INTRO
 	var end_pan := _pan_on_point(_intro_focus(), to_zoom)
 	_intro_holds_center = false
 	_intro_tweening = true
@@ -1821,7 +1960,7 @@ func _zoom_from_overview() -> Tween:
 func _settle_intro_view() -> void:
 	_intro_holds_center = false
 	_intro_tweening = false
-	_map_zoom = MAP_ZOOM_MAX
+	_map_zoom = MAP_ZOOM_INTRO
 	_map_pan = _pan_on_point(_intro_focus(), _map_zoom)
 	_map_placed = true
 	_apply_map_view()
@@ -1864,31 +2003,12 @@ func _play_mission_start() -> void:
 
 
 func _briefing_lines() -> Array[StoryLine]:
-	var unit := _briefing_unit()
-	var speaker := "Squad" if unit == null else unit.display_name
-	var portrait := _pilot_portrait(unit)
 	var lines: Array[StoryLine] = []
-	lines.append(_brief(speaker, portrait, "Well that was fast. Citadel approaches. Their mechs are already on the streets."))
-	lines.append(_brief(speaker, portrait, "Move beside one and the fight starts right there."))
-	lines.append(_brief(speaker, portrait, "Fight as a squad, you'll be at a disadvantage if you attack alone."))
-	lines.append(_brief(speaker, portrait, "Clear every hostile and this mission is done. Then we can head back to base."))
+	lines.append(_brief("Comms", COMMS_PORTRAIT, "Well that was fast. Citadel approaches. Their mechs are already on the streets."))
+	lines.append(_brief("Comms", COMMS_PORTRAIT, "Move beside one and the fight starts right there."))
+	lines.append(_brief("Comms", COMMS_PORTRAIT, "Fight as a squad, you'll be at a disadvantage if you attack alone."))
+	lines.append(_brief("Comms", COMMS_PORTRAIT, "Clear every hostile and this mission is done. Then we can head back to base."))
 	return lines
-
-
-func _briefing_unit() -> MechState:
-	for unit in GameManager.player_mechs:
-		if unit != null and unit.alive:
-			return unit
-	return null
-
-
-func _pilot_portrait(unit: MechState) -> Texture2D:
-	if unit == null or unit.art_id == "":
-		return null
-	var path := "res://art/mechs/player/%s/pilot.png" % unit.art_id
-	if not ResourceLoader.exists(path):
-		return null
-	return load(path) as Texture2D
 
 
 func _brief(speaker: String, portrait: Texture2D, text: String) -> StoryLine:
@@ -2034,6 +2154,8 @@ func _animate_move(unit: MechState, path: Array[Vector2i]) -> void:
 	unit.overworld_position = path[path.size() - 1]
 	_moving_unit = null
 	_move_token = null
+	if _turn_chevron != null and is_instance_valid(_turn_chevron) and _turn_chevron.get_parent() == token:
+		token.remove_child(_turn_chevron)
 	if is_inside_tree():
 		_refresh()
 	token.queue_free()
@@ -2239,14 +2361,14 @@ func _sample_saved_view() -> Dictionary:
 
 
 func _chrome_alpha() -> float:
-	var bar := get_node_or_null("Layout/TopBar") as CanvasItem
+	var bar := get_node_or_null("Chrome") as CanvasItem
 	if bar == null:
 		return 1.0
 	return bar.modulate.a
 
 
 func _set_chrome_alpha(alpha: float) -> void:
-	get_node("Layout/TopBar").modulate.a = alpha
+	get_node("Chrome").modulate.a = alpha
 	action_bar.modulate.a = alpha
 	if alpha <= 0.0:
 		_hide_status_tip()
@@ -2277,7 +2399,8 @@ func _adjacent_player(unit: MechState) -> MechState:
 func _make_token(unit: MechState) -> Button:
 	var token := CELL_SCENE.instantiate() as Button
 	token.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	token.z_index = 10
+	# ApproachLayer is z 4 and the sprite adds another 4, so this keeps the walker under the stage shadow.
+	token.z_index = -3
 	var source: Button = _buttons[unit.overworld_position]
 	# Same transform as the map, so the traveler stays the size of a standing mech.
 	_sync_approach_boxes()
@@ -2388,6 +2511,9 @@ func _on_cell_resized(button: Button) -> void:
 	var sprite := button.get_node_or_null("MechSprite") as AnimatedSprite2D
 	if sprite != null and sprite.visible:
 		_place_unit_sprite(button, sprite)
+	if _turn_chevron != null and is_instance_valid(_turn_chevron) and _turn_chevron.visible and _turn_chevron.get_parent() == button:
+		var marker_sprite := button.get_node_or_null("MechSprite") as AnimatedSprite2D
+		_place_turn_chevron(button, marker_sprite)
 	_sync_approach_boxes()
 
 
@@ -2480,7 +2606,6 @@ func _remember_steps(actor: MechState) -> void:
 		return
 	_step_actor_id = actor.id
 	_step_home = actor.overworld_position
-	_step_home_facing = actor.facing
 	_step_distances = OverworldAi.reachable(actor, GameManager.all_mechs(), GameManager.overworld_size())
 
 
@@ -2505,38 +2630,6 @@ func _steps_from_here(actor: MechState) -> Dictionary:
 	)
 
 
-func _can_undo() -> bool:
-	var actor := _current_actor()
-	return (
-		_undo_unit != null
-		and actor == _undo_unit
-		and actor.alive
-		and actor.team == "player"
-		and actor.has_moved
-		and not _opening
-		and not _animating
-		and not _turn_busy
-		and not _map_locked
-		and not _targeting
-	)
-
-
-func _on_undo_move() -> void:
-	if not _can_undo():
-		return
-	var unit := _undo_unit
-	unit.overworld_position = _undo_origin
-	unit.facing = _undo_facing
-	unit.has_moved = false
-	_clear_undo()
-	_selected = unit
-	_refresh()
-
-
-func _clear_undo() -> void:
-	_undo_unit = null
-
-
 func _paint_cell_mark(button: Button, unit: MechState) -> void:
 	var mark := button.get_node_or_null("CellMark") as CellMark
 	if mark == null:
@@ -2552,48 +2645,14 @@ func _paint_cell_mark(button: Button, unit: MechState) -> void:
 		mark.show_reticule(Color(0, 0, 0, 0))
 
 
-func _selection_color(unit: MechState) -> Color:
-	var color := SELECT_BLUE if unit.team == "player" else SELECT_RED
-	color.a = 0.34
-	return color
-
-
 func _range_color(unit: MechState) -> Color:
 	var color := SELECT_BLUE if unit.team == "player" else SELECT_RED
 	color.a = 0.45
 	return color
 
 
-func _sync_selection_pulse(actor: MechState) -> void:
-	if actor == null or not actor.alive or actor.team != "player" or _map_locked or _confirming:
-		_stop_selection_pulse()
-		return
-	if _shown_fight_roster().has(actor):
-		_stop_selection_pulse()
-		return
-	var button: Button = _buttons.get(actor.overworld_position) as Button
-	var shade := _shade_style(button)
-	if shade == null:
-		_stop_selection_pulse()
-		return
-	if (
-		_select_id == actor.id
-		and _select_shade == shade
-		and _select_pulse != null
-		and _select_pulse.is_valid()
-		and _select_pulse.is_running()
-	):
-		return
+func _sync_selection_pulse(_actor: MechState) -> void:
 	_stop_selection_pulse()
-	_select_id = actor.id
-	_select_shade = shade
-	var base := SELECT_BLUE
-	shade.bg_color = Color(base.r, base.g, base.b, 0.38)
-	_select_pulse = create_tween()
-	_select_pulse.set_loops()
-	_select_pulse.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_select_pulse.tween_property(shade, "bg_color:a", 0.1, 0.45)
-	_select_pulse.tween_property(shade, "bg_color:a", 0.42, 0.45)
 
 
 func _stop_selection_pulse() -> void:
@@ -2669,6 +2728,87 @@ func _preview_claims(unit: MechState) -> bool:
 	if _confirming == false and not _approach_open():
 		return false
 	return _shown_fight_roster().has(unit)
+
+
+## Mark over the player whose turn it is. It stays up with nothing selected, and rides the walker.
+func _wants_turn_chevron(actor: MechState) -> bool:
+	return (
+		actor != null
+		and actor.alive
+		and actor.team == "player"
+		and not _opening
+		and not _map_locked
+	)
+
+
+func _chevron_anchor(actor: MechState) -> Button:
+	if actor != null and _moving_unit == actor and is_instance_valid(_move_token) and _move_token is Button:
+		return _move_token as Button
+	return _button_for_unit(actor)
+
+
+func _sync_turn_chevron(actor: MechState) -> void:
+	if not _wants_turn_chevron(actor):
+		if _turn_chevron != null and is_instance_valid(_turn_chevron):
+			_turn_chevron.set_shown(false)
+		return
+	var button := _chevron_anchor(actor)
+	var chevron = _turn_chevron_node()
+	if button == null or chevron == null:
+		if chevron != null:
+			chevron.set_shown(false)
+		return
+	if button.size.x < 1.0:
+		chevron.set_shown(false)
+		return
+	_attach_turn_chevron(chevron, button)
+	if chevron.get_parent() != button:
+		chevron.set_shown(false)
+		return
+	var sprite := button.get_node_or_null("MechSprite") as AnimatedSprite2D
+	_place_turn_chevron(button, sprite if sprite != null and sprite.visible else null)
+	chevron.set_shown(true)
+
+
+func _attach_turn_chevron(chevron: Control, anchor: Control) -> void:
+	if chevron.get_parent() == anchor:
+		return
+	if chevron.get_parent() == null:
+		anchor.add_child(chevron)
+		return
+	chevron.reparent(anchor, false)
+
+
+func _turn_chevron_node():
+	if _turn_chevron != null and is_instance_valid(_turn_chevron):
+		var parent = _turn_chevron.get_parent()
+		if parent == null or not parent.is_queued_for_deletion():
+			return _turn_chevron
+	_turn_chevron = TURN_CHEVRON_SCENE.instantiate()
+	return _turn_chevron
+
+
+func _place_turn_chevron(button: Button, sprite: AnimatedSprite2D) -> void:
+	if _turn_chevron == null or button == null or button.size.x < 1.0:
+		return
+	var side := button.size.x * 0.46
+	var crown := button.size.y * 0.08
+	if sprite != null and sprite.visible and sprite.sprite_frames != null and sprite.sprite_frames.has_animation("idle"):
+		var tex := sprite.sprite_frames.get_frame_texture("idle", 0)
+		if tex != null:
+			var frame := tex.get_size()
+			var content := MechSprites.content_rect(tex)
+			var visual_h := frame.y * absf(sprite.scale.y)
+			side = maxf(visual_h * 0.5, button.size.x * 0.34)
+			crown = sprite.position.y + (content.position.y - frame.y * 0.5) * sprite.scale.y
+	side *= 0.75 * 0.75
+	var gap := side * 0.08
+	var bob := side * TURN_CHEVRON_BOB
+	_turn_chevron.size = Vector2(side, side)
+	_turn_chevron.position = Vector2(
+		(sprite.position.x if sprite != null and sprite.visible else button.size.x * 0.5) - side * 0.5,
+		crown - side - gap - bob + 10.0
+	)
 
 
 func _sync_turn_tint(actor: MechState) -> void:

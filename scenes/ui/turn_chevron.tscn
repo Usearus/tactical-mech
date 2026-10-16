@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://bpqi14uf7u6n4"]
+
+[ext_resource type="Script" uid="uid://bjcbja2n2alv2" path="res://scripts/ui/turn_chevron.gd" id="1_chevron"]
+[ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="2_sheet"]
+[ext_resource type="Shader" path="res://shaders/chevron_whiten.gdshader" id="3_whiten"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_chevron"]
+atlas = ExtResource("2_sheet")
+region = Rect2(30, 228, 48, 40)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_whiten"]
+resource_local_to_scene = true
+shader = ExtResource("3_whiten")
+shader_parameter/whiten = 0.0
+
+[node name="TurnChevron" type="Control" unique_id=1482337264]
+visible = false
+z_index = 12
+z_as_relative = false
+layout_mode = 3
+anchors_preset = 0
+offset_right = 48.0
+offset_bottom = 40.0
+mouse_filter = 2
+script = ExtResource("1_chevron")
+
+[node name="Bob" type="Control" parent="." unique_id=1475792069]
+anchors_preset = 0
+offset_right = 48.0
+offset_bottom = 40.0
+mouse_filter = 2
+
+[node name="Mark" type="TextureRect" parent="Bob" unique_id=1525207662]
+texture_filter = 0
+material = SubResource("ShaderMaterial_whiten")
+layout_mode = 0
+offset_right = 48.0
+offset_bottom = 40.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_chevron")
+expand_mode = 1
+stretch_mode = 5

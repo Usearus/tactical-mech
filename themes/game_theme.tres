@@ -1,6 +1,7 @@
 [gd_resource type="Theme" format=3 uid="uid://dfjrh01ei61f3"]
 
 [ext_resource type="FontFile" uid="uid://tlv3b4ojb0q8" path="res://fonts/m5x7.ttf" id="1_font"]
+[ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="2_sheet"]
 
 [sub_resource type="StyleBoxFlat" id="accent_disabled"]
 content_margin_left = 12.0
@@ -89,6 +90,24 @@ corner_radius_top_left = 2
 corner_radius_top_right = 2
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_check_on"]
+atlas = ExtResource("2_sheet")
+region = Rect2(162, 112, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_check_on_disabled"]
+atlas = ExtResource("2_sheet")
+region = Rect2(230, 112, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_check_off"]
+atlas = ExtResource("2_sheet")
+region = Rect2(128, 112, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_check_off_disabled"]
+atlas = ExtResource("2_sheet")
+region = Rect2(196, 112, 32, 32)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_checkbox"]
 
 [sub_resource type="StyleBoxFlat" id="loadout_panel"]
 content_margin_left = 10.0
@@ -429,6 +448,22 @@ Button/styles/hover = SubResource("button_hover")
 Button/styles/hover_pressed = SubResource("button_pressed")
 Button/styles/normal = SubResource("button_normal")
 Button/styles/pressed = SubResource("button_pressed")
+CheckBox/colors/icon_disabled_color = Color(1, 1, 1, 1)
+CheckBox/colors/icon_focus_color = Color(1, 1, 1, 1)
+CheckBox/colors/icon_hover_color = Color(1, 1, 1, 1)
+CheckBox/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
+CheckBox/colors/icon_normal_color = Color(1, 1, 1, 1)
+CheckBox/colors/icon_pressed_color = Color(1, 1, 1, 1)
+CheckBox/icons/checked = SubResource("AtlasTexture_check_on")
+CheckBox/icons/checked_disabled = SubResource("AtlasTexture_check_on_disabled")
+CheckBox/icons/unchecked = SubResource("AtlasTexture_check_off")
+CheckBox/icons/unchecked_disabled = SubResource("AtlasTexture_check_off_disabled")
+CheckBox/styles/disabled = SubResource("StyleBoxEmpty_checkbox")
+CheckBox/styles/focus = SubResource("StyleBoxEmpty_checkbox")
+CheckBox/styles/hover = SubResource("StyleBoxEmpty_checkbox")
+CheckBox/styles/hover_pressed = SubResource("StyleBoxEmpty_checkbox")
+CheckBox/styles/normal = SubResource("StyleBoxEmpty_checkbox")
+CheckBox/styles/pressed = SubResource("StyleBoxEmpty_checkbox")
 Label/font_sizes/font_size = 32
 LoadoutPanel/base_type = &"PanelContainer"
 LoadoutPanel/styles/panel = SubResource("loadout_panel")
@@ -475,6 +510,7 @@ RosterButtonSelected/styles/focus = SubResource("roster_selected")
 RosterButtonSelected/styles/hover = SubResource("roster_selected_hover")
 RosterButtonSelected/styles/normal = SubResource("roster_selected")
 RosterButtonSelected/styles/pressed = SubResource("roster_selected_pressed")
+SciCheckbox/base_type = &"CheckBox"
 SidePanel/base_type = &"PanelContainer"
 SidePanel/styles/panel = SubResource("side_panel")
 SquadGauge/base_type = &"ProgressBar"

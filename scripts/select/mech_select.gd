@@ -3,14 +3,18 @@ extends Control
 const CARD_SCENE := preload("res://scenes/ui/mech_card.tscn")
 const SLOT_SCENE := preload("res://scenes/ui/strip_card_slot.tscn")
 const ROW_SCENE := preload("res://scenes/ui/roster_row.tscn")
-const OVERDRIVE_NOTE := "Actions to fill this gauge. The stage sets a minimum. High OVD makes it longer. A full gauge boosts attack and guard."
+const OVERDRIVE_NOTE := "Charge Gauge: Each charge requires a mech to move or a card to be discarded to fill this gauge. This stage sets a minimum of 4. Once charge gauge is full Overdrive can be activated in battle, boosting attack and guard."
 const TIER_GOLD := Color(0.98, 0.84, 0.32)
 ## Screen pixels the cut moves right for each pixel down. Matches the squad-screen reference.
 const SHAPE_SLOPE := 0.46
+## Blurb stays beside the stat table above this width/height. Taller screens stack them.
+const DETAILS_ROW_ASPECT := 1.5
+## Portrait stays capped on wide screens so the blurb column can use the rest.
+const STAGE_ROW_MAX_X := 400.0
+## Share of the identity row the portrait keeps while the blurb and stats are stacked.
+const STACKED_PORTRAIT_RATIO := 0.6
 ## Where the cut crosses the bottom of the portrait, as a fraction of that panel's width.
 const SHAPE_ANCHOR := 0.98
-## Gap inside the preview stroke before the first card. It scrolls away with the row.
-const CARD_LEAD := 16.0
 
 var _squad: Array[MechData] = []
 var _focused: MechData
@@ -20,18 +24,19 @@ var _deal_tries := 0
 var _buttons: Dictionary = {}
 var _checks: Dictionary = {}
 var _syncing := false
-var _deploy_flash: Tween
 
 @onready var _special_note: InfoNote = %SpecialNote
 
 @onready var back_button: Button = %BackButton
 @onready var roster: VBoxContainer = %Roster
-@onready var frame: PanelContainer = %Frame
+@onready var identity: HBoxContainer = %Identity
 @onready var stage: Panel = %Stage
+@onready var copy_column: MarginContainer = %MarginContainer
 @onready var shape: ColorRect = %Shape
 @onready var pilot_sprite: AnimatedSprite2D = %Pilot
 @onready var mech_sprite: AnimatedSprite2D = %Mech
 @onready var preview_name: Label = %PreviewName
+@onready var details: BoxContainer = %Details
 @onready var blurb: Label = %Blurb
 @onready var stat_table: VBoxContainer = %StatTable
 @onready var stat_grid: GridContainer = %StatGrid
@@ -47,7 +52,6 @@ var _deploy_flash: Tween
 @onready var spd_grade: Label = %SpdGrade
 @onready var ovd_stat: Label = %OvdStat
 @onready var ovd_grade: Label = %OvdGrade
-@onready var card_row: MarginContainer = %CardRow
 @onready var deck_lead: MarginContainer = %DeckLead
 @onready var deck: HBoxContainer = %Deck
 @onready var deck_scroll: ScrollContainer = %DeckScroll
@@ -73,7 +77,9 @@ func _ready() -> void:
 	deck_scroll.get_h_scroll_bar().value_changed.connect(func(_value: float) -> void:
 		_sync_card_fade()
 	)
-	_style_frame()
+	resized.connect(_arrange_details)
+	identity.resized.connect(_arrange_details)
+	_arrange_details()
 	_add_overdrive_info()
 	_watch_stat_tips()
 	_build_roster()
@@ -130,31 +136,6 @@ func _squad_limit() -> int:
 	return GameManager.squad_size()
 
 
-func _sync_deploy_pulse(ready: bool) -> void:
-	deploy_button.disabled = not ready
-	if ready:
-		_start_deploy_flash()
-	else:
-		_stop_deploy_flash()
-
-
-func _start_deploy_flash() -> void:
-	if _deploy_flash != null and _deploy_flash.is_valid() and _deploy_flash.is_running():
-		return
-	_deploy_flash = AccentPulse.start(self, deploy_button)
-
-
-func _stop_deploy_flash() -> void:
-	if _deploy_flash != null and _deploy_flash.is_valid():
-		_deploy_flash.kill()
-	_deploy_flash = null
-	if deploy_button == null:
-		return
-	deploy_button.theme_type_variation = &""
-	for slot in ["normal", "hover", "pressed", "focus", "disabled", "hover_pressed"]:
-		deploy_button.remove_theme_stylebox_override(slot)
-
-
 func _refresh() -> void:
 	var limit := _squad_limit()
 	deploy_button.text = "Deploy Squad %d/%d" % [_squad.size(), limit]
@@ -168,16 +149,14 @@ func _refresh() -> void:
 		var check := _checks.get(data.id) as CheckBox
 		if check != null:
 			check.button_pressed = slot >= 0
-		_paint_roster_button(button, data, slot >= 0)
 	_syncing = false
 	_show_focused()
 	_show_totals()
-	_sync_deploy_pulse(_squad.size() == _squad_limit())
+	deploy_button.disabled = _squad.size() != _squad_limit()
 	_place_pair()
 
 
 func _show_focused() -> void:
-	_style_frame()
 	var show_stats := _focused != null
 	blurb.visible = show_stats
 	stat_table.visible = show_stats
@@ -249,8 +228,10 @@ func _show_span(value: Label, grade: Label, low: int, high: int, letter: String,
 
 func _show_grade(grade: Label, letter: String) -> void:
 	grade.text = letter
-	var gold := letter == "S" or letter == "A"
-	grade.add_theme_color_override("font_color", TIER_GOLD if gold else Color.WHITE)
+	if letter == "S" or letter == "A":
+		grade.add_theme_color_override("font_color", TIER_GOLD)
+	else:
+		grade.remove_theme_color_override("font_color")
 
 
 func _watch_stat_tips() -> void:
@@ -379,8 +360,6 @@ func _strip_order(cards: Array[CardData]) -> Array[CardData]:
 
 
 func _sync_card_fade() -> void:
-	card_fade.z_as_relative = false
-	card_fade.z_index = 120
 	var leftover := deck_lead.size.x - deck_scroll.scroll_horizontal - deck_scroll.size.x
 	card_fade.visible = leftover > 4.0
 
@@ -398,6 +377,49 @@ func _stretch_shape() -> void:
 	var slope := SHAPE_SLOPE * shape.size.y / shape.size.x
 	mat.set_shader_parameter("edge_top", anchor_x - slope * anchor_y)
 	mat.set_shader_parameter("edge_bottom", anchor_x + slope * (1.0 - anchor_y))
+
+
+## Blurb sits beside the stat table on wide screens. Taller ones stack it on top
+## and give the portrait 60% of the row.
+func _arrange_details() -> void:
+	if size.x < 8.0 or size.y < 8.0:
+		return
+	var stacked := size.x / size.y < DETAILS_ROW_ASPECT
+	if details.vertical != stacked:
+		details.vertical = stacked
+		stat_table.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if stacked else Control.SIZE_SHRINK_END
+		preview_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if stacked else TextServer.AUTOWRAP_OFF
+	_fit_copy_column(stacked)
+
+
+func _fit_copy_column(stacked: bool) -> void:
+	if not stacked:
+		if is_equal_approx(stage.custom_maximum_size.x, STAGE_ROW_MAX_X) and copy_column.size_flags_horizontal == Control.SIZE_EXPAND_FILL:
+			return
+		_set_width_limit(stage, 0.0, STAGE_ROW_MAX_X)
+		_set_width_limit(copy_column, 0.0, 0.0)
+		stage.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		copy_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		return
+	if identity.size.x < 8.0:
+		return
+	var usable := identity.size.x - float(identity.get_theme_constant("separation"))
+	var portrait_width := usable * STACKED_PORTRAIT_RATIO
+	if is_equal_approx(stage.custom_maximum_size.x, portrait_width):
+		return
+	_set_width_limit(stage, portrait_width, portrait_width)
+	_set_width_limit(copy_column, usable - portrait_width, usable - portrait_width)
+	stage.size_flags_horizontal = Control.SIZE_FILL
+	copy_column.size_flags_horizontal = Control.SIZE_FILL
+
+
+func _set_width_limit(control: Control, minimum_x: float, maximum_x: float) -> void:
+	var minimum := control.custom_minimum_size
+	var maximum := control.custom_maximum_size
+	minimum.x = minimum_x
+	maximum.x = maximum_x
+	control.custom_minimum_size = minimum
+	control.custom_maximum_size = maximum
 
 
 func _place_pair() -> void:
@@ -418,8 +440,6 @@ func _place_pair() -> void:
 	if show_pilot and show_mech:
 		var shift := mech_slot * 0.34
 		var mech_left := (pilot_slot - mech_slot) * 0.5 + shift
-		pilot_sprite.z_index = 2
-		mech_sprite.z_index = 1
 		_place_sprite(pilot_sprite, pilot_slot, pilot_left, baseline)
 		_place_sprite(mech_sprite, mech_slot, pilot_left + mech_left, baseline)
 	elif show_pilot:
@@ -456,24 +476,6 @@ func _index_of(data: MechData) -> int:
 		if _squad[index] == data:
 			return index
 	return -1
-
-
-func _paint_roster_button(button: Button, data: MechData, selected: bool) -> void:
-	if selected:
-		button.theme_type_variation = &"RosterButtonSelected"
-	elif data == _focused:
-		button.theme_type_variation = &"RosterButtonActive"
-	else:
-		button.theme_type_variation = &"RosterButton"
-	for slot in ["normal", "hover", "pressed", "focus"]:
-		button.remove_theme_stylebox_override(slot)
-
-
-func _style_frame() -> void:
-	frame.theme_type_variation = &"PreviewFrameFocused" if _focused != null else &"PreviewFrame"
-	card_row.add_theme_constant_override("margin_left", 0)
-	card_row.add_theme_constant_override("margin_right", 0)
-	deck_lead.add_theme_constant_override("margin_left", int(CARD_LEAD))
 
 
 func _add_overdrive_info() -> void:

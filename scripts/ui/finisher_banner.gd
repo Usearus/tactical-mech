@@ -12,12 +12,15 @@ var _pose_home := Vector2.ZERO
 @onready var pose: TextureRect = %Portrait
 @onready var pilot: TextureRect = %Pilot
 @onready var title: Label = %Title
+@onready var fire_pose: AnimatedSprite2D = %FirePose
 
 
 func _ready() -> void:
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_pose_home = pose.position
+	fire_pose.visible = false
+	fire_pose.animation_finished.connect(_on_fire_pose_finished)
 	title.add_theme_color_override("font_color", Color.WHITE)
 	title.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
 	title.add_theme_constant_override("outline_size", 10)
@@ -68,12 +71,56 @@ func play(unit: MechState) -> void:
 	if is_inside_tree():
 		visible = false
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_stop_fire_pose()
 	_playing = false
 
 
 func _show_unit(unit: MechState) -> void:
+	pilot.texture = _load_pilot(unit.art_id)
+	if _show_raven_fire(unit):
+		return
+	_stop_fire_pose()
 	pose.texture = _pose_for(unit.art_id)
-	pilot.texture = _load_art(unit.art_id, "pilot.png")
+
+
+## Raven's finisher uses her firing strip instead of a still pose.
+func _show_raven_fire(unit: MechState) -> bool:
+	var raven := unit.art_id == "purple" or (unit.data != null and unit.data.id == "raven")
+	if not raven:
+		return false
+	var frames := MechSprites.frames_for(unit.art_id)
+	if frames == null or not frames.has_animation("attack"):
+		return false
+	var tex := frames.get_frame_texture("attack", 0)
+	var frame := tex.get_size() if tex != null else Vector2(64, 64)
+	var box := pose.size
+	if box.x < 2.0 or box.y < 2.0:
+		box = Vector2(566, 527)
+	var longest := maxf(frame.x, frame.y)
+	if longest <= 0.0:
+		return false
+	pose.texture = null
+	fire_pose.sprite_frames = frames
+	fire_pose.scale = Vector2.ONE * (minf(box.x, box.y) / longest)
+	fire_pose.position = box * 0.5
+	fire_pose.visible = true
+	fire_pose.play("attack")
+	return true
+
+
+func _on_fire_pose_finished() -> void:
+	_replay_fire_pose.call_deferred()
+
+
+func _replay_fire_pose() -> void:
+	if _playing and fire_pose.visible and is_inside_tree():
+		fire_pose.play("attack")
+
+
+func _stop_fire_pose() -> void:
+	fire_pose.visible = false
+	if fire_pose.sprite_frames != null:
+		fire_pose.stop()
 
 
 func _pose_for(art_id: String) -> Texture2D:
@@ -85,10 +132,15 @@ func _pose_for(art_id: String) -> Texture2D:
 	return _load_art(art_id, "fire_pose.png")
 
 
+func _load_pilot(art_id: String) -> Texture2D:
+	return _load_from("res://art/characters/player/%s/pilot.png" % art_id)
+
+
 func _load_art(art_id: String, file_name: String) -> Texture2D:
-	if art_id == "":
-		return null
-	var path := "res://art/mechs/player/%s/%s" % [art_id, file_name]
-	if not ResourceLoader.exists(path):
+	return _load_from("res://art/mechs/player/%s/%s" % [art_id, file_name])
+
+
+func _load_from(path: String) -> Texture2D:
+	if path == "" or not ResourceLoader.exists(path):
 		return null
 	return load(path) as Texture2D

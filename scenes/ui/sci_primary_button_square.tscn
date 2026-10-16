@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="1_theme"]
+
+[node name="sci_primary_button_square" type="Button"]
+custom_minimum_size = Vector2(56, 56)
+theme = ExtResource("1_theme")
+theme_type_variation = &"PrimaryButtonSquare"

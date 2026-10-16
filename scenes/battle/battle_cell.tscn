@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/ui/cell_mark.tscn" id="1_mark"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_action.tscn" id="2_action"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_hit_points.tscn" id="3_hp"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_barrier.tscn" id="4_barrier"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_guard.tscn" id="5_guard"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_evade.tscn" id="6_evade"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cell"]
 resource_local_to_scene = true
@@ -13,6 +14,38 @@ corner_radius_top_left = 2
 corner_radius_top_right = 2
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_shade"]
+resource_local_to_scene = true
+bg_color = Color(0, 0, 0, 0)
+expand_margin_left = -2.0
+expand_margin_top = -2.0
+expand_margin_right = -2.0
+expand_margin_bottom = -2.0
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_attack"]
+resource_local_to_scene = true
+bg_color = Color(0, 0, 0, 0)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_intercept"]
+resource_local_to_scene = true
+bg_color = Color(1, 0.9, 0.45, 0.16)
+expand_margin_left = -2.0
+expand_margin_top = -2.0
+expand_margin_right = -2.0
+expand_margin_bottom = -2.0
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [node name="BattleCell" type="Button"]
 clip_contents = true
@@ -32,6 +65,39 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0.08, 0.2, 0.34, 1)
+
+[node name="Shade" type="Panel" parent="."]
+z_index = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_shade")
+
+[node name="AttackShade" type="Panel" parent="."]
+z_index = 1
+layout_mode = 1
+anchor_left = 0.16
+anchor_top = 0.16
+anchor_right = 0.84
+anchor_bottom = 0.84
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_attack")
+
+[node name="InterceptFill" type="Panel" parent="."]
+visible = false
+z_index = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_intercept")
 
 [node name="MechSprite" type="AnimatedSprite2D" parent="."]
 visible = false
@@ -62,7 +128,7 @@ horizontal_alignment = 1
 vertical_alignment = 2
 
 [node name="Vitals" type="VBoxContainer" parent="."]
-z_index = 4
+z_index = 8
 layout_mode = 1
 offset_left = 2.0
 offset_top = 2.0
@@ -81,6 +147,9 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="Guard" parent="Vitals" instance=ExtResource("5_guard")]
+layout_mode = 2
+
+[node name="Evade" parent="Vitals" instance=ExtResource("6_evade")]
 layout_mode = 2
 
 [node name="CellMark" parent="." instance=ExtResource("1_mark")]

@@ -1,6 +1,6 @@
 shader_type canvas_item;
 
-uniform vec4 fill_color : source_color = vec4(0.20, 0.21, 0.25, 1.0);
+uniform vec4 fill_color : source_color = vec4(0.20, 0.21, 0.25, 0.0);
 uniform vec4 dot_color : source_color = vec4(0.42, 0.44, 0.50, 0.8);
 uniform float spacing = 22.0;
 uniform float radius = 1.15;
@@ -8,7 +8,7 @@ uniform float radius = 1.15;
 uniform float edge_top = 0.24;
 uniform float edge_bottom = 0.51;
 uniform bool clip_shape = true;
-uniform float fill_alpha = 1.0;
+uniform float fill_alpha = 0.0;
 
 void fragment() {
 	if (clip_shape) {

@@ -2,6 +2,7 @@ class_name MechPanel
 extends HBoxContainer
 
 signal deck_pressed
+signal inspect_pressed
 
 var _unit: MechState
 var _head_windows: Dictionary = {}
@@ -14,10 +15,12 @@ var _pilot_portrait := false
 @onready var hit_points: HBoxContainer = _find_badge("HitPoints")
 @onready var barrier_row: HBoxContainer = _find_badge("Barrier")
 @onready var guard_row: HBoxContainer = _find_badge("Guard")
+@onready var evade_row: HBoxContainer = _find_badge("Evade")
 @onready var action_row: HBoxContainer = _find_badge("Action")
 @onready var attack_row: HBoxContainer = _find_badge("Attack")
 @onready var attack_button: Button = get_node_or_null("AttackButton") as Button
 @onready var deck_button: Button = get_node_or_null("DeckButton") as Button
+@onready var inspect_button: Button = get_node_or_null("InspectButton") as Button
 
 
 func _ready() -> void:
@@ -28,6 +31,8 @@ func _ready() -> void:
 		portrait_host.clip_contents = true
 	if deck_button != null and not deck_button.pressed.is_connected(_on_deck_pressed):
 		deck_button.pressed.connect(_on_deck_pressed)
+	if inspect_button != null and not inspect_button.pressed.is_connected(_on_inspect_pressed):
+		inspect_button.pressed.connect(_on_inspect_pressed)
 	show_message("Select a mech")
 
 
@@ -43,6 +48,7 @@ func present_unit(unit: MechState, show_attack: bool) -> void:
 	elif name_label != null:
 		_present_rows(unit)
 	_show_deck_button(unit)
+	_show_inspect_button(unit)
 	_show_portrait(unit)
 
 
@@ -51,6 +57,7 @@ func show_message(text: String) -> void:
 	if attack_button != null:
 		attack_button.visible = false
 	_show_deck_button(null)
+	_show_inspect_button(null)
 	if portrait != null:
 		portrait.visible = false
 	if name_label != null:
@@ -60,6 +67,7 @@ func show_message(text: String) -> void:
 	_set_badge(hit_points, false, "")
 	_set_badge(barrier_row, false, "")
 	_set_badge(guard_row, false, "")
+	_set_badge(evade_row, false, "")
 	_set_badge(action_row, false, "")
 	_set_badge(attack_row, false, "")
 
@@ -72,6 +80,7 @@ func _present_overworld(unit: MechState) -> void:
 	name_label.text = unit.display_name
 	_set_badge(hit_points, true, "%d / %d" % [unit.hp, max_hp])
 	_set_badge(barrier_row, unit.standing_guard > 0, str(unit.standing_guard))
+	_set_badge(evade_row, unit.alive and unit.intercepting, "1")
 	_set_badge(action_row, enemy, str(unit.turn_count))
 	_present_attack(unit, enemy)
 	map_line.visible = true
@@ -84,6 +93,7 @@ func _present_rows(unit: MechState) -> void:
 	_set_badge(hit_points, true, str(unit.hp))
 	_set_badge(barrier_row, unit.standing_guard > 0, str(unit.standing_guard))
 	_set_badge(guard_row, not enemy and unit.guard > 0, str(unit.guard))
+	_set_badge(evade_row, unit.alive and unit.intercepting, "1")
 	_set_badge(action_row, enemy, str(maxi(unit.cards_until_turn, 0)))
 	_present_attack(unit, enemy)
 
@@ -144,8 +154,18 @@ func _show_deck_button(unit: MechState) -> void:
 	deck_button.visible = unit != null and unit.team == "player"
 
 
+func _show_inspect_button(unit: MechState) -> void:
+	if inspect_button == null:
+		return
+	inspect_button.visible = unit != null and unit.team == "enemy"
+
+
 func _on_deck_pressed() -> void:
 	deck_pressed.emit()
+
+
+func _on_inspect_pressed() -> void:
+	inspect_pressed.emit()
 
 
 func _show_portrait(unit: MechState) -> void:

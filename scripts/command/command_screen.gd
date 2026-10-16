@@ -8,7 +8,6 @@ const MECH_FEET := 63.0
 const PILOT_THIGH := 82.0
 
 @onready var start_button: Button = %StartButton
-@onready var start_flash: ColorRect = %Flash
 @onready var mech_sprite: AnimatedSprite2D = %Mech
 @onready var pilot_sprite: Sprite2D = %Pilot
 
@@ -59,16 +58,4 @@ func _on_start_pressed() -> void:
 		return
 	_leaving = true
 	start_button.disabled = true
-	await _flash_start_button()
 	GameManager.start_mission()
-
-
-func _flash_start_button() -> void:
-	start_flash.visible = true
-	start_flash.color = Color(1, 1, 1, 0)
-	var tween := create_tween()
-	for _pulse in 2:
-		tween.tween_property(start_flash, "color:a", 0.9, 0.08)
-		tween.tween_property(start_flash, "color:a", 0.0, 0.12)
-	await tween.finished
-	start_flash.visible = false

@@ -74,7 +74,7 @@ static func pilot_frames(art_id: String) -> SpriteFrames:
 		return null
 	if _pilots.has(art_id):
 		return _pilots[art_id]
-	var path := "res://art/mechs/player/%s/pilot.png" % art_id
+	var path := "res://art/characters/player/%s/pilot.png" % art_id
 	if not ResourceLoader.exists(path):
 		return null
 	var texture := load(path) as Texture2D

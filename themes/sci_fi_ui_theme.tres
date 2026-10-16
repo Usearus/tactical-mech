@@ -1,0 +1,303 @@
+[gd_resource type="Theme" format=3 uid="uid://c58dj4alu30k1"]
+
+[ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="1_nl1x6"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1luc2"]
+atlas = ExtResource("1_nl1x6")
+region = Rect2(196, 206, 132, 156)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_p86no"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = SubResource("AtlasTexture_1luc2")
+texture_margin_left = 88.0
+texture_margin_top = 82.0
+texture_margin_right = 18.0
+texture_margin_bottom = 15.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_check_on"]
+atlas = ExtResource("1_nl1x6")
+region = Rect2(162, 112, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_check_on_disabled"]
+atlas = ExtResource("1_nl1x6")
+region = Rect2(230, 112, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_check_off"]
+atlas = ExtResource("1_nl1x6")
+region = Rect2(128, 112, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_check_off_disabled"]
+atlas = ExtResource("1_nl1x6")
+region = Rect2(196, 112, 32, 32)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_checkbox"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_dialogue"]
+content_margin_left = 32.0
+content_margin_top = 20.0
+content_margin_right = 44.0
+content_margin_bottom = 20.0
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 32.0
+texture_margin_top = 24.0
+texture_margin_right = 42.0
+texture_margin_bottom = 42.0
+region_rect = Rect2(2, 112, 116, 92)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_disabled"]
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 22.0
+texture_margin_top = 22.0
+texture_margin_right = 22.0
+texture_margin_bottom = 22.0
+region_rect = Rect2(394, 4, 88, 58)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_focus"]
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 22.0
+texture_margin_top = 22.0
+texture_margin_right = 22.0
+texture_margin_bottom = 22.0
+region_rect = Rect2(298, 4, 88, 58)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_hover"]
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 22.0
+texture_margin_top = 22.0
+texture_margin_right = 22.0
+texture_margin_bottom = 22.0
+region_rect = Rect2(298, 4, 88, 58)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_hover_pressed"]
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 22.0
+texture_margin_top = 22.0
+texture_margin_right = 22.0
+texture_margin_bottom = 22.0
+region_rect = Rect2(490, 4, 88, 58)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_normal"]
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 22.0
+texture_margin_top = 22.0
+texture_margin_right = 22.0
+texture_margin_bottom = 22.0
+region_rect = Rect2(202, 4, 88, 58)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pressed"]
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 22.0
+texture_margin_top = 22.0
+texture_margin_right = 22.0
+texture_margin_bottom = 22.0
+region_rect = Rect2(490, 4, 88, 58)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sq_disabled"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(444, 86, 64, 64)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sq_hover"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(378, 86, 64, 64)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sq_pressed"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(510, 86, 64, 64)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sq_normal"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(312, 86, 64, 64)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_primary"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 24.0
+texture_margin_top = 24.0
+texture_margin_right = 24.0
+texture_margin_bottom = 24.0
+region_rect = Rect2(2, 2, 92, 92)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rvuqs"]
+atlas = ExtResource("1_nl1x6")
+region = Rect2(102, 4, 88, 88)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_i8rxg"]
+texture = SubResource("AtlasTexture_rvuqs")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1w6sa"]
+atlas = ExtResource("1_nl1x6")
+region = Rect2(102, 206, 88, 88)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_7o8bn"]
+texture = SubResource("AtlasTexture_1w6sa")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+
+[resource]
+CardBase/base_type = &"PanelContainer"
+CardBase/styles/panel = SubResource("StyleBoxTexture_p86no")
+CheckBox/colors/icon_disabled_color = Color(1, 1, 1, 1)
+CheckBox/colors/icon_focus_color = Color(1, 1, 1, 1)
+CheckBox/colors/icon_hover_color = Color(1, 1, 1, 1)
+CheckBox/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
+CheckBox/colors/icon_normal_color = Color(1, 1, 1, 1)
+CheckBox/colors/icon_pressed_color = Color(1, 1, 1, 1)
+CheckBox/icons/checked = SubResource("AtlasTexture_check_on")
+CheckBox/icons/checked_disabled = SubResource("AtlasTexture_check_on_disabled")
+CheckBox/icons/unchecked = SubResource("AtlasTexture_check_off")
+CheckBox/icons/unchecked_disabled = SubResource("AtlasTexture_check_off_disabled")
+CheckBox/styles/disabled = SubResource("StyleBoxEmpty_checkbox")
+CheckBox/styles/focus = SubResource("StyleBoxEmpty_checkbox")
+CheckBox/styles/hover = SubResource("StyleBoxEmpty_checkbox")
+CheckBox/styles/hover_pressed = SubResource("StyleBoxEmpty_checkbox")
+CheckBox/styles/normal = SubResource("StyleBoxEmpty_checkbox")
+CheckBox/styles/pressed = SubResource("StyleBoxEmpty_checkbox")
+DialoguePanel/base_type = &"Panel"
+DialoguePanel/styles/panel = SubResource("StyleBoxTexture_dialogue")
+Palette/colors/Black = Color(0.05098039, 0.05098039, 0.05882353, 1)
+Palette/colors/Blue = Color(0.31764707, 0.5529412, 0.6392157, 1)
+Palette/colors/BlueDark = Color(0.23137255, 0.4117647, 0.57254905, 1)
+Palette/colors/BlueDarkest = Color(0.1764706, 0.25490195, 0.43137255, 1)
+Palette/colors/BlueLight = Color(0.5137255, 0.77254903, 0.8117647, 1)
+Palette/colors/BlueLightest = Color(0.74509805, 0.9843137, 0.9843137, 1)
+Palette/colors/Brown = Color(0.6039216, 0.5529412, 0.47843137, 1)
+Palette/colors/BrownDark = Color(0.4117647, 0.36862746, 0.34117648, 1)
+Palette/colors/BrownDarkest = Color(0.30980393, 0.27058825, 0.25098038, 1)
+Palette/colors/BrownLight = Color(0.8352941, 0.7882353, 0.67058825, 1)
+Palette/colors/BrownLightest = Color(0.9843137, 0.9490196, 0.8156863, 1)
+Palette/colors/Gold = Color(0.6117647, 0.45490196, 0.26666668, 1)
+Palette/colors/GoldDark = Color(0.4745098, 0.3372549, 0.21176471, 1)
+Palette/colors/GoldDarker = Color(0.33333334, 0.23137255, 0.17254902, 1)
+Palette/colors/GoldDarkest = Color(0.21176471, 0.16470589, 0.1607843, 1)
+Palette/colors/GoldDeep = Color(0.14901961, 0.1254902, 0.14901961, 1)
+Palette/colors/GoldLight = Color(0.73333335, 0.57254905, 0.3372549, 1)
+Palette/colors/GoldLighter = Color(0.8509804, 0.70980394, 0.43529412, 1)
+Palette/colors/GoldLightest = Color(0.9607843, 0.85882354, 0.5764706, 1)
+Palette/colors/Gray = Color(0.41960785, 0.3764706, 0.43137255, 1)
+Palette/colors/GrayDark = Color(0.3137255, 0.25882354, 0.32941177, 1)
+Palette/colors/GrayDarker = Color(0.19607843, 0.16862746, 0.23137255, 1)
+Palette/colors/GrayDarkest = Color(0.11764706, 0.10588235, 0.15294118, 1)
+Palette/colors/GrayLight = Color(0.5803922, 0.5254902, 0.5647059, 1)
+Palette/colors/GrayLighter = Color(0.7294118, 0.69803923, 0.7137255, 1)
+Palette/colors/GrayLightest = Color(0.8980392, 0.8901961, 0.8901961, 1)
+Palette/colors/Green = Color(0.44313726, 0.6156863, 0.3137255, 1)
+Palette/colors/GreenDark = Color(0.31764707, 0.49803922, 0.30588236, 1)
+Palette/colors/GreenLight = Color(0.5921569, 0.7411765, 0.3372549, 1)
+Palette/colors/KhakiDark = Color(0.3529412, 0.36078432, 0.34509805, 1)
+Palette/colors/KhakiDarkest = Color(0.21960784, 0.21960784, 0.28627452, 1)
+Palette/colors/KhakiLight = Color(0.5137255, 0.5058823, 0.42352942, 1)
+Palette/colors/KhakiLightest = Color(0.70980394, 0.68235296, 0.5686275, 1)
+Palette/colors/Olive = Color(0.49411765, 0.5372549, 0.25098038, 1)
+Palette/colors/OliveDark = Color(0.36862746, 0.46666667, 0.27058825, 1)
+Palette/colors/OliveDarkest = Color(0.23921569, 0.39607844, 0.30196077, 1)
+Palette/colors/OliveLight = Color(0.627451, 0.6392157, 0.29411766, 1)
+Palette/colors/OliveLightest = Color(0.7607843, 0.7176471, 0.32156864, 1)
+Palette/colors/Purple = Color(0.40392157, 0.27058825, 0.37254903, 1)
+Palette/colors/PurpleDark = Color(0.30196077, 0.20392157, 0.32941177, 1)
+Palette/colors/PurpleDarker = Color(0.21568628, 0.16862746, 0.32941177, 1)
+Palette/colors/PurpleDarkest = Color(0.14117648, 0.15686275, 0.28627452, 1)
+Palette/colors/PurpleLight = Color(0.5254902, 0.38039216, 0.4392157, 1)
+Palette/colors/PurpleLighter = Color(0.6784314, 0.5098039, 0.49803922, 1)
+Palette/colors/PurpleLightest = Color(0.90588236, 0.69411767, 0.61960787, 1)
+Palette/colors/PurplePale = Color(0.9490196, 0.827451, 0.70980394, 1)
+Palette/colors/Red = Color(0.5882353, 0.25490195, 0.23921569, 1)
+Palette/colors/RedDark = Color(0.45882353, 0.16862746, 0.22352941, 1)
+Palette/colors/RedDarker = Color(0.32941177, 0.14117648, 0.20392157, 1)
+Palette/colors/RedDarkest = Color(0.21960784, 0.13333333, 0.1764706, 1)
+Palette/colors/RedLight = Color(0.70980394, 0.38431373, 0.2745098, 1)
+Palette/colors/RedLighter = Color(0.84705883, 0.5568628, 0.30980393, 1)
+Palette/colors/RedLightest = Color(0.9372549, 0.75686276, 0.37254903, 1)
+Palette/colors/SageDark = Color(0.21568628, 0.29803923, 0.2745098, 1)
+Palette/colors/SageDarker = Color(0.16470589, 0.22352941, 0.25490195, 1)
+Palette/colors/SageDarkest = Color(0.14117648, 0.15686275, 0.19607843, 1)
+Palette/colors/SageLight = Color(0.32941177, 0.40784314, 0.31764707, 1)
+Palette/colors/SageLighter = Color(0.4509804, 0.5137255, 0.4117647, 1)
+Palette/colors/SageLightest = Color(0.5803922, 0.63529414, 0.52156866, 1)
+Palette/colors/SteelDark = Color(0.3372549, 0.44313726, 0.5137255, 1)
+Palette/colors/SteelDarkest = Color(0.24313726, 0.31764707, 0.36862746, 1)
+Palette/colors/SteelLight = Color(0.47058824, 0.6039216, 0.6745098, 1)
+Palette/colors/SteelLightest = Color(0.7529412, 0.8509804, 0.8509804, 1)
+Palette/colors/White = Color(1, 1, 0.98039216, 1)
+PrimaryButton/base_type = &"Button"
+PrimaryButton/constants/align_to_largest_stylebox = 1
+PrimaryButton/styles/disabled = SubResource("StyleBoxTexture_disabled")
+PrimaryButton/styles/focus = SubResource("StyleBoxTexture_focus")
+PrimaryButton/styles/hover = SubResource("StyleBoxTexture_hover")
+PrimaryButton/styles/hover_pressed = SubResource("StyleBoxTexture_hover_pressed")
+PrimaryButton/styles/normal = SubResource("StyleBoxTexture_normal")
+PrimaryButton/styles/pressed = SubResource("StyleBoxTexture_pressed")
+PrimaryButtonSquare/base_type = &"Button"
+PrimaryButtonSquare/constants/align_to_largest_stylebox = 1
+PrimaryButtonSquare/styles/disabled = SubResource("StyleBoxTexture_sq_disabled")
+PrimaryButtonSquare/styles/focus = SubResource("StyleBoxTexture_sq_hover")
+PrimaryButtonSquare/styles/hover = SubResource("StyleBoxTexture_sq_hover")
+PrimaryButtonSquare/styles/hover_pressed = SubResource("StyleBoxTexture_sq_pressed")
+PrimaryButtonSquare/styles/normal = SubResource("StyleBoxTexture_sq_normal")
+PrimaryButtonSquare/styles/pressed = SubResource("StyleBoxTexture_sq_pressed")
+PrimaryPanel/base_type = &"PanelContainer"
+PrimaryPanel/styles/panel = SubResource("StyleBoxTexture_primary")
+SciCheckbox/base_type = &"CheckBox"
+SciCheckbox/colors/icon_disabled_color = Color(1, 1, 1, 1)
+SciCheckbox/colors/icon_focus_color = Color(1, 1, 1, 1)
+SciCheckbox/colors/icon_hover_color = Color(1, 1, 1, 1)
+SciCheckbox/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
+SciCheckbox/colors/icon_normal_color = Color(1, 1, 1, 1)
+SciCheckbox/colors/icon_pressed_color = Color(1, 1, 1, 1)
+SciCheckbox/icons/checked = SubResource("AtlasTexture_check_on")
+SciCheckbox/icons/checked_disabled = SubResource("AtlasTexture_check_on_disabled")
+SciCheckbox/icons/unchecked = SubResource("AtlasTexture_check_off")
+SciCheckbox/icons/unchecked_disabled = SubResource("AtlasTexture_check_off_disabled")
+SciCheckbox/styles/disabled = SubResource("StyleBoxEmpty_checkbox")
+SciCheckbox/styles/focus = SubResource("StyleBoxEmpty_checkbox")
+SciCheckbox/styles/hover = SubResource("StyleBoxEmpty_checkbox")
+SciCheckbox/styles/hover_pressed = SubResource("StyleBoxEmpty_checkbox")
+SciCheckbox/styles/normal = SubResource("StyleBoxEmpty_checkbox")
+SciCheckbox/styles/pressed = SubResource("StyleBoxEmpty_checkbox")
+SecondaryPanel/base_type = &"PanelContainer"
+SecondaryPanel/styles/panel = SubResource("StyleBoxTexture_i8rxg")
+SecondaryPanelEnemy/base_type = &"PanelContainer"
+SecondaryPanelEnemy/styles/panel = SubResource("StyleBoxTexture_7o8bn")

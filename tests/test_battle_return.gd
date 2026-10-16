@@ -103,8 +103,8 @@ func test_attack_from_the_east_keeps_the_target_on_d2() -> void:
 	var enemy := _mech("scout", "enemy", Vector2i(9, 3))
 	var encounter := EncounterData.create(player, Vector2i(-1, 0), [player, enemy])
 	var placed := BattleDeployment.place(encounter, BattleGrid.create())
-	assert_eq(placed[enemy.id], Vector2i(3, 1), "attacking from the east still puts the target on D2")
-	assert_eq(placed[player.id], Vector2i(4, 1), "the attacker stands one cell east of D2")
+	assert_eq(placed[enemy.id], Vector2i(2, 1), "attacking from the east puts the target on C2")
+	assert_eq(placed[player.id], Vector2i(3, 1), "the attacker stands on D2, beside the target")
 
 
 func test_attack_from_the_north_keeps_the_target_on_d2() -> void:
@@ -174,6 +174,33 @@ func test_view_ring_turns_with_a_north_south_fight() -> void:
 		BattleDeployment.overworld_cell_for(encounter, play),
 		"the defender's cell is the same stage cell as before"
 	)
+
+
+func test_terrain_point_keeps_a_cell_center() -> void:
+	var mech_px := Vector2(64, 64)
+	var side := _encounter(Vector2i(8, 3), Vector2i(9, 3), Vector2i.RIGHT)
+	_assert_cell_center(side, Vector2i(8, 3), mech_px)
+	_assert_cell_center(side, Vector2i(9, 3), mech_px)
+	var north := _encounter(Vector2i(8, 4), Vector2i(8, 3), Vector2i.UP)
+	_assert_cell_center(north, Vector2i(8, 3), mech_px)
+	_assert_cell_center(north, Vector2i(8, 4), mech_px)
+	var south := _encounter(Vector2i(8, 3), Vector2i(8, 4), Vector2i.DOWN)
+	_assert_cell_center(south, Vector2i(8, 4), mech_px)
+	_assert_cell_center(south, Vector2i(8, 3), mech_px)
+
+
+func _assert_cell_center(encounter: EncounterData, world: Vector2i, mech_px: Vector2) -> void:
+	var view := BattleDeployment.view_cell_for_overworld(encounter, world)
+	var stage := (Vector2(world) + Vector2(0.5, 0.5)) * mech_px
+	var expected := (Vector2(view) + Vector2(0.5, 0.5)) * mech_px
+	assert_eq(BattleDeployment.terrain_point(encounter, stage, mech_px), expected, "cell center lands on the stamped view cell")
+
+
+func _encounter(from_pos: Vector2i, to_pos: Vector2i, step: Vector2i) -> EncounterData:
+	var player := _mech("lancer", "player", from_pos)
+	var enemy := _mech("scout", "enemy", to_pos)
+	var everyone: Array[MechState] = [player, enemy]
+	return EncounterData.create(player, step, everyone)
 
 
 func _map() -> Vector2i:

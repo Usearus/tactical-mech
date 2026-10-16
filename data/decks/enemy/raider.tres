@@ -9,7 +9,7 @@ id = "raider_strike"
 display_name = "Strike"
 description = "A strike at an adjacent enemy."
 card_type = "Attack"
-damage = 6
+damage = 7
 reach = 1
 target_type = "enemy"
 

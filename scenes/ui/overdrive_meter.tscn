@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://byj1wl4xpte36"]
+
+[ext_resource type="Script" uid="uid://bwennl7msa2ij" path="res://scripts/ui/overdrive_meter.gd" id="1_meter"]
+[ext_resource type="PackedScene" path="res://scenes/ui/info_badge.tscn" id="3_badge"]
+[ext_resource type="PackedScene" path="res://scenes/ui/overdrive_segment.tscn" id="4_segment"]
+[ext_resource type="Texture2D" uid="uid://c005sck28lhl3" path="res://icodot-svg/ui/weather-nature/icon-lightning-ui.svg" id="5_bolt"]
+[ext_resource type="Shader" uid="uid://b474y1xvdk7dn" path="res://shaders/icon_white.gdshader" id="6_white"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_white"]
+shader = ExtResource("6_white")
+
+[node name="Row" type="HBoxContainer" unique_id=1577333674]
+custom_minimum_size = Vector2(200, 0)
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 186.0
+offset_bottom = 38.0
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+script = ExtResource("1_meter")
+
+[node name="Energy" type="TextureRect" parent="." unique_id=1245769412]
+material = SubResource("ShaderMaterial_white")
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("5_bolt")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="OverdriveInfo" parent="." unique_id=1204718479 instance=ExtResource("3_badge")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Segments" type="HBoxContainer" parent="." unique_id=519887547]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="Segment" parent="Segments" unique_id=1362252298 instance=ExtResource("4_segment")]
+layout_mode = 2
+
+[node name="Segment2" parent="Segments" unique_id=1809322944 instance=ExtResource("4_segment")]
+layout_mode = 2
+
+[node name="Segment3" parent="Segments" unique_id=1540949896 instance=ExtResource("4_segment")]
+layout_mode = 2
+
+[node name="Segment4" parent="Segments" unique_id=1485923960 instance=ExtResource("4_segment")]
+layout_mode = 2

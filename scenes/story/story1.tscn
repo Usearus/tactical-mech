@@ -3,10 +3,10 @@
 [ext_resource type="PackedScene" path="res://scenes/story/story.tscn" id="1_base"]
 [ext_resource type="Script" uid="uid://d1hy6pewttitq" path="res://scripts/story/story_line.gd" id="2_line"]
 [ext_resource type="Texture2D" uid="uid://bfsnt2gcpfks0" path="res://art/backgrounds/scene_alley.jpg" id="3_bg"]
-[ext_resource type="Texture2D" uid="uid://wkanx7w3nqyu" path="res://art/mechs/player/purple/pilot.png" id="4_raven"]
-[ext_resource type="Texture2D" uid="uid://dj4ec55gtrtip" path="res://art/mechs/player/white/pilot.png" id="5_comet"]
+[ext_resource type="Texture2D" uid="uid://dtcn3mffw0nti" path="res://art/characters/player/purple/pilot.png" id="4_raven"]
+[ext_resource type="Texture2D" uid="uid://dj4ec55gtrtip" path="res://art/characters/player/white/pilot.png" id="5_comet"]
 [ext_resource type="Texture2D" uid="uid://cd7cswcd8k2ja" path="res://art/mechs/player/white/idle.png" id="6_white"]
-[ext_resource type="Texture2D" uid="uid://cge1goco58nhh" path="res://art/mechs/player/purple/idle.png" id="7_purple"]
+[ext_resource type="Texture2D" uid="uid://tf0wj5tn2i20" path="res://art/mechs/player/purple/idle.png" id="7_purple"]
 
 [sub_resource type="Resource" id="l1"]
 script = ExtResource("2_line")
@@ -83,16 +83,13 @@ offset = Vector2(0, -31)
 flip_h = true
 metadata/art_id = "purple"
 
-[node name="PortraitWell" parent="DialogueBar/Dialogue" index="3"]
-anchors_preset = 9
-
 [node name="Portrait" parent="DialogueBar/Dialogue/PortraitWell" index="1"]
 texture = ExtResource("5_comet")
 
-[node name="Speaker" parent="DialogueBar/Dialogue" index="4"]
+[node name="Speaker" parent="DialogueBar/Dialogue" index="2"]
 text = "Comet"
 
-[node name="Body" parent="DialogueBar/Dialogue" index="5"]
+[node name="Body" parent="DialogueBar/Dialogue" index="3"]
 text = "Street's clear. The citadel is watching the far end."
 
 [editable path="DialogueBar"]

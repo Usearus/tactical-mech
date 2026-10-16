@@ -4,8 +4,6 @@ extends Control
 const PLAYER_ROW_SCENE := preload("res://scenes/battle/results_row_player.tscn")
 const ENEMY_ROW_SCENE := preload("res://scenes/battle/results_row_enemy.tscn")
 const LOSS := Color(0.92, 0.28, 0.24)
-const ENEMY_BORDER := Color(0.82, 0.28, 0.24, 0.7)
-const PLAYER_BORDER := Color(0.25, 0.72, 0.95, 0.55)
 const GAIN := Color(0.55, 0.85, 0.45)
 const GUARD_TINT := Color(0.45, 0.78, 1.0)
 const SQUAD := Color(0.25, 0.72, 0.95)
@@ -22,15 +20,15 @@ var _fight_offense := false
 var _squad_charge := 0
 var _squad_max := 4
 var _after: Dictionary = {}
-var _squad_fill: StyleBoxFlat
 
 @onready var title: Label = %Title
 @onready var player_list: VBoxContainer = %PlayerList
 @onready var enemy_list: VBoxContainer = %EnemyList
 @onready var squad_host: VBoxContainer = %SquadGaugeHost
-@onready var bar_host: VBoxContainer = %OverdriveBarHost
+@onready var bar_host: PanelContainer = %OverdriveBarHost
 @onready var continue_button: Button = %ContinueButton
-var _squad_bar: ProgressBar
+@onready var _overdrive_note: InfoNote = %OverdriveNote
+var _squad_meter: OverdriveMeter
 var _next_label: Label
 var _squad_note: Label
 
@@ -57,7 +55,7 @@ func present(units: Array, opened: Dictionary, outcome: String) -> void:
 	for unit in units:
 		if unit is MechState:
 			_add_unit(unit as MechState, opened)
-	_show_squad(_squad_charge, _squad_max)
+	_show_squad(_squad_charge, _squad_max, false)
 	_show_bank(0)
 	_set_note(_squad_note, "", MUTED)
 	continue_button.disabled = true
@@ -191,7 +189,6 @@ func _add_unit(unit: MechState, opened: Dictionary) -> void:
 	row.guard_end = unit.guard
 	row.shell = shell
 	var panel := (ENEMY_ROW_SCENE if enemy else PLAYER_ROW_SCENE).instantiate() as PanelContainer
-	_paint_team_border(panel, enemy)
 	var portrait := panel.get_node("%Portrait") as Control
 	var name_label := panel.get_node("%Name") as Label
 	var note := panel.get_node("%Note") as Label
@@ -214,21 +211,46 @@ func _add_unit(unit: MechState, opened: Dictionary) -> void:
 
 
 func _bind_portrait(host: Control, unit: MechState) -> void:
+	var mech := host.get_node_or_null("Mech") as AnimatedSprite2D
+	var pilot := host.get_node_or_null("Pilot") as AnimatedSprite2D
+	if mech != null or pilot != null:
+		_bind_pair(host, mech, pilot, unit)
+		return
 	var sprite := host.get_node_or_null("Sprite") as AnimatedSprite2D
 	if sprite == null:
 		host.visible = false
 		return
 	var frames := MechSprites.frames_for(unit.art_id)
-	if frames == null or not frames.has_animation("idle"):
+	if not _show_sprite(sprite, frames, unit.alive):
 		host.visible = false
 		return
 	host.visible = true
-	sprite.sprite_frames = frames
-	sprite.play("idle")
-	sprite.modulate = Color(0.42, 0.42, 0.46) if not unit.alive else Color.WHITE
 	if not host.resized.is_connected(_place_sprite):
 		host.resized.connect(_place_sprite.bind(host, sprite))
 	_place_sprite.call_deferred(host, sprite)
+
+
+func _bind_pair(host: Control, mech: AnimatedSprite2D, pilot: AnimatedSprite2D, unit: MechState) -> void:
+	var show_mech := _show_sprite(mech, MechSprites.frames_for(unit.art_id), unit.alive)
+	var show_pilot := _show_sprite(pilot, MechSprites.pilot_frames(unit.art_id), unit.alive)
+	host.visible = show_mech or show_pilot
+	if not host.visible:
+		return
+	if not host.resized.is_connected(_place_pair):
+		host.resized.connect(_place_pair.bind(host, mech, pilot))
+	_place_pair.call_deferred(host, mech, pilot)
+
+
+func _show_sprite(sprite: AnimatedSprite2D, frames: SpriteFrames, alive: bool) -> bool:
+	if sprite == null or frames == null or not frames.has_animation("idle"):
+		if sprite != null:
+			sprite.visible = false
+		return false
+	sprite.visible = true
+	sprite.sprite_frames = frames
+	sprite.play("idle")
+	sprite.modulate = Color(0.42, 0.42, 0.46) if not alive else Color.WHITE
+	return true
 
 
 func _place_sprite(host: Control, sprite: AnimatedSprite2D) -> void:
@@ -247,6 +269,39 @@ func _place_sprite(host: Control, sprite: AnimatedSprite2D) -> void:
 	sprite.position = host.size * 0.5
 
 
+## Mech fills the portrait height. The pilot sits smaller in the bottom-left, on top of the mech.
+func _place_pair(host: Control, mech: AnimatedSprite2D, pilot: AnimatedSprite2D) -> void:
+	if host.size.y < 1.0:
+		return
+	if mech != null and mech.visible:
+		var tex := _idle_texture(mech)
+		if tex != null and tex.get_height() > 0:
+			var fit := host.size.y / float(tex.get_height())
+			mech.scale = Vector2(fit, fit)
+			mech.position = host.size * 0.5
+	if pilot == null or not pilot.visible:
+		return
+	var pilot_tex := _idle_texture(pilot)
+	if pilot_tex == null:
+		return
+	var content := MechSprites.content_rect(pilot_tex)
+	var content_height := maxf(content.size.y, 1.0)
+	var pilot_fit := host.size.y * 0.5 / content_height
+	pilot.scale = Vector2(pilot_fit, pilot_fit)
+	var tex_size := pilot_tex.get_size()
+	var local_bottom_left := Vector2(
+		content.position.x - tex_size.x * 0.5,
+		content.end.y - tex_size.y * 0.5
+	)
+	pilot.position = Vector2(0.0, host.size.y) - local_bottom_left * pilot_fit
+
+
+func _idle_texture(sprite: AnimatedSprite2D) -> Texture2D:
+	if sprite.sprite_frames == null or not sprite.sprite_frames.has_animation("idle"):
+		return null
+	return sprite.sprite_frames.get_frame_texture("idle", 0)
+
+
 func _bind_stat(row: HBoxContainer, prefix: String, opened: int, closed: int, guard_stat: bool) -> StatLine:
 	var line := StatLine.new()
 	line.prefix = prefix
@@ -263,15 +318,6 @@ func _bind_stat(row: HBoxContainer, prefix: String, opened: int, closed: int, gu
 		line.show_value(opened)
 		line.show_delta(_delta_tint(line))
 	return line
-
-
-func _paint_team_border(panel: PanelContainer, enemy: bool) -> void:
-	var box := panel.get_theme_stylebox("panel") as StyleBoxFlat
-	if box == null:
-		return
-	box = box.duplicate() as StyleBoxFlat
-	box.border_color = ENEMY_BORDER if enemy else PLAYER_BORDER
-	panel.add_theme_stylebox_override("panel", box)
 
 
 func _delta_tint(line: StatLine) -> Color:
@@ -299,26 +345,22 @@ func _outcome_color(outcome: String) -> Color:
 
 
 func _build_gauges() -> void:
-	_squad_bar = bar_host.get_node_or_null("SquadBar") as ProgressBar
+	_squad_meter = bar_host.get_node_or_null("SquadBar") as OverdriveMeter
 	_next_label = squad_host.get_node_or_null("NextLabel") as Label
 	_squad_note = squad_host.get_node_or_null("SquadNote") as Label
 	if _next_label != null:
 		_next_label.visible = false
 	if _squad_note != null:
 		_squad_note.visible = false
-	if _squad_bar == null:
-		return
-	_squad_fill = OverdriveGauge.claim_fill(_squad_bar)
-	OverdriveGauge.dress(_squad_bar)
+	if _squad_meter != null and _squad_meter.info_badge != null and _overdrive_note != null:
+		_squad_meter.info_badge.set_meta("tip_width", 480.0)
+		_overdrive_note.attach(_squad_meter.info_badge, OverdriveMeter.NOTE)
 
 
-func _show_squad(charge: int, maximum: int) -> void:
-	if _squad_bar == null:
+func _show_squad(charge: int, maximum: int, announce: bool = true) -> void:
+	if _squad_meter == null:
 		return
-	_squad_bar.max_value = maxi(maximum, 1)
-	_squad_bar.value = charge
-	OverdriveGauge.write(_squad_bar, charge, maximum)
-	OverdriveGauge.pulse(_squad_bar, _squad_fill, maximum > 0 and charge >= maximum)
+	_squad_meter.show_charge(charge, maximum, false, announce)
 
 
 func _show_bank(amount: int) -> void:

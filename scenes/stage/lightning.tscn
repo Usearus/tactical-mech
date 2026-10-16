@@ -1,0 +1,57 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/stage/lightning.gd" id="1_bolt"]
+
+[sub_resource type="Gradient" id="Gradient_bolt"]
+offsets = PackedFloat32Array(0, 0.08, 0.55, 1)
+colors = PackedColorArray(1, 1, 1, 0, 0.95, 0.98, 1, 1, 0.62, 0.86, 1, 0.75, 0.4, 0.68, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_bolt"]
+gradient = SubResource("Gradient_bolt")
+width = 1
+height = 96
+fill_from = Vector2(0.5, 0)
+fill_to = Vector2(0.5, 1)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_bolt"]
+blend_mode = 1
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_bolt"]
+particle_flag_align_y = true
+particle_flag_disable_z = true
+emission_shape = 3
+emission_box_extents = Vector3(680, 20, 1)
+direction = Vector3(0.15, 1, 0)
+spread = 8.0
+initial_velocity_min = 2000.0
+initial_velocity_max = 2700.0
+gravity = Vector3(30, 200, 0)
+scale_min = 0.8
+scale_max = 1.5
+color = Color(0.92, 0.97, 1, 1)
+
+[node name="Lightning" type="Node2D"]
+z_index = 10
+script = ExtResource("1_bolt")
+
+[node name="Flash" type="Polygon2D" parent="." groups=["weather_flash"]]
+color = Color(0.78, 0.9, 1, 0)
+polygon = PackedVector2Array(0, 0, 1280, 0, 1280, 768, 0, 768)
+
+[node name="Bolts" type="GPUParticles2D" parent="."]
+z_index = 1
+material = SubResource("CanvasItemMaterial_bolt")
+texture_filter = 1
+position = Vector2(640, -8)
+emitting = false
+amount = 16
+lifetime = 0.34
+one_shot = true
+explosiveness = 1.0
+visibility_rect = Rect2(-900, -40, 1800, 1100)
+local_coords = true
+process_material = SubResource("ParticleProcessMaterial_bolt")
+texture = SubResource("GradientTexture2D_bolt")
+
+[node name="Gap" type="Timer" parent="."]
+one_shot = true

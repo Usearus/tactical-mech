@@ -1,13 +1,20 @@
 class_name MechCard
 extends PanelContainer
 
-const STROKES := {
-	"red": Color(0.84, 0.2, 0.18),
-	"tan": Color(0.74, 0.6, 0.36),
-	"orange": Color(0.95, 0.48, 0.14),
-	"purple": Color(0.58, 0.36, 0.88),
-	"white": Color(0.86, 0.9, 0.96),
-	"cyan": Color(0.22, 0.8, 0.88),
+const UI_THEME := preload("res://themes/sci_fi_ui_theme.tres")
+## Each mech art uses the nearest named color on the theme Palette.
+const STROKE_SWATCH := {
+	"red": &"RedDark",
+	"tan": &"GoldLight",
+	"orange": &"RedLight",
+	"purple": &"PurpleLight",
+	"white": &"GrayLight",
+	"cyan": &"BlueLight",
+	"grunt_rifle": &"Red",
+	"grunt_dog": &"RedDark",
+	"grunt_slasher": &"BrownDark",
+	"grunt_flyer": &"PurpleLight",
+	"boss_green": &"OliveDark",
 }
 
 const BODY_COLOR := Color(0.14, 0.15, 0.19)
@@ -21,18 +28,26 @@ const MOVE_ICON: Texture2D = preload("res://art/icons/stats/move.svg")
 const DODGE_ICON: Texture2D = preload("res://art/icons/stats/dodge.svg")
 const DEFEND_ICON: Texture2D = preload("res://art/icons/stats/defend.svg")
 const BARRIER_ICON: Texture2D = preload("res://art/icons/stats/crescent.svg")
+const CHARGE_ICON: Texture2D = preload("res://icodot-svg/ui/weather-nature/icon-lightning-ui.svg")
+const CHARGE_SHADER: Shader = preload("res://shaders/icon_white.gdshader")
 const ENHANCED_COLOR := Color(0.45, 0.78, 1.0)
 const CHIP_SCENE := preload("res://scenes/ui/stat_chip.tscn")
 const INFO_BADGE := preload("res://scenes/ui/info_badge.tscn")
+const OWNER_BADGE := preload("res://scenes/ui/hand_owner_badge.tscn")
 const SPECIAL_NOTE := "Special card: Can only be used when in overdrive mode."
+const ACTION_COST_NOTE := "Cost: Card costs %d action to use."
 
 signal pulled
 signal undo_dragged
 
 const PULL_DISTANCE := 72.0
 const HOVER_LIFT := -56.0
+const ENEMY_DIM_ALPHA := 0.4
+const ENEMY_DIM_TIME := 0.28
 ## How far a lifted card must be dragged down before the step is undone.
 const UNDO_DROP := 36.0
+## A press that barely moves is a tap: lift the card, or put an active card back.
+const TAP_SLOP := 18.0
 const DISCARD_PREVIEW_SCALE := 0.85
 const DEAL_TIME := 0.3
 const DEAL_STAGGER := 0.05
@@ -57,50 +72,70 @@ var _power_amount := 0.0
 var _stat_key := ""
 var _stat_damage := 0
 var _stat_block := 0
-var _frame_style: StyleBoxFlat
-var _header_style: StyleBoxFlat
-var _footer_style: StyleBoxFlat
+var _frame_style: StyleBoxTexture
+var _frame_tint: ShaderMaterial
 var _wave_tween: Tween
 var _wave_token := 0
 var _shine_tween: Tween
 var _shine_token := 0
+var _enemy_dimmed := false
+var _dim_tween: Tween
+var _owner_badge: HandOwnerBadge
+var _badge_slot: Control
+var _badge_art := ""
+var _badge_rim := Color.WHITE
 
-@onready var _gauge_tag: Label = $GaugeTag
-@onready var _wave_host: Control = $OverdriveWave
-@onready var _wave_band: TextureRect = $OverdriveWave/Band
-@onready var _power_mark: Control = $OverdriveWave/PowerMark
-@onready var _shine_host: Control = $Shine
-@onready var _shine_band: TextureRect = $Shine/Glint
-@onready var _shine_flash: ColorRect = $Shine/Flash
-@onready var header: PanelContainer = %Header
-@onready var footer: PanelContainer = %Footer
+@onready var _gauge_tag: Control = $Clip/GaugeTag
+@onready var _wave_host: Control = $Clip/OverdriveWave
+@onready var _wave_band: TextureRect = $Clip/OverdriveWave/Band
+@onready var _power_mark: Control = $Clip/OverdriveWave/PowerMark
+@onready var _shine_host: Control = $Clip/Shine
+@onready var _shine_band: TextureRect = $Clip/Shine/Glint
+@onready var _shine_flash: ColorRect = $Clip/Shine/Flash
+@onready var _enemy_dim: ColorRect = $Clip/EnemyDim/Shade
+@onready var header: MarginContainer = %Header
+@onready var footer: MarginContainer = %Footer
 @onready var title_label: Label = %CardTitle
 @onready var strength_label: Label = %Strength
 @onready var detail_label: Label = %Detail
 @onready var stat_row: HBoxContainer = %Stats
+@onready var _plate: NinePatchRect = %Plate
+@onready var _action_cost: Label = %ActionCost/Amount
 
 
 func _ready() -> void:
-	_frame_style = _claim_style(self)
-	_header_style = _claim_style(header)
-	_footer_style = _claim_style(footer)
+	_frame_style = _claim_frame(self)
+	if _plate == null:
+		return
+	if _frame_style != null:
+		_plate.texture = _frame_style.texture
+		_plate.patch_margin_left = int(_frame_style.texture_margin_left)
+		_plate.patch_margin_top = int(_frame_style.texture_margin_top)
+		_plate.patch_margin_right = int(_frame_style.texture_margin_right)
+		_plate.patch_margin_bottom = int(_frame_style.texture_margin_bottom)
+	var shared := _plate.material as ShaderMaterial
+	if shared != null:
+		_frame_tint = shared.duplicate() as ShaderMaterial
+		_plate.material = _frame_tint
 
 
-func _claim_style(panel: PanelContainer) -> StyleBoxFlat:
-	var box := panel.get_theme_stylebox("panel") as StyleBoxFlat
+func _claim_frame(panel: PanelContainer) -> StyleBoxTexture:
+	var box := panel.get_theme_stylebox("panel") as StyleBoxTexture
 	if box == null:
 		return null
-	var copy := box.duplicate() as StyleBoxFlat
+	var copy := box.duplicate() as StyleBoxTexture
 	panel.add_theme_stylebox_override("panel", copy)
 	return copy
 
 
 static func stroke_for(mech: MechData) -> Color:
-	if mech == null:
-		return Color.WHITE
-	if STROKES.has(mech.art_id):
-		return STROKES[mech.art_id]
-	return mech.color
+	if mech != null and STROKE_SWATCH.has(mech.art_id):
+		return _swatch(STROKE_SWATCH[mech.art_id])
+	return _swatch(&"Gray")
+
+
+static func _swatch(color_name: StringName) -> Color:
+	return UI_THEME.get_color(color_name, &"Palette")
 
 
 func has_attack() -> bool:
@@ -114,7 +149,7 @@ func play_overdrive_wave() -> void:
 	if not has_attack():
 		return
 	var host := _wave_host
-	move_child(host, -1)
+	_raise_node(host)
 	if _wave_band != null:
 		_wave_band.position = Vector2(0.0, size.y)
 	host.visible = true
@@ -140,14 +175,100 @@ func fit_strip() -> void:
 	size_flags_vertical = SIZE_SHRINK_CENTER
 	var header := get_node_or_null("%Header") as PanelContainer
 	if header != null:
-		header.custom_minimum_size = Vector2(0, 36)
+		header.custom_minimum_size = Vector2(0, 40)
 	var detail := get_node_or_null("%Detail") as Label
 	if detail != null:
 		detail.custom_minimum_size = Vector2(0, 100)
 		detail.max_lines_visible = 5
 	var card_footer := get_node_or_null("%Footer") as PanelContainer
 	if card_footer != null:
-		card_footer.custom_minimum_size = Vector2(0, 36)
+		card_footer.custom_minimum_size = Vector2(0, 40)
+
+
+## Speech cloud on the first card of a mech. An empty art id takes it off.
+func set_owner_badge(art_id: String, rim: Color, slot: Control = null) -> void:
+	if art_id == "":
+		clear_owner_badge()
+		return
+	_badge_art = art_id
+	_badge_rim = rim
+	if slot != null:
+		_badge_slot = slot
+	if _owner_badge == null or not is_instance_valid(_owner_badge):
+		_owner_badge = OWNER_BADGE.instantiate() as HandOwnerBadge
+	_owner_badge.visible = true
+	_mount_owner_badge()
+
+
+func clear_owner_badge() -> void:
+	_badge_art = ""
+	if _owner_badge == null or not is_instance_valid(_owner_badge):
+		return
+	_owner_badge.visible = false
+	var parent := _owner_badge.get_parent()
+	if parent != null and not parent.is_queued_for_deletion():
+		parent.remove_child(_owner_badge)
+
+
+func _mount_owner_badge() -> void:
+	if _owner_badge == null or not is_instance_valid(_owner_badge) or not _owner_badge.visible:
+		return
+	if _badge_art == "":
+		return
+	var slot := _badge_slot
+	if slot == null or not is_instance_valid(slot):
+		var parent := get_parent() as Control
+		if parent != null and parent.get_node_or_null("Empty") != null:
+			slot = parent
+	if slot == null or not is_instance_valid(slot) or slot.is_queued_for_deletion():
+		return
+	if _owner_badge.get_parent() != slot:
+		var current := _owner_badge.get_parent()
+		if current != null:
+			current.remove_child(_owner_badge)
+		slot.add_child(_owner_badge)
+	_owner_badge.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_owner_badge.position = Vector2.ZERO
+	_owner_badge.rotation = 0.0
+	_owner_badge.scale = Vector2(HandOwnerBadge.PIN_SCALE, HandOwnerBadge.PIN_SCALE)
+	_owner_badge.z_as_relative = true
+	_owner_badge.z_index = HandOwnerBadge.DRAW_Z
+	_owner_badge.show_head(_badge_art, _badge_rim)
+	_owner_badge.modulate = _badge_tone()
+
+
+## Free the mark before this card leaves its seat. Never do this from a tree notification.
+func _drop_owner_badge() -> void:
+	_badge_art = ""
+	_badge_slot = null
+	var badge := _owner_badge
+	_owner_badge = null
+	if badge == null or not is_instance_valid(badge):
+		return
+	badge.visible = false
+	var parent := badge.get_parent()
+	if parent != null and not parent.is_queued_for_deletion():
+		parent.remove_child(badge)
+	badge.queue_free()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PARENTED:
+		call_deferred("_mount_owner_badge")
+
+
+func _badge_tone() -> Color:
+	return Color(0.62, 0.62, 0.62) if _enemy_dimmed else Color.WHITE
+
+
+func _apply_badge_tone(immediate: bool) -> void:
+	if _owner_badge == null or not is_instance_valid(_owner_badge):
+		return
+	var tone := _badge_tone()
+	if immediate or _dim_tween == null or not _dim_tween.is_valid():
+		_owner_badge.modulate = tone
+		return
+	_dim_tween.tween_property(_owner_badge, "modulate", tone, ENEMY_DIM_TIME)
 
 
 func present(card: CardData, stroke: Color, damage := -1, block := -1) -> void:
@@ -157,7 +278,11 @@ func present(card: CardData, stroke: Color, damage := -1, block := -1) -> void:
 	_stat_block = card.block if block < 0 else block
 	title_label.text = card.display_name
 	title_label.add_theme_color_override("font_color", Color.WHITE)
+	var badge := special_badge()
+	if badge != null:
+		badge.modulate = Color.WHITE
 	detail_label.text = card.description
+	_show_action_cost(card)
 	_set_power_amount(_power_amount)
 	_apply_stats()
 	_sync_special_mark(card)
@@ -182,6 +307,7 @@ func _sync_special_mark(card: CardData) -> void:
 		return
 	var badge := INFO_BADGE.instantiate() as TextureButton
 	badge.name = "SpecialInfo"
+	badge.modulate = Color.WHITE
 	title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title_label.add_child(badge)
 
@@ -208,8 +334,47 @@ func set_undo_drag_enabled(enabled: bool) -> void:
 	if enabled:
 		mouse_filter = Control.MOUSE_FILTER_STOP
 		_ignore_mouse(self)
-	elif not _pull_enabled and not _gliding and not _pulling and not _dragging:
+		return
+	if _dragging:
+		_dragging = false
+		_kill_preview_motion()
+	if not _pull_enabled and not _gliding and not _pulling:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+## Black veil while an enemy is acting, or while a played card is resolving.
+func set_enemy_dim(enabled: bool, immediate := false) -> void:
+	if _enemy_dim == null or enabled == _enemy_dimmed:
+		return
+	var host := _enemy_dim.get_parent() as CanvasItem
+	_enemy_dimmed = enabled
+	if _dim_tween != null and _dim_tween.is_valid():
+		_dim_tween.kill()
+	_dim_tween = null
+	var color := _enemy_dim.color
+	color.a = ENEMY_DIM_ALPHA if enabled else 0.0
+	if immediate:
+		_enemy_dim.color = color
+		if host != null:
+			host.visible = enabled
+		_apply_badge_tone(true)
+		return
+	if host != null:
+		host.visible = true
+	_dim_tween = create_tween()
+	_dim_tween.set_parallel(true)
+	_dim_tween.tween_property(_enemy_dim, "color:a", color.a, ENEMY_DIM_TIME)
+	_apply_badge_tone(false)
+	if not enabled:
+		_dim_tween.finished.connect(_hide_enemy_dim, CONNECT_ONE_SHOT)
+
+
+func _hide_enemy_dim() -> void:
+	if _enemy_dimmed or _enemy_dim == null:
+		return
+	var host := _enemy_dim.get_parent() as CanvasItem
+	if host != null:
+		host.visible = false
 
 
 func set_drop_handler(handler: Callable) -> void:
@@ -238,6 +403,7 @@ func release_for_discard() -> void:
 	_cancel_glide()
 	_discard_preview = false
 	_kill_preview_motion()
+	_drop_owner_badge()
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
@@ -324,9 +490,11 @@ func settle(lifted: bool) -> void:
 	var home := Vector2(0, HOVER_LIFT) if lifted else Vector2.ZERO
 	var target_scale := Vector2(1.04, 1.04) if lifted else Vector2.ONE
 	if lifted == _lifted and position.distance_to(home) < 2.0 and scale.distance_to(target_scale) < 0.02:
+		z_index = HandOwnerBadge.DRAW_Z + 1 if lifted else 0
 		_set_slot_z(1 if lifted else 0)
 		return
 	_lifted = lifted
+	z_index = HandOwnerBadge.DRAW_Z + 1 if lifted else 0
 	_tween_to(home, target_scale, 0.0, not lifted)
 	_set_slot_z(8 if lifted else 0)
 
@@ -360,7 +528,7 @@ func _begin_drag(global_pos: Vector2) -> void:
 	_dragging = true
 	_start_position = position
 	_press_global = global_pos
-	z_index = 2 if _undo_drag else 0
+	z_index = HandOwnerBadge.DRAW_Z + 1
 	_set_slot_z(20)
 
 
@@ -381,10 +549,14 @@ func _follow_drag(global_pos: Vector2) -> void:
 
 func _end_drag(global_pos: Vector2) -> void:
 	_dragging = false
+	var tap := _press_global.distance_to(global_pos) <= TAP_SLOP
 	if _undo_drag:
-		await _finish_undo_drag()
+		await _finish_undo_drag(tap)
 		return
-	if _notify_drop(global_pos, true):
+	if not tap and _notify_drop(global_pos, true):
+		return
+	if tap:
+		_finish_tap()
 		return
 	var delta := position - _start_position
 	if delta.length() >= PULL_DISTANCE:
@@ -397,10 +569,21 @@ func _end_drag(global_pos: Vector2) -> void:
 		settle(_lifted)
 
 
-func _finish_undo_drag() -> void:
+func _finish_tap() -> void:
+	z_index = 0
+	_discard_preview = false
+	_kill_preview_motion()
+	if not _pull_enabled:
+		settle(_lifted)
+		return
+	if is_inside_tree():
+		pulled.emit()
+
+
+func _finish_undo_drag(from_tap := false) -> void:
 	z_index = 0
 	var dropped := position.y - _start_position.y
-	if dropped < UNDO_DROP:
+	if not from_tap and dropped < UNDO_DROP:
 		settle(true)
 		return
 	_undo_drag = false
@@ -489,10 +672,17 @@ func _ignore_mouse(node: Node) -> void:
 		_ignore_mouse(child)
 
 
+func _show_action_cost(card: CardData) -> void:
+	if _action_cost == null:
+		return
+	var cost := 0 if card == null else maxi(card.action_cost, 0)
+	_action_cost.text = str(cost)
+
+
 func _apply_stats() -> void:
 	if _shown == null or strength_label == null:
 		return
-	var key := "%s|%s|%d|%d|%d|%d|%d|%d|%d" % [
+	var key := "%s|%s|%d|%d|%d|%d|%d|%d|%d|%d" % [
 		_shown.card_type,
 		_shown.defense_kind,
 		_shown.damage,
@@ -502,6 +692,7 @@ func _apply_stats() -> void:
 		_stat_block,
 		_shown.reach,
 		_shown.movement,
+		1 if _shown.intercept else 0,
 	]
 	if key == _stat_key:
 		return
@@ -522,17 +713,19 @@ func _show_icon_stats(card: CardData) -> void:
 				_add_stat(row, "mov", card.movement)
 		"Defense":
 			if card.target_type == "squad":
-				row.add_child(_stat_word("+%d CHG" % GameManager.SPARK_CHARGE))
+				_add_stat(row, "chg", GameManager.SPARK_CHARGE)
 			elif card.barrier > 0:
 				_add_stat(row, "bar", card.barrier)
 			elif card.is_dodge():
-				_add_stat(row, "dodge", -1)
+				_add_stat(row, "dodge", 1)
 			elif card.block > 0:
 				_add_stat(row, "def", _stat_block, _stat_block > card.block)
 			if card.movement > 0:
 				_add_stat(row, "mov", card.movement)
 		"Move":
 			_add_stat(row, "mov", card.movement)
+	if card.intercept and not card.is_dodge():
+		_add_stat(row, "dodge", 1)
 	row.visible = row.get_child_count() > 0
 
 
@@ -557,6 +750,12 @@ func _bind_tips() -> void:
 			if phrase == "":
 				continue
 			note.watch(child, phrase)
+	var cost_row: Control = null
+	if _action_cost != null:
+		cost_row = _action_cost.get_parent() as Control
+	if cost_row != null:
+		var cost := 1 if _shown == null else maxi(_shown.action_cost, 0)
+		note.watch(cost_row, ACTION_COST_NOTE % cost)
 	var badge := special_badge()
 	if badge != null and _shown != null and _shown.is_special:
 		note.attach(badge, SPECIAL_NOTE)
@@ -594,15 +793,11 @@ func _stat_chip(kind: String, amount: int, enhanced := false) -> Control:
 	if enhanced:
 		icon.modulate = ENHANCED_COLOR
 		number.add_theme_color_override("font_color", ENHANCED_COLOR)
-	return chip
-
-
-func _stat_word(text: String) -> Control:
-	var chip := CHIP_SCENE.instantiate()
-	var icon := chip.get_node("Icon") as CanvasItem
-	var number := chip.get_node("Number") as Label
-	icon.visible = false
-	number.text = text
+	if kind == "chg":
+		var bolt := ShaderMaterial.new()
+		bolt.shader = CHARGE_SHADER
+		bolt.set_shader_parameter("ink", Color(0.95, 0.96, 0.98))
+		icon.material = bolt
 	return chip
 
 
@@ -618,6 +813,8 @@ func _stat_texture(kind: String) -> Texture2D:
 			return DEFEND_ICON
 		"bar":
 			return BARRIER_ICON
+		"chg":
+			return CHARGE_ICON
 		_:
 			return MOVE_ICON
 
@@ -689,7 +886,8 @@ func _run_shine(token: int) -> void:
 			resized.connect(_retry_shine, CONNECT_ONE_SHOT)
 		return
 	var host := _shine_host
-	move_child(host, -1)
+	_mask_shine(host)
+	_raise_node(host)
 	host.visible = true
 	host.position = Vector2.ZERO
 	host.size = size
@@ -700,6 +898,25 @@ func _run_shine(token: int) -> void:
 	_shine_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_shine_tween.tween_method(_place_shine_glint, 0.0, 1.0, 0.72)
 	_shine_tween.tween_interval(1.05)
+
+
+func _raise_node(node: Node) -> void:
+	var parent := node.get_parent()
+	if parent == null:
+		return
+	parent.move_child(node, -1)
+
+
+func _mask_shine(host: Control) -> void:
+	var mask := host as NinePatchRect
+	if mask == null or _plate == null:
+		return
+	mask.texture = _plate.texture
+	mask.patch_margin_left = _plate.patch_margin_left
+	mask.patch_margin_top = _plate.patch_margin_top
+	mask.patch_margin_right = _plate.patch_margin_right
+	mask.patch_margin_bottom = _plate.patch_margin_bottom
+	mask.clip_children = CanvasItem.CLIP_CHILDREN_ONLY
 
 
 func _retry_shine() -> void:
@@ -746,28 +963,18 @@ func _set_power_amount(amount: float) -> void:
 	_paint_card(
 		BODY_COLOR.lerp(POWER_BODY, t),
 		_stroke.lerp(ENHANCED_COLOR, t),
-		_header_fill(_stroke).lerp(POWER_HEADER, t),
+		_stroke.lerp(POWER_HEADER, t),
 		FOOTER_COLOR.lerp(POWER_FOOTER, t)
 	)
 
 
 func _apply_frame(stroke: Color) -> void:
-	_paint_card(BODY_COLOR, stroke, _header_fill(stroke), FOOTER_COLOR)
+	_paint_card(BODY_COLOR, stroke, stroke, FOOTER_COLOR)
 
 
-func _paint_card(body: Color, stroke: Color, header_fill: Color, footer_fill: Color) -> void:
-	if _frame_style == null or _header_style == null or _footer_style == null:
+func _paint_card(_body: Color, stroke: Color, _header_fill: Color, _footer_fill: Color) -> void:
+	if _frame_style != null:
+		_frame_style.modulate_color = Color.WHITE
+	if _frame_tint == null:
 		return
-	_frame_style.bg_color = body
-	_frame_style.border_color = stroke
-	_header_style.bg_color = header_fill
-	_footer_style.bg_color = footer_fill
-
-
-func _header_fill(stroke: Color) -> Color:
-	var fill := stroke
-	var guard := 0
-	while fill.get_luminance() > 0.42 and guard < 6:
-		fill = fill.darkened(0.18)
-		guard += 1
-	return fill
+	_frame_tint.set_shader_parameter("tint", Color(stroke.r, stroke.g, stroke.b, 1.0))

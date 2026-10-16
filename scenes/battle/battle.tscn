@@ -1,19 +1,28 @@
 [gd_scene format=3 uid="uid://cb6inromidxhh"]
 
 [ext_resource type="Script" uid="uid://dhmij1p11ah7h" path="res://scripts/battle/battle_manager.gd" id="1_battle"]
+[ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="2_n6gaa"]
 [ext_resource type="Script" uid="uid://c4wug2b2q41ke" path="res://scripts/ui/mech_panel.gd" id="2_panel"]
 [ext_resource type="PackedScene" uid="uid://uuk6s2xwa8ql" path="res://scenes/battle/battle_results.tscn" id="3_results"]
 [ext_resource type="PackedScene" uid="uid://dm2x0drnvxdgy" path="res://scenes/ui/mode_banner.tscn" id="4_banner"]
-[ext_resource type="Texture2D" uid="uid://wkanx7w3nqyu" path="res://art/mechs/player/purple/pilot.png" id="4_oiw7q"]
+[ext_resource type="Texture2D" uid="uid://dtcn3mffw0nti" path="res://art/characters/player/purple/pilot.png" id="4_oiw7q"]
 [ext_resource type="PackedScene" uid="uid://cr43116mbib6d" path="res://scenes/ui/finisher_banner.tscn" id="5_finisher"]
-[ext_resource type="PackedScene" path="res://scenes/ui/menu_corner.tscn" id="6_menu"]
+[ext_resource type="PackedScene" uid="uid://c2fvjjatnm6rj" path="res://scenes/ui/menu_corner.tscn" id="6_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/info_note.tscn" id="7_note"]
-[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_hit_points.tscn" id="8_hp"]
-[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_barrier.tscn" id="8_barrier"]
-[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_guard.tscn" id="8_guard"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_action.tscn" id="8_action"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_attack.tscn" id="8_attack"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_barrier.tscn" id="8_barrier"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_evade.tscn" id="8_evade"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_guard.tscn" id="8_guard"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_hit_points.tscn" id="8_hp"]
 [ext_resource type="PackedScene" uid="uid://b7n3handprom" path="res://scenes/ui/hand_prompt.tscn" id="9_prompt"]
+[ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="10_btn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_primary_button_square.tscn" id="11_sq"]
+[ext_resource type="PackedScene" uid="uid://byj1wl4xpte36" path="res://scenes/ui/overdrive_meter.tscn" id="12_meter"]
+[ext_resource type="PackedScene" uid="uid://w2vke8x0fk42" path="res://scenes/ui/sci_flashing_button.tscn" id="13_flash"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pile_card_back.tscn" id="14_back"]
+[ext_resource type="Texture2D" uid="uid://dqepltaljtfey" path="res://art/icons/stats/clock.svg" id="15_clock"]
+[ext_resource type="PackedScene" path="res://scenes/ui/card_readout.tscn" id="16_readout"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_p86no"]
 animations = [{
@@ -42,31 +51,44 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.035019178, 0.07600274, 0.0983923, 1)
+color = Color(0.043137256, 0.078431375, 0.15686275, 1)
 
-[node name="Full Layout" type="HBoxContainer" parent="." unique_id=480009120]
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=761953743]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 6
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
 
-[node name="Grid + Hand" type="VBoxContainer" parent="Full Layout" unique_id=192365957]
+[node name="Full Layout" type="HBoxContainer" parent="MarginContainer" unique_id=480009120]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Grid + Hand" type="VBoxContainer" parent="MarginContainer/Full Layout" unique_id=192365957]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 12
 
-[node name="GridHost" type="Control" parent="Full Layout/Grid + Hand" unique_id=1429523693]
+[node name="GridPanel" type="PanelContainer" parent="MarginContainer/Full Layout/Grid + Hand" unique_id=1607200250]
+layout_mode = 2
+size_flags_vertical = 3
+theme = ExtResource("2_n6gaa")
+theme_type_variation = &"PrimaryPanel"
+
+[node name="GridHost" type="Control" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel" unique_id=1429523693]
 unique_name_in_owner = true
 clip_contents = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="Center" type="Control" parent="Full Layout/Grid + Hand/GridHost" unique_id=704089889]
+[node name="Center" type="Control" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost" unique_id=704089889]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -75,266 +97,142 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Field" type="Control" parent="Full Layout/Grid + Hand/GridHost/Center"]
+[node name="Field" type="Control" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center" unique_id=1097916829]
+anchors_preset = 0
 mouse_filter = 2
-layout_mode = 0
 
-[node name="Board" type="ColorRect" parent="Full Layout/Grid + Hand/GridHost/Center/Field" unique_id=1209883283]
+[node name="Board" type="ColorRect" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field" unique_id=1209883283]
 layout_mode = 0
 mouse_filter = 2
 color = Color(0.07, 0.08, 0.1, 1)
 
-[node name="Grid" type="GridContainer" parent="Full Layout/Grid + Hand/GridHost/Center/Field" unique_id=16955820]
+[node name="Grid" type="GridContainer" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field" unique_id=16955820]
 unique_name_in_owner = true
 layout_mode = 0
 theme_override_constants/h_separation = 3
 theme_override_constants/v_separation = 3
 columns = 10
 
-[node name="SceneryShade" type="Control" parent="Full Layout/Grid + Hand/GridHost/Center/Field"]
+[node name="Shots" type="Node2D" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field"]
+unique_name_in_owner = true
+z_index = 6
+
+[node name="SceneryShade" type="Control" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field" unique_id=898471101]
 z_index = 8
+anchors_preset = 0
 mouse_filter = 2
-layout_mode = 0
 
-[node name="Top" type="ColorRect" parent="Full Layout/Grid + Hand/GridHost/Center/Field/SceneryShade"]
-mouse_filter = 2
+[node name="Top" type="ColorRect" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field/SceneryShade" unique_id=863092068]
 layout_mode = 0
+mouse_filter = 2
 color = Color(0, 0, 0, 0.3)
 
-[node name="Bottom" type="ColorRect" parent="Full Layout/Grid + Hand/GridHost/Center/Field/SceneryShade"]
-mouse_filter = 2
+[node name="Bottom" type="ColorRect" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field/SceneryShade" unique_id=1021837926]
 layout_mode = 0
+mouse_filter = 2
 color = Color(0, 0, 0, 0.3)
 
-[node name="Left" type="ColorRect" parent="Full Layout/Grid + Hand/GridHost/Center/Field/SceneryShade"]
-mouse_filter = 2
+[node name="Left" type="ColorRect" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field/SceneryShade" unique_id=748223457]
 layout_mode = 0
+mouse_filter = 2
 color = Color(0, 0, 0, 0.3)
 
-[node name="Right" type="ColorRect" parent="Full Layout/Grid + Hand/GridHost/Center/Field/SceneryShade"]
-mouse_filter = 2
+[node name="Right" type="ColorRect" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field/SceneryShade" unique_id=287390444]
 layout_mode = 0
+mouse_filter = 2
 color = Color(0, 0, 0, 0.3)
 
-[node name="Hand Margin" type="MarginContainer" parent="Full Layout/Grid + Hand" unique_id=1690501970]
+[node name="Hand Margin" type="MarginContainer" parent="MarginContainer/Full Layout/Grid + Hand" unique_id=1690501970]
 custom_maximum_size = Vector2(-1, 280)
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 0
-theme_override_constants/margin_bottom = 8
 
-[node name="HandRow" type="HBoxContainer" parent="Full Layout/Grid + Hand/Hand Margin" unique_id=754585897]
+[node name="HandAnchor" type="Control" parent="MarginContainer/Full Layout/Grid + Hand/Hand Margin" unique_id=628211980]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="HandRow" type="HBoxContainer" parent="MarginContainer/Full Layout/Grid + Hand/Hand Margin/HandAnchor" unique_id=754585897]
+layout_mode = 0
+offset_bottom = 264.0
 theme_override_constants/separation = 12
 
-[node name="Hand" type="HBoxContainer" parent="Full Layout/Grid + Hand/Hand Margin/HandRow" unique_id=1320627133]
+[node name="Hand" type="HBoxContainer" parent="MarginContainer/Full Layout/Grid + Hand/Hand Margin/HandAnchor/HandRow" unique_id=1320627133]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
 theme_override_constants/separation = 12
 
-[node name="HandGap" type="Control" parent="Full Layout/Grid + Hand/Hand Margin/HandRow" unique_id=196039570]
+[node name="HandGap" type="Control" parent="MarginContainer/Full Layout/Grid + Hand/Hand Margin/HandAnchor/HandRow" unique_id=196039570]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="Sidebar Margin" type="MarginContainer" parent="Full Layout" unique_id=463353231]
-custom_minimum_size = Vector2(0, 284)
+[node name="SideBar" type="VBoxContainer" parent="MarginContainer/Full Layout" unique_id=520126229]
 layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
+theme_override_constants/separation = 8
 
-[node name="Sidebar" type="VBoxContainer" parent="Full Layout/Sidebar Margin" unique_id=174363870]
+[node name="MenuMargin" type="MarginContainer" parent="MarginContainer/Full Layout/SideBar" unique_id=126037905]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 0
+
+[node name="MenuRow" type="HBoxContainer" parent="MarginContainer/Full Layout/SideBar/MenuMargin" unique_id=122789961]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="MarginContainer/Full Layout/SideBar/MenuMargin/MenuRow" unique_id=437555577]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 40
+text = "Round 1/2"
+vertical_alignment = 1
+
+[node name="MenuCorner" parent="MarginContainer/Full Layout/SideBar/MenuMargin/MenuRow" unique_id=568833171 instance=ExtResource("6_menu")]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/Full Layout/SideBar" unique_id=1244089151]
+layout_mode = 2
+size_flags_vertical = 3
+theme = ExtResource("2_n6gaa")
+theme_type_variation = &"SecondaryPanel"
+
+[node name="Sidebar" type="VBoxContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer" unique_id=174363870]
 custom_minimum_size = Vector2(296, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 20
 
-[node name="MenuRow" type="HBoxContainer" parent="Full Layout/Sidebar Margin/Sidebar" unique_id=122789961]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="Title" type="Label" parent="Full Layout/Sidebar Margin/Sidebar/MenuRow" unique_id=437555577]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 56)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-text = "Round 1/2"
-vertical_alignment = 1
-
-[node name="MenuCorner" parent="Full Layout/Sidebar Margin/Sidebar/MenuRow" unique_id=568833171 instance=ExtResource("6_menu")]
-layout_mode = 2
-size_flags_vertical = 0
-
-[node name="BattleLog" type="RichTextLabel" parent="Full Layout/Sidebar Margin/Sidebar" unique_id=1612687693]
-unique_name_in_owner = true
+[node name="LogSwap" type="Control" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="BattleLog" type="RichTextLabel" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/LogSwap" unique_id=1612687693]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_colors/default_color = Color(0.9, 0.91, 0.94, 1)
 theme_override_constants/line_separation = 6
 theme_override_font_sizes/normal_font_size = 22
 scroll_following = true
 
-[node name="Actions Column" type="VBoxContainer" parent="Full Layout/Sidebar Margin/Sidebar" unique_id=127074928]
-custom_minimum_size = Vector2(0, 268)
-layout_mode = 2
-size_flags_horizontal = 8
-size_flags_vertical = 4
-theme_override_constants/separation = 8
-
-[node name="PileRow" type="HBoxContainer" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column" unique_id=1041843381]
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 3
-theme_override_constants/separation = 8
-
-[node name="DiscardPile" type="PanelContainer" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column/PileRow" unique_id=640022681]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(144, 180)
-clip_contents = true
-layout_mode = 2
-size_flags_horizontal = 4
-mouse_default_cursor_shape = 2
-theme_type_variation = &"Pile"
-
-[node name="DiscardMargin" type="MarginContainer" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column/PileRow/DiscardPile" unique_id=1769898166]
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/margin_left = 6
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 6
-theme_override_constants/margin_bottom = 8
-
-[node name="DiscardBody" type="VBoxContainer" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column/PileRow/DiscardPile/DiscardMargin" unique_id=585571863]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-mouse_filter = 2
-theme_override_constants/separation = 2
-alignment = 1
-
-[node name="DiscardTitle" type="Label" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column/PileRow/DiscardPile/DiscardMargin/DiscardBody" unique_id=1538672417]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-text = "Discard"
-horizontal_alignment = 1
-
-[node name="DiscardLabel" type="Label" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column/PileRow/DiscardPile/DiscardMargin/DiscardBody" unique_id=352864903]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 40
-text = "0"
-horizontal_alignment = 1
-
-[node name="DeckPile" type="PanelContainer" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column/PileRow" unique_id=2116544845]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(144, 180)
-clip_contents = true
-layout_mode = 2
-size_flags_horizontal = 4
-mouse_default_cursor_shape = 2
-theme_type_variation = &"Pile"
-
-[node name="DeckMargin" type="MarginContainer" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column/PileRow/DeckPile" unique_id=2089224455]
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/margin_left = 6
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 6
-theme_override_constants/margin_bottom = 8
-
-[node name="DeckBody" type="VBoxContainer" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column/PileRow/DeckPile/DeckMargin" unique_id=1395742293]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-mouse_filter = 2
-theme_override_constants/separation = 2
-alignment = 1
-
-[node name="DeckTitle" type="Label" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column/PileRow/DeckPile/DeckMargin/DeckBody" unique_id=577412592]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-text = "Deck"
-horizontal_alignment = 1
-
-[node name="DeckCount" type="Label" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column/PileRow/DeckPile/DeckMargin/DeckBody" unique_id=2105742526]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 40
-text = "0"
-horizontal_alignment = 1
-
-[node name="GaugeFace" type="Control" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column" unique_id=841762110]
-custom_minimum_size = Vector2(0, 56)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-mouse_filter = 1
-
-[node name="PlayerGauge" type="ProgressBar" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column/GaugeFace" unique_id=841762109]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 56)
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_type_variation = &"SquadGauge"
-max_value = 4.0
-show_percentage = false
-
-[node name="Title" type="Label" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column/GaugeFace/PlayerGauge" unique_id=2011055502]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 10.0
-offset_right = -10.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.08, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 32
-text = "Overdrive"
-vertical_alignment = 1
-
-[node name="Charge" type="RichTextLabel" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column/GaugeFace/PlayerGauge" unique_id=906364605]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 10.0
-offset_right = -10.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_colors/default_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.08, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/normal_font_size = 32
-bbcode_enabled = true
-text = "0/4"
-scroll_active = false
-autowrap_mode = 0
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="ActivateButton" type="Button" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column/GaugeFace" unique_id=636293191]
+[node name="CardReadout" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/LogSwap" instance=ExtResource("16_readout")]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -343,15 +241,272 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_type_variation = &"AccentButton"
-text = "Activate Overdrive"
 
-[node name="SkipButton" type="Button" parent="Full Layout/Sidebar Margin/Sidebar/Actions Column" unique_id=976583124]
-unique_name_in_owner = true
+[node name="Sidebar Column" type="VBoxContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar" unique_id=1847293311]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 10
+theme_override_constants/separation = 20
+
+[node name="PanelContainer3" type="PanelContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column" unique_id=1593714073]
+layout_mode = 2
+size_flags_vertical = 10
+theme = ExtResource("2_n6gaa")
+theme_type_variation = &"SecondaryPanel"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PanelContainer3" unique_id=1301167218]
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="GaugeFace" type="Control" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PanelContainer3/VBoxContainer" unique_id=841762110]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 4
+mouse_filter = 1
+
+[node name="GaugeAlign" type="HBoxContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PanelContainer3/VBoxContainer/GaugeFace" unique_id=1526875890]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 2
+
+[node name="PlayerGauge" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PanelContainer3/VBoxContainer/GaugeFace/GaugeAlign" unique_id=2124016887 instance=ExtResource("12_meter")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ActivateButton" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PanelContainer3/VBoxContainer" unique_id=636293191 instance=ExtResource("13_flash")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+text = "Activate Overdrive"
+
+[node name="PileRow" type="HBoxContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column" unique_id=1041843381]
+custom_minimum_size = Vector2(0, 160)
+layout_mode = 2
+size_flags_vertical = 10
+theme_override_constants/separation = 8
+
+[node name="DiscardStack" type="Control" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow" unique_id=1842201941]
+custom_minimum_size = Vector2(135, 160)
+layout_mode = 2
+size_flags_vertical = 8
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -16)
+mouse_filter = 2
+
+[node name="DiscardBackFar" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DiscardStack" unique_id=1842201942 instance=ExtResource("14_back")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 16.0
+offset_right = 12.0
+offset_bottom = 16.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DiscardBackNear" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DiscardStack" unique_id=1842201943 instance=ExtResource("14_back")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 8.0
+offset_right = 6.0
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DiscardPile" type="Button" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DiscardStack" unique_id=1445833075]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(124, 140)
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_n6gaa")
+theme_type_variation = &"PrimaryButtonSquare"
+disabled = true
+
+[node name="DiscardMargin" type="MarginContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DiscardStack/DiscardPile" unique_id=1769898166]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 8
+
+[node name="DiscardBody" type="VBoxContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DiscardStack/DiscardPile/DiscardMargin" unique_id=585571863]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="DiscardTitle" type="Label" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DiscardStack/DiscardPile/DiscardMargin/DiscardBody" unique_id=1538672417]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 0.5)
+text = "Discard"
+horizontal_alignment = 1
+
+[node name="DiscardLabel" type="Label" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DiscardStack/DiscardPile/DiscardMargin/DiscardBody" unique_id=352864903]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 0.5)
+theme_override_font_sizes/font_size = 40
+text = "0"
+horizontal_alignment = 1
+
+[node name="DeckStack" type="Control" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow" unique_id=1842201944]
+custom_minimum_size = Vector2(135, 160)
+layout_mode = 2
+size_flags_vertical = 8
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -16)
+mouse_filter = 2
+
+[node name="DeckBackFar" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DeckStack" unique_id=1842201945 instance=ExtResource("14_back")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 16.0
+offset_right = 12.0
+offset_bottom = 16.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DeckBackNear" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DeckStack" unique_id=1842201946 instance=ExtResource("14_back")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 8.0
+offset_right = 6.0
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DeckPile" type="Button" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DeckStack" unique_id=1281074807]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(124, 140)
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_n6gaa")
+theme_type_variation = &"PrimaryButtonSquare"
+
+[node name="DeckMargin" type="MarginContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DeckStack/DeckPile" unique_id=2089224455]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 8
+
+[node name="DeckBody" type="VBoxContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DeckStack/DeckPile/DeckMargin" unique_id=1395742293]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="DeckTitle" type="Label" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DeckStack/DeckPile/DeckMargin/DeckBody" unique_id=577412592]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "Deck"
+horizontal_alignment = 1
+
+[node name="DeckCount" type="Label" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DeckStack/DeckPile/DeckMargin/DeckBody" unique_id=2105742526]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 40
+text = "0"
+horizontal_alignment = 1
+
+[node name="SkipButton" parent="MarginContainer/Full Layout/SideBar" unique_id=976583124 instance=ExtResource("10_btn")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 56)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+text = ""
+
+[node name="Content" type="HBoxContainer" parent="MarginContainer/Full Layout/SideBar/SkipButton" unique_id=1842201960]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Caption" type="Label" parent="MarginContainer/Full Layout/SideBar/SkipButton/Content" unique_id=1842201961]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 22
 text = "End round"
+vertical_alignment = 1
+
+[node name="Cost" type="HBoxContainer" parent="MarginContainer/Full Layout/SideBar/SkipButton/Content" unique_id=1842201962]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Icon" type="TextureRect" parent="MarginContainer/Full Layout/SideBar/SkipButton/Content/Cost" unique_id=1842201963]
+modulate = Color(1, 1, 1, 1)
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("15_clock")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Amount" type="Label" parent="MarginContainer/Full Layout/SideBar/SkipButton/Content/Cost" unique_id=1842201964]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 22
+text = "1"
+vertical_alignment = 1
 
 [node name="Resolution" type="Control" parent="." unique_id=1842201934]
 unique_name_in_owner = true
@@ -399,7 +554,7 @@ theme_override_font_sizes/font_size = 72
 text = "Game over"
 horizontal_alignment = 1
 
-[node name="BackToTitleButton" type="Button" parent="Resolution/Center" unique_id=1842201938]
+[node name="BackToTitleButton" parent="Resolution/Center" unique_id=1842201938 instance=ExtResource("10_btn")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
@@ -475,9 +630,8 @@ theme_override_constants/h_separation = 16
 theme_override_constants/v_separation = 16
 columns = 5
 
-[node name="DiscardClose" type="Button" parent="DiscardLayer/DiscardOverlay" unique_id=1426706654]
+[node name="DiscardClose" parent="DiscardLayer/DiscardOverlay" unique_id=1426706654 instance=ExtResource("11_sq")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(56, 56)
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -492,67 +646,64 @@ text = "X"
 
 [node name="StatsWindow" type="PanelContainer" parent="." unique_id=2029709662]
 unique_name_in_owner = true
-visible = false
 z_index = 30
 layout_mode = 0
-theme_type_variation = &"SidePanel"
+theme = ExtResource("2_n6gaa")
+theme_type_variation = &"SecondaryPanel"
 
-[node name="StatsMargin" type="MarginContainer" parent="StatsWindow" unique_id=1576917111]
-layout_mode = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 8
-
-[node name="Actions" type="HBoxContainer" parent="StatsWindow/StatsMargin" unique_id=475263287]
+[node name="Actions" type="HBoxContainer" parent="StatsWindow" unique_id=475263287]
 layout_mode = 2
 theme_override_constants/separation = 10
 script = ExtResource("2_panel")
 
-[node name="PortraitHost" type="Panel" parent="StatsWindow/StatsMargin/Actions" unique_id=1180061500]
+[node name="PortraitHost" type="Panel" parent="StatsWindow/Actions" unique_id=1180061500]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(88, 88)
 clip_contents = true
 layout_mode = 2
 size_flags_vertical = 4
-theme_type_variation = &"PortraitFrame"
+theme = ExtResource("2_n6gaa")
+theme_type_variation = &"SecondaryPanel"
 
-[node name="Portrait" type="AnimatedSprite2D" parent="StatsWindow/StatsMargin/Actions/PortraitHost" unique_id=814677686]
+[node name="Portrait" type="AnimatedSprite2D" parent="StatsWindow/Actions/PortraitHost" unique_id=814677686]
 unique_name_in_owner = true
 texture_filter = 1
 position = Vector2(44, 44)
 scale = Vector2(1.34375, 1.34375)
 sprite_frames = SubResource("SpriteFrames_p86no")
 
-[node name="Stats" type="VBoxContainer" parent="StatsWindow/StatsMargin/Actions" unique_id=845988753]
+[node name="Stats" type="VBoxContainer" parent="StatsWindow/Actions" unique_id=845988753]
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 theme_override_constants/separation = 2
 
-[node name="Name" type="Label" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=1072847214]
+[node name="Name" type="Label" parent="StatsWindow/Actions/Stats" unique_id=1072847214]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "Mech"
 vertical_alignment = 1
 
-[node name="HitPoints" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=1416919991 instance=ExtResource("8_hp")]
+[node name="HitPoints" parent="StatsWindow/Actions/Stats" unique_id=1416919991 instance=ExtResource("8_hp")]
 visible = true
 layout_mode = 2
 
-[node name="Barrier" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=958988119 instance=ExtResource("8_barrier")]
+[node name="Barrier" parent="StatsWindow/Actions/Stats" unique_id=958988119 instance=ExtResource("8_barrier")]
 visible = true
 layout_mode = 2
 
-[node name="Guard" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=492778006 instance=ExtResource("8_guard")]
+[node name="Guard" parent="StatsWindow/Actions/Stats" unique_id=492778006 instance=ExtResource("8_guard")]
 visible = true
 layout_mode = 2
 
-[node name="Action" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=640560636 instance=ExtResource("8_action")]
+[node name="Evade" parent="StatsWindow/Actions/Stats" unique_id=555464536 instance=ExtResource("8_evade")]
+layout_mode = 2
+
+[node name="Action" parent="StatsWindow/Actions/Stats" unique_id=640560636 instance=ExtResource("8_action")]
 visible = true
 layout_mode = 2
 
-[node name="Attack" parent="StatsWindow/StatsMargin/Actions/Stats" unique_id=2062396361 instance=ExtResource("8_attack")]
+[node name="Attack" parent="StatsWindow/Actions/Stats" unique_id=2062396361 instance=ExtResource("8_attack")]
 visible = true
 layout_mode = 2
 
@@ -577,10 +728,6 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 1836.0
-offset_top = 201.0
-offset_right = 1836.0
-offset_bottom = 201.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -597,7 +744,7 @@ layout_mode = 1
 
 [node name="HandPromptLayer" type="CanvasLayer" parent="." unique_id=1928374651]
 layer = 80
+visible = false
 
 [node name="HandPrompt" parent="HandPromptLayer" unique_id=1928374652 instance=ExtResource("9_prompt")]
 unique_name_in_owner = true
-visible = false

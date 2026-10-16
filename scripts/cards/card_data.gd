@@ -5,6 +5,8 @@ extends Resource
 @export var display_name: String = ""
 @export var description: String = ""
 @export var card_type: String = "Attack"
+## Steps taken off every enemy clock when this card is played. 0 shows as a free card.
+@export var action_cost: int = 1
 ## Held out of the hand until Overdrive. A deck can mark more than one.
 @export var is_special: bool = false
 ## Guard adds block to a mech. Dodge stays in hand and negates one attack.

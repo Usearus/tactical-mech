@@ -13,13 +13,10 @@ const POPUP_LAYER := 90
 @onready var pages: Control = %Pages
 @onready var howto_back: Button = %HowToBack
 @onready var howto_next: Button = %HowToNext
-@onready var log_tab: Button = %LogTab
-@onready var legend_tab: Button = %LegendTab
-@onready var log_body: RichTextLabel = %LogBody
+@onready var log_body: VBoxContainer = %LogBody
 @onready var legend: VBoxContainer = %Legend
 
 var _howto_index := 0
-var _log: PackedStringArray = PackedStringArray()
 
 
 func _ready() -> void:
@@ -32,8 +29,6 @@ func _ready() -> void:
 	%MissionLog.pressed.connect(_open_log)
 	%LegendButton.pressed.connect(_open_legend)
 	%QuitButton.pressed.connect(_quit)
-	log_tab.pressed.connect(func() -> void: _select_tab(true))
-	legend_tab.pressed.connect(func() -> void: _select_tab(false))
 	howto_back.pressed.connect(func() -> void: _turn_howto(-1))
 	howto_next.pressed.connect(func() -> void: _turn_howto(1))
 	_fill_howto()
@@ -59,21 +54,6 @@ func close() -> void:
 		scrim.visible = false
 
 
-func note_status(text: String) -> void:
-	var line := text.strip_edges()
-	if line == "":
-		return
-	if not _log.is_empty() and _log[_log.size() - 1] == line:
-		return
-	_log.append(line)
-	_fill_log()
-
-
-func clear_log() -> void:
-	_log = PackedStringArray()
-	_fill_log()
-
-
 func _on_node_added(node: Node) -> void:
 	if node.scene_file_path.is_empty():
 		return
@@ -92,8 +72,6 @@ func _sync_scene() -> void:
 	root.visible = not on_title and not on_story
 	if on_title or on_story:
 		close()
-	if on_title:
-		clear_log()
 
 
 func toggle() -> void:
@@ -107,11 +85,11 @@ func toggle() -> void:
 
 
 func _open_log() -> void:
-	_show_detail(true)
+	_show_page(true)
 
 
 func _open_legend() -> void:
-	_show_detail(false)
+	_show_page(false)
 
 
 func open_help() -> void:
@@ -150,21 +128,13 @@ func _fill_howto() -> void:
 	howto_next.disabled = _howto_index >= total - 1
 
 
-func _show_detail(showing_log: bool) -> void:
+func _show_page(showing_log: bool) -> void:
 	menu_panel.visible = false
 	howto.visible = false
-	_select_tab(showing_log)
-	detail.visible = true
-	scrim.visible = true
-
-
-func _select_tab(showing_log: bool) -> void:
 	log_body.visible = showing_log
 	legend.visible = not showing_log
-	_style_tab(log_tab, showing_log)
-	_style_tab(legend_tab, not showing_log)
-	if showing_log:
-		_fill_log()
+	detail.visible = true
+	scrim.visible = true
 
 
 func _sync_legend() -> void:
@@ -183,15 +153,6 @@ func _sync_legend() -> void:
 		label.text = UiIcons.phrase(rows[row_name])
 
 
-func _fill_log() -> void:
-	if log_body == null:
-		return
-	if _log.is_empty():
-		log_body.text = "No statuses yet."
-	else:
-		log_body.text = "\n\n".join(_log)
-
-
 func _on_scrim_input(event: InputEvent) -> void:
 	var pressed := false
 	if event is InputEventMouseButton:
@@ -205,8 +166,3 @@ func _on_scrim_input(event: InputEvent) -> void:
 func _quit() -> void:
 	close()
 	GameManager.quit_stage()
-
-
-func _style_tab(button: Button, selected: bool) -> void:
-	button.toggle_mode = true
-	button.set_pressed_no_signal(selected)

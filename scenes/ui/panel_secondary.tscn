@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://c3f0iqk8frqh6"]
+
+[ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="1_foqir"]
+
+[node name="SecondaryPanel" type="PanelContainer" unique_id=1762085647]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_foqir")
+theme_type_variation = &"SecondaryPanel"

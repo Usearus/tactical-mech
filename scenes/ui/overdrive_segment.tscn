@@ -29,8 +29,8 @@ corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
 
 [node name="OverdriveSegment" type="Panel"]
-custom_minimum_size = Vector2(22, 28)
-size_flags_horizontal = 4
+custom_minimum_size = Vector2(4, 28)
+size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_empty")

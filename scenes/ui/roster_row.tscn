@@ -1,46 +1,85 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://c47yd0cqj78bx"]
 
-[ext_resource type="Texture2D" path="res://art/icons/check_on.png" id="1_on"]
-[ext_resource type="Texture2D" path="res://art/icons/check_off.png" id="2_off"]
+[ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="1_3bh40"]
+[ext_resource type="PackedScene" uid="uid://bgrbx6435mfm7" path="res://scenes/ui/sci_checkbox.tscn" id="1_check"]
+[ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="1_sheet"]
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_check"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_normal"]
+content_margin_left = 56.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_sheet")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(312, 86, 64, 64)
 
-[node name="RosterRow" type="Button"]
-custom_minimum_size = Vector2(0, 72)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pressed"]
+content_margin_left = 56.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_sheet")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(510, 86, 64, 64)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_hover"]
+content_margin_left = 56.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_sheet")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(378, 86, 64, 64)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_disabled"]
+content_margin_left = 56.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_sheet")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(444, 86, 64, 64)
+
+[node name="RosterRow" type="Button" unique_id=299772481]
+custom_minimum_size = Vector2(0, 48)
+offset_right = 160.0
+offset_bottom = 56.0
 size_flags_horizontal = 3
 focus_mode = 0
-theme_type_variation = &"RosterButton"
+theme = ExtResource("1_3bh40")
+theme_type_variation = &"PrimaryButtonSquare"
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 32
-alignment = 0
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_normal")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_hover")
+theme_override_styles/hover_pressed = SubResource("StyleBoxTexture_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_disabled")
+theme_override_styles/focus = SubResource("StyleBoxTexture_hover")
 text = "Comet"
+alignment = 0
 
-[node name="Check" type="CheckBox" parent="."]
+[node name="Check" parent="." unique_id=377877961 instance=ExtResource("1_check")]
 unique_name_in_owner = true
 layout_mode = 1
+anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
 offset_left = 12.0
-offset_top = -24.0
-offset_right = 60.0
-offset_bottom = 24.0
+offset_top = -16.0
+offset_right = 44.0
+offset_bottom = 16.0
 grow_vertical = 2
-focus_mode = 0
-mouse_filter = 0
-texture_filter = 0
-theme_override_constants/icon_max_width = 48
-theme_override_icons/checked = ExtResource("1_on")
-theme_override_icons/unchecked = ExtResource("2_off")
-theme_override_icons/checked_disabled = ExtResource("1_on")
-theme_override_icons/unchecked_disabled = ExtResource("2_off")
-theme_override_styles/normal = SubResource("StyleBoxEmpty_check")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_check")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_check")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_check")
-theme_override_styles/disabled = SubResource("StyleBoxEmpty_check")
-flat = true
-alignment = 1
-icon_alignment = 1
-vertical_icon_alignment = 1

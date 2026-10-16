@@ -1,8 +1,9 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://c2fvjjatnm6rj"]
 
-[ext_resource type="Script" path="res://scripts/ui/menu_corner.gd" id="1_corner"]
+[ext_resource type="Script" uid="uid://c1snhtv4m0rjv" path="res://scripts/ui/menu_corner.gd" id="1_corner"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_primary_button_square.tscn" id="2_sq"]
 
-[node name="MenuCorner" type="HBoxContainer"]
+[node name="MenuCorner" type="HBoxContainer" unique_id=1302927831]
 custom_minimum_size = Vector2(124, 56)
 offset_right = 124.0
 offset_bottom = 56.0
@@ -10,31 +11,28 @@ mouse_filter = 2
 theme_override_constants/separation = 12
 script = ExtResource("1_corner")
 
-[node name="HowToButton" type="Button" parent="."]
-custom_minimum_size = Vector2(56, 56)
+[node name="HowToButton" parent="." unique_id=1843053243 instance=ExtResource("2_sq")]
 layout_mode = 2
 focus_mode = 0
 
-[node name="Mark" type="Label" parent="HowToButton"]
+[node name="Mark" type="Label" parent="HowToButton" unique_id=1706907675]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 40
 text = "?"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="MenuButton" type="Button" parent="."]
-custom_minimum_size = Vector2(56, 56)
+[node name="MenuButton" parent="." unique_id=1838299121 instance=ExtResource("2_sq")]
 layout_mode = 2
 focus_mode = 0
 
-[node name="Icon" type="VBoxContainer" parent="MenuButton"]
+[node name="Icon" type="VBoxContainer" parent="MenuButton" unique_id=2109806897]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -50,17 +48,17 @@ grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/separation = 5
 
-[node name="Bar" type="ColorRect" parent="MenuButton/Icon"]
+[node name="Bar" type="ColorRect" parent="MenuButton/Icon" unique_id=577126762]
 custom_minimum_size = Vector2(28, 4)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Bar2" type="ColorRect" parent="MenuButton/Icon"]
+[node name="Bar2" type="ColorRect" parent="MenuButton/Icon" unique_id=1402582992]
 custom_minimum_size = Vector2(28, 4)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Bar3" type="ColorRect" parent="MenuButton/Icon"]
+[node name="Bar3" type="ColorRect" parent="MenuButton/Icon" unique_id=717131190]
 custom_minimum_size = Vector2(28, 4)
 layout_mode = 2
 mouse_filter = 2

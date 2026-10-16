@@ -9,7 +9,7 @@ id = "boss_green_smash"
 display_name = "Smash"
 description = "A heavy hit at an adjacent enemy."
 card_type = "Attack"
-damage = 7
+damage = 10
 reach = 1
 target_type = "enemy"
 

@@ -1,0 +1,103 @@
+[gd_scene format=3 uid="uid://86plmkkgetby"]
+
+[ext_resource type="Script" uid="uid://c4wug2b2q41ke" path="res://scripts/ui/mech_panel.gd" id="1_4wbp2"]
+[ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="1_qwuxx"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_hit_points.tscn" id="2_qwuxx"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_barrier.tscn" id="3_4uuw2"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_action.tscn" id="4_bw0hj"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_attack.tscn" id="5_wpvfr"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_evade.tscn" id="6_1euws"]
+[ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="7_teo3p"]
+
+[node name="StatsWindow" type="PanelContainer" unique_id=107101956]
+z_index = 25
+custom_minimum_size = Vector2(380, 0)
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = -120.0
+offset_right = 392.0
+offset_bottom = -8.0
+grow_vertical = 0
+theme = ExtResource("1_qwuxx")
+theme_type_variation = &"SecondaryPanel"
+
+[node name="StatsBody" type="HBoxContainer" parent="." unique_id=741914450]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+script = ExtResource("1_4wbp2")
+
+[node name="PortraitHost" type="Panel" parent="StatsBody" unique_id=1061552273]
+custom_minimum_size = Vector2(88, 88)
+clip_contents = true
+layout_mode = 2
+size_flags_vertical = 4
+theme = ExtResource("1_qwuxx")
+theme_type_variation = &"SecondaryPanel"
+
+[node name="Portrait" type="AnimatedSprite2D" parent="StatsBody/PortraitHost" unique_id=1597121608]
+texture_filter = 1
+
+[node name="Stats" type="VBoxContainer" parent="StatsBody" unique_id=391147831]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Name" type="Label" parent="StatsBody/Stats" unique_id=885922582]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Mech"
+vertical_alignment = 1
+
+[node name="Vitals" type="HBoxContainer" parent="StatsBody/Stats" unique_id=211538100]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="HitPoints" parent="StatsBody/Stats/Vitals" unique_id=918478520 instance=ExtResource("2_qwuxx")]
+visible = true
+layout_mode = 2
+
+[node name="Barrier" parent="StatsBody/Stats/Vitals" unique_id=1802234679 instance=ExtResource("3_4uuw2")]
+visible = true
+layout_mode = 2
+
+[node name="Action" parent="StatsBody/Stats/Vitals" unique_id=1734475857 instance=ExtResource("4_bw0hj")]
+visible = true
+layout_mode = 2
+
+[node name="Attack" parent="StatsBody/Stats/Vitals" unique_id=527603394 instance=ExtResource("5_wpvfr")]
+visible = true
+layout_mode = 2
+
+[node name="Evade" parent="StatsBody/Stats/Vitals" unique_id=1554346848 instance=ExtResource("6_1euws")]
+layout_mode = 2
+
+[node name="MapLine" type="Label" parent="StatsBody/Stats" unique_id=796715199]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "MOV 0, ATR 0, SPD 0"
+vertical_alignment = 1
+
+[node name="DeckButton" parent="StatsBody" unique_id=1312133095 instance=ExtResource("7_teo3p")]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(120, 88)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 32
+text = "DECK"
+
+[node name="InspectButton" parent="StatsBody" instance=ExtResource("7_teo3p")]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(168, 88)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 32
+text = "INSPECT"

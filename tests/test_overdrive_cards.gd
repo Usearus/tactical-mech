@@ -106,7 +106,7 @@ func test_spark_banks_two_for_the_next_gauge() -> void:
 	assert_eq(GameManager.player_attack_gauge, 1, "spark does not fill the current gauge")
 	assert_eq(GameManager.player_banked_gauge, GameManager.SPARK_CHARGE, "the next gauge holds the charge")
 	var card := load("res://data/decks/player/comet.tres").special_cards()[0] as CardData
-	assert_eq(card.description, "Add 2 charge to your next overdrive gauge.")
+	assert_eq(card.description, "Add 2 charge to your next overdrive gauge after battle.")
 	GameManager.battle_offense = saved_offense
 	GameManager.player_attack_gauge = saved_gauge
 	GameManager.player_attack_max = saved_max

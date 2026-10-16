@@ -1,0 +1,44 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" uid="uid://bh6k6jgd4s3of" path="res://scripts/ui/hand_owner_badge.gd" id="1_badge"]
+[ext_resource type="Shader" uid="uid://c4k7m2n8p5q6r" path="res://shaders/bubble_badge.gdshader" id="2_pin"]
+[ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="3_sheet"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_pin"]
+resource_local_to_scene = true
+shader = ExtResource("2_pin")
+shader_parameter/rim = Color(1, 1, 1, 1)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bubble"]
+atlas = ExtResource("3_sheet")
+region = Rect2(332, 208, 80, 78)
+
+[node name="HandOwnerBadge" type="Control" unique_id=715238328]
+z_index = 12
+scale = Vector2(0.7, 0.7)
+layout_mode = 3
+anchors_preset = 0
+mouse_filter = 2
+script = ExtResource("1_badge")
+
+[node name="Pin" type="TextureRect" parent="." unique_id=1701604871]
+texture_filter = 0
+material = SubResource("ShaderMaterial_pin")
+layout_mode = 0
+offset_top = -78.0
+offset_right = 80.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_bubble")
+expand_mode = 1
+
+; Dark interior of theme_assets region Rect2(332, 208, 80, 78). Move with that art.
+[node name="Head" type="TextureRect" parent="." unique_id=1701604872]
+texture_filter = 0
+layout_mode = 0
+offset_left = 12.0
+offset_top = -74.0
+offset_right = 68.0
+offset_bottom = -18.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5

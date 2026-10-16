@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://w2vke8x0fk42"]
+
+[ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="1_theme"]
+[ext_resource type="Script" uid="uid://ck4t52ltgg3ww" path="res://scripts/ui/sci_flashing_button.gd" id="2_script"]
+
+[node name="sci_flashing_button" type="Button" unique_id=383090246]
+custom_maximum_size = Vector2(-1, 56)
+theme = ExtResource("1_theme")
+theme_type_variation = &"PrimaryButton"
+script = ExtResource("2_script")

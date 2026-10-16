@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://qxdubftejjtg"]
+
+[ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="1_22atx"]
+
+[node name="PrimaryPanel" type="PanelContainer" unique_id=1762085647]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(3, 3)
+theme = ExtResource("1_22atx")
+theme_type_variation = &"PrimaryPanel"

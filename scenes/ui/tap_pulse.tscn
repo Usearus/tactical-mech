@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/tap_pulse.gd" id="1_pulse"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_circle"]
+bg_color = Color(0.62, 0.92, 1, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 17
+corner_radius_top_right = 17
+corner_radius_bottom_right = 17
+corner_radius_bottom_left = 17
+anti_aliasing = false
+
+[node name="TapPulse" type="Panel"]
+custom_minimum_size = Vector2(34, 34)
+offset_right = 34.0
+offset_bottom = 34.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_circle")
+script = ExtResource("1_pulse")

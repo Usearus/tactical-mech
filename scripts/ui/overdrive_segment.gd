@@ -8,8 +8,12 @@ enum Kind { EMPTY, ACCOUNTED, EXTRA }
 @export var accounted_style: StyleBoxFlat
 @export var extra_style: StyleBoxFlat
 
+const FLASH_HALF := 0.18
+const FLASH_TIMES := 3
+
 var kind := Kind.EMPTY
 var _tween: Tween
+var _flashing := false
 
 
 func _ready() -> void:
@@ -51,6 +55,37 @@ func dismiss() -> void:
 	scale = Vector2.ONE
 
 
+func is_flashing() -> bool:
+	return _flashing
+
+
+## Three swings to white and back. done runs after the last return to rest.
+func flash_white(rest: Color, done: Callable = Callable()) -> void:
+	_stop()
+	_flashing = true
+	var style := StyleBoxFlat.new()
+	style.bg_color = rest
+	style.set_corner_radius_all(2)
+	add_theme_stylebox_override("panel", style)
+	_tween = create_tween()
+	_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	for _pulse in FLASH_TIMES:
+		_tween.tween_property(style, "bg_color", Color.WHITE, FLASH_HALF)
+		_tween.tween_property(style, "bg_color", rest, FLASH_HALF)
+	_tween.finished.connect(func() -> void:
+		_flashing = false
+		if done.is_valid():
+			done.call()
+	)
+
+
+## A gauge-owned style, so every filled pill can share one color and pulse together.
+func apply_style(style: StyleBoxFlat) -> void:
+	visible = true
+	if style != null:
+		add_theme_stylebox_override("panel", style)
+
+
 func _apply(next: Kind) -> void:
 	var style := empty_style
 	match next:
@@ -63,6 +98,7 @@ func _apply(next: Kind) -> void:
 
 
 func _stop() -> void:
+	_flashing = false
 	if _tween != null and _tween.is_valid():
 		_tween.kill()
 	_tween = null

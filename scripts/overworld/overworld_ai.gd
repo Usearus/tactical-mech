@@ -4,7 +4,8 @@ extends RefCounted
 ## Overworld enemy turn. Each enemy walks orthogonally toward the nearest
 ## player. A grunt stops one cell short and holds, and steps in only when
 ## another enemy can reach that same player this round. A boss, and the last
-## living enemy, step in alone. A mech cannot walk through another mech.
+## living enemy, step in alone. A player can pass through other players.
+## Neither team can enter a cell held by the other.
 
 const STEPS: Array[Vector2i] = [
 	Vector2i.RIGHT,
@@ -124,7 +125,8 @@ static func path_from_distances(origin: Vector2i, destination: Vector2i, distanc
 	return path
 
 
-## Cells inside `allowed` that can be reached from `origin` without crossing a mech.
+## Cells inside `allowed` that can be reached from `origin`. Players may cross
+## other players. An opposing mech still blocks the cell.
 static func reachable_within(
 	origin: Vector2i,
 	allowed: Dictionary,
@@ -151,7 +153,28 @@ static func reachable_within(
 	return distances
 
 
-## Movement stops at another mech. The mover's own cell does not count.
+## Cells within attack range of any cell in `standable`.
+## `standable` includes where the unit already stands. Its own cell is left out,
+## and rubble is left out, since nobody can be standing there.
+static func threat_zone(standable: Dictionary, attack_range: int, home: Vector2i) -> Dictionary:
+	var cells := {}
+	var reach := maxi(attack_range, 1)
+	for raw in standable:
+		var origin: Vector2i = raw
+		for y in range(-reach, reach + 1):
+			var span := reach - absi(y)
+			for x in range(-span, span + 1):
+				if x == 0 and y == 0:
+					continue
+				var coords := origin + Vector2i(x, y)
+				if coords == home or not StageMap.contains(coords) or StageMap.blocked(coords):
+					continue
+				cells[coords] = true
+	return cells
+
+
+## Cells the unit can enter. A player path may cross another player, and still
+## cannot enter an enemy. The mover's own cell does not count.
 static func reachable(unit: MechState, everyone: Array[MechState], map_size: Vector2i) -> Dictionary:
 	var distances := {unit.overworld_position: 0}
 	var queue: Array[Vector2i] = [unit.overworld_position]
@@ -223,9 +246,12 @@ static func _step_toward(
 	return origin
 
 
+## An opposing mech blocks the cell. A player can pass through another player.
 static func _blocked_by_mech(coords: Vector2i, mover: MechState, everyone: Array[MechState]) -> bool:
 	var unit := _unit_at(coords, everyone)
-	return unit != null and unit != mover
+	if unit == null or unit == mover:
+		return false
+	return mover == null or mover.team != "player" or unit.team != "player"
 
 
 static func _unit_at(coords: Vector2i, everyone: Array[MechState]) -> MechState:

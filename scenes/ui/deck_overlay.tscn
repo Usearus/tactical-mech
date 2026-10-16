@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/ui/deck_overlay.gd" id="1_overlay"]
 [ext_resource type="PackedScene" path="res://scenes/ui/info_note.tscn" id="2_note"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_primary_button_square.tscn" id="3_sq"]
 
 [node name="DeckOverlay" type="CanvasLayer"]
 layer = 60
@@ -60,7 +61,7 @@ theme_override_font_sizes/font_size = 36
 text = "Deck"
 vertical_alignment = 1
 
-[node name="Close" type="Button" parent="Overlay"]
+[node name="Close" parent="Overlay" instance=ExtResource("3_sq")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(56, 56)
 layout_mode = 1

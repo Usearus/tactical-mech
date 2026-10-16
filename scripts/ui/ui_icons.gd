@@ -11,7 +11,7 @@ const PHRASES := {
 	"atk": "Damage this card deals.",
 	"rng": "How far this card can reach.",
 	"mov": "Cells this card moves.",
-	"dodge": "This card negates one incoming attack.",
+	"dodge": "This card negates or intercepts one incoming attack.",
 	"def": "Guard that absorbs hits before hit points. Only active during a battle.",
 	"bar": "Barrier that absorbs hits after guard, before hit points. Remains after battle.",
 }

@@ -68,6 +68,23 @@ func test_enemy_who_already_acted_does_not_count_unless_beside_the_player() -> v
 	assert_eq(_destination(actor, [player, held, actor]), Vector2i(9, 3))
 
 
+func test_player_passes_through_allies_and_stops_at_enemies() -> void:
+	var mover := _unit("pilot", "player", Vector2i(6, 3), 4)
+	var ally := _unit("wing", "player", Vector2i(7, 3), 2)
+	var enemy := _unit("scout", "enemy", Vector2i(8, 3), 2)
+	var everyone: Array[MechState] = [mover, ally, enemy]
+	var through_ally := OverworldAi.reachable(mover, [mover, ally], MAP)
+	assert_true(through_ally.has(Vector2i(7, 3)))
+	assert_true(through_ally.has(Vector2i(9, 3)))
+	var path := OverworldAi.path_from_distances(mover.overworld_position, Vector2i(9, 3), through_ally)
+	assert_true(path.has(Vector2i(7, 3)))
+	assert_eq(path[path.size() - 1], Vector2i(9, 3))
+	var blocked := OverworldAi.reachable(mover, everyone, MAP)
+	assert_true(blocked.has(Vector2i(7, 3)))
+	assert_false(blocked.has(Vector2i(8, 3)))
+	assert_false(blocked.has(Vector2i(9, 3)))
+
+
 func test_mechs_do_not_walk_through_each_other() -> void:
 	var player := _unit("pilot", "player", Vector2i(10, 3), 2)
 	var blocker := _unit("wing", "player", Vector2i(8, 3), 2)
@@ -81,6 +98,20 @@ func test_mechs_do_not_walk_through_each_other() -> void:
 	var distances := OverworldAi.reachable(grunt, everyone, MAP)
 	assert_false(distances.has(Vector2i(8, 3)))
 	assert_false(distances.has(Vector2i(10, 3)))
+
+
+func test_threat_zone_reaches_past_movement_by_attack_range() -> void:
+	var enemy := _unit("scout", "enemy", Vector2i(10, 3), 2)
+	var standable := OverworldAi.reachable(enemy, [enemy], MAP)
+	var threat := OverworldAi.threat_zone(standable, 1, enemy.overworld_position)
+	assert_true(standable.has(Vector2i(12, 3)))
+	assert_false(standable.has(Vector2i(13, 3)))
+	assert_false(threat.has(enemy.overworld_position))
+	assert_true(threat.has(Vector2i(13, 3)))
+	assert_false(threat.has(Vector2i(14, 3)))
+	var farther := OverworldAi.threat_zone(standable, 2, enemy.overworld_position)
+	assert_true(farther.has(Vector2i(14, 3)))
+	assert_false(farther.has(Vector2i(15, 3)))
 
 
 func test_grunts_on_different_players_do_not_unlock_each_other() -> void:

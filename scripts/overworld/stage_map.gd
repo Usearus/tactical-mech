@@ -1,11 +1,17 @@
 class_name StageMap
 extends RefCounted
 
-## The overworld is a TileMapLayer scene. Painted cells are the map.
+## The overworld stage is a Node2D of TileMapLayers. Ground is the map.
 ## A tile with a collision polygon is solid. Units cannot enter it.
 const DEFAULT_SCENE := "res://scenes/stage/stage1b.tscn"
+## Above mechs and their barrier. Overworld cells are z 1, sprites add 4, barrier adds 1.
+## Battle scenery shade and HP badges are z 8. HUD chrome starts at z 15.
+const SHADOW_Z := 7
+## Rain, lightning, and later effects live under this child. Battle copies each one.
+const WEATHER_NODE := "Weather"
 
 static var scene_path := DEFAULT_SCENE
+static var root: Node2D
 static var layer: TileMapLayer
 static var bounds := Rect2i()
 
@@ -13,17 +19,41 @@ static var bounds := Rect2i()
 static func use(path: String) -> void:
 	if path == "":
 		path = DEFAULT_SCENE
-	if layer != null and scene_path == path and is_instance_valid(layer):
+	if root != null and scene_path == path and is_instance_valid(root):
 		return
 	scene_path = path
-	if layer != null and is_instance_valid(layer):
-		layer.queue_free()
+	if root != null and is_instance_valid(root):
+		root.queue_free()
+	root = null
+	layer = null
 	var packed := load(scene_path) as PackedScene
 	var node := packed.instantiate()
-	layer = node as TileMapLayer
+	root = node as Node2D
+	if root == null:
+		push_error("Stage scene root must be a Node2D: %s" % scene_path)
+		node.queue_free()
+		bounds = Rect2i()
+		return
+	layer = root.get_node_or_null("Ground") as TileMapLayer
+	var shadows := root.get_node_or_null("Shadows") as CanvasItem
+	if shadows != null:
+		shadows.z_index = SHADOW_Z
 	if layer == null:
-		layer = node.find_child("*", true, false) as TileMapLayer
+		push_error("Stage scene is missing Ground: %s" % scene_path)
+		bounds = Rect2i()
+		return
 	bounds = mech_bounds(layer.get_used_rect())
+
+
+## Tile layers in draw order. Ground, then Shadow, then Props.
+static func visual_layers() -> Array[TileMapLayer]:
+	var found: Array[TileMapLayer] = []
+	if root == null or not is_instance_valid(root):
+		return found
+	for child in root.get_children():
+		if child is TileMapLayer:
+			found.append(child)
+	return found
 
 
 static func ensure() -> void:

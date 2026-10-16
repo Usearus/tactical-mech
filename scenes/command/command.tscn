@@ -2,7 +2,8 @@
 
 [ext_resource type="Script" uid="uid://bbl7v4hpmxmkg" path="res://scripts/command/command_screen.gd" id="1_command"]
 [ext_resource type="Texture2D" uid="uid://bxxnnm23koq7y" path="res://art/backgrounds/title_screen_background.jpg" id="2_bg"]
-[ext_resource type="Texture2D" uid="uid://daumv0v074k4h" path="res://art/mechs/player/purple/pilot_full_body.png" id="3_pilot"]
+[ext_resource type="Texture2D" uid="uid://daumv0v074k4h" path="res://art/characters/player/purple/pilot_full_body.png" id="3_pilot"]
+[ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="4_btn"]
 
 [node name="Command" type="Control" unique_id=1385585051]
 layout_mode = 3
@@ -80,22 +81,10 @@ text = "Tactical Mech"
 horizontal_alignment = 2
 uppercase = true
 
-[node name="StartButton" type="Button" parent="Menu/Column" unique_id=925525369]
+[node name="StartButton" parent="Menu/Column" unique_id=925525369 instance=ExtResource("4_btn")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(320, 72)
 layout_mode = 2
 size_flags_horizontal = 8
 theme_override_font_sizes/font_size = 48
 text = "START DEMO"
-
-[node name="Flash" type="ColorRect" parent="Menu/Column/StartButton"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(1, 1, 1, 0)
