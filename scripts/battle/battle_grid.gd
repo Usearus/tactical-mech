@@ -44,10 +44,3 @@ func occupant_at(coords: Vector2i) -> String:
 	if cell == null:
 		return ""
 	return cell.occupant_id
-
-
-static func coord_name(coords: Vector2i) -> String:
-	if coords.y < 0 or coords.y > 25:
-		return str(coords)
-	var row := char(65 + coords.y)
-	return "%s%d" % [row, coords.x + 1]

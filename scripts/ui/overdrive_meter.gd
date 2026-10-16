@@ -8,6 +8,12 @@ const NOTE := "Moving on the map and discarding cards fills this gauge. When it 
 ## Same blue as a filled select-screen pill, and the squad gauge's accent fill.
 const MUTED := Color(0.18, 0.38, 0.5)
 const ACCENT := Color(0.25, 0.72, 0.95)
+## Pulse target, and the type size of the Activate button beside the gauge.
+const FLASH_COLOR := Color(0.72, 0.94, 1.0)
+const TEXT_SIZE := 32
+## How long a "+N charge" tag stays fully visible, then how long it takes to fade.
+const GAIN_HOLD := 1.5
+const GAIN_FADE := 0.4
 ## Matches the squad gauge flash: a short swing toward white, then back.
 const PULSE_STEP := 0.45
 
@@ -86,7 +92,7 @@ func _set_pulse(full: bool) -> void:
 		_pulse = create_tween()
 		_pulse.set_loops()
 		_pulse.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		_pulse.tween_property(_accent_style, "bg_color", OverdriveGauge.FLASH_COLOR, PULSE_STEP)
+		_pulse.tween_property(_accent_style, "bg_color", FLASH_COLOR, PULSE_STEP)
 		_pulse.tween_property(_accent_style, "bg_color", ACCENT, PULSE_STEP)
 		return
 	if _pulse != null and _pulse.is_valid():

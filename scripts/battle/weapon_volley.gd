@@ -121,8 +121,8 @@ static func play(
 			var aim := straight_aim(from, center, missed, overshoot) if straight else aim_point(from, center, spread, missed, rng, overshoot)
 			var bend := 0.0
 			if arc_size > 0.0:
-				var sign := -1.0 if rng.randf() < 0.5 else 1.0
-				bend = sign * rng.randf_range(arc_size * 0.65, arc_size)
+				var arc_sign := -1.0 if rng.randf() < 0.5 else 1.0
+				bend = arc_sign * rng.randf_range(arc_size * 0.65, arc_size)
 			var seconds := maxf(flight + rng.randf_range(-jitter, jitter), 0.08)
 			var delay := shot_i * gap
 			var shot := scene.instantiate() as BattleShot

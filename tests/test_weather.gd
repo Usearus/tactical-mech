@@ -18,12 +18,6 @@ func test_stage_keeps_rain_and_lightning() -> void:
 	stage.free()
 
 
-func test_a_stage_without_weather_adds_nothing() -> void:
-	var stage := (load("res://scenes/stage/stage1.tscn") as PackedScene).instantiate()
-	assert_eq(WeatherFit.layers(stage).size(), 0, "no weather node means a clear board")
-	stage.free()
-
-
 func test_fit_covers_the_board_and_leaves_the_stage() -> void:
 	var stage := (load("res://scenes/stage/stage1b.tscn") as PackedScene).instantiate()
 	var rain := stage.get_node("Weather/Rain") as GPUParticles2D

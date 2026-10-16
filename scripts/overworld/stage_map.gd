@@ -91,35 +91,6 @@ static func mech_bounds(used: Rect2i) -> Rect2i:
 	return Rect2i(origin, limit - origin)
 
 
-static func tile_origin(coords: Vector2i) -> Vector2i:
-	return coords * mech_span()
-
-
-## Atlas picture of one painted cell. Empty when the cell has no tile.
-static func tile_texture(coords: Vector2i) -> AtlasTexture:
-	ensure()
-	if layer == null or layer.tile_set == null:
-		return null
-	var source_id := layer.get_cell_source_id(tile_origin(coords))
-	if source_id < 0:
-		return null
-	var atlas := layer.tile_set.get_source(source_id) as TileSetAtlasSource
-	if atlas == null or atlas.texture == null:
-		return null
-	var picture := AtlasTexture.new()
-	picture.atlas = atlas.texture
-	picture.region = atlas.get_tile_texture_region(layer.get_cell_atlas_coords(tile_origin(coords)))
-	return picture
-
-
-static func tile_flip(coords: Vector2i) -> Vector2i:
-	ensure()
-	var data := layer.get_cell_tile_data(tile_origin(coords))
-	if data == null:
-		return Vector2i.ZERO
-	return Vector2i(1 if data.flip_h else 0, 1 if data.flip_v else 0)
-
-
 static func blocked(coords: Vector2i) -> bool:
 	ensure()
 	if not bounds.has_point(coords):

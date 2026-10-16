@@ -2564,7 +2564,7 @@ func _style_activate_button() -> void:
 	if activate_button == null:
 		return
 	activate_button.text = ACTIVATE_TEXT
-	activate_button.add_theme_font_size_override("font_size", OverdriveGauge.TEXT_SIZE)
+	activate_button.add_theme_font_size_override("font_size", OverdriveMeter.TEXT_SIZE)
 	activate_button.stop_pulse()
 
 

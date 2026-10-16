@@ -1918,8 +1918,8 @@ func _show_turn_charge() -> void:
 	if _charge_gain_tween != null and _charge_gain_tween.is_valid():
 		_charge_gain_tween.kill()
 	_charge_gain_tween = create_tween()
-	_charge_gain_tween.tween_interval(OverdriveGauge.GAIN_HOLD)
-	_charge_gain_tween.tween_property(_charge_gain, "modulate:a", 0.0, OverdriveGauge.GAIN_FADE)
+	_charge_gain_tween.tween_interval(OverdriveMeter.GAIN_HOLD)
+	_charge_gain_tween.tween_property(_charge_gain, "modulate:a", 0.0, OverdriveMeter.GAIN_FADE)
 	_charge_gain_tween.finished.connect(func() -> void:
 		if is_instance_valid(_charge_gain):
 			_charge_gain.visible = false

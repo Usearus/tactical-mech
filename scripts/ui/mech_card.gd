@@ -173,7 +173,6 @@ func fit_strip() -> void:
 	custom_minimum_size = Vector2(168, 228)
 	size_flags_horizontal = SIZE_SHRINK_BEGIN
 	size_flags_vertical = SIZE_SHRINK_CENTER
-	var header := get_node_or_null("%Header") as PanelContainer
 	if header != null:
 		header.custom_minimum_size = Vector2(0, 40)
 	var detail := get_node_or_null("%Detail") as Label

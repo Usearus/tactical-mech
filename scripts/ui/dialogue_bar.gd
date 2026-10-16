@@ -34,14 +34,6 @@ func _ready() -> void:
 	prompt.visible = false
 
 
-## Top of the bar before it slides in. Story scenes stand mechs on this line.
-func rest_top() -> float:
-	var bar := dialogue if is_instance_valid(dialogue) else get_node_or_null("Dialogue") as Control
-	if bar == null:
-		return 0.0
-	return bar.offset_top
-
-
 ## Shows the bar, waits through every line, then hides.
 func play(lines: Array[StoryLine]) -> void:
 	if _playing:

@@ -46,13 +46,6 @@ static func deploy_players(chosen: Array[MechData]) -> Array[MechState]:
 	return players
 
 
-static func create_units() -> Dictionary:
-	return {
-		"players": deploy_players(player_roster()),
-		"enemies": create_enemies(),
-	}
-
-
 static func player_slots() -> Array[StageSpawn]:
 	var slots: Array[StageSpawn] = []
 	for spawn in _spawns():

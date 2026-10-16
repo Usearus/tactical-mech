@@ -55,27 +55,6 @@ func _ready() -> void:
 	_fade = layer.get_node("Fade") as ColorRect
 
 
-func fade_out(duration := FADE_SECONDS) -> void:
-	await _fade_to(1.0, duration)
-
-
-func fade_in(duration := FADE_SECONDS) -> void:
-	if _fade == null or _fade.color.a <= 0.01:
-		return
-	await _fade_to(0.0, duration)
-
-
-func _fade_to(target_alpha: float, duration: float) -> void:
-	if _fade_tween != null and _fade_tween.is_valid():
-		_fade_tween.kill()
-	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
-	_fade_tween = create_tween()
-	_fade_tween.tween_property(_fade, "color:a", target_alpha, duration)
-	await _fade_tween.finished
-	if _fade.color.a <= 0.01:
-		_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-
 func boot() -> void:
 	if _booted:
 		return

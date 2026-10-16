@@ -142,7 +142,7 @@ func _apply_icon(badge: Control) -> void:
 
 func _fitted_size(label: Label, wrap_limit: float = MAX_TEXT_WIDTH) -> Vector2:
 	var text := "" if label == null else label.text
-	var wrap := wrap_limit
+	var wrap_width := wrap_limit
 	var text_height := 0.0
 	if label != null and not text.is_empty():
 		var font := label.get_theme_font("font")
@@ -150,11 +150,11 @@ func _fitted_size(label: Label, wrap_limit: float = MAX_TEXT_WIDTH) -> Vector2:
 		var line_width := 0.0
 		for line in text.split("\n"):
 			line_width = maxf(line_width, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)
-		wrap = minf(line_width, wrap_limit)
-		text_height = font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, wrap, font_size).y
-		label.custom_minimum_size = Vector2(wrap, text_height)
+		wrap_width = minf(line_width, wrap_limit)
+		text_height = font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, wrap_width, font_size).y
+		label.custom_minimum_size = Vector2(wrap_width, text_height)
 	var icon := get_node_or_null("Row/Icon") as TextureRect
-	var content := Vector2(wrap, text_height)
+	var content := Vector2(wrap_width, text_height)
 	if icon != null and icon.visible:
 		content.x += 8.0 + icon.custom_minimum_size.x
 		content.y = maxf(content.y, icon.custom_minimum_size.y)

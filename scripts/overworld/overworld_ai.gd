@@ -194,20 +194,6 @@ static func reachable(unit: MechState, everyone: Array[MechState], map_size: Vec
 	return distances
 
 
-static func approach_origin(unit: MechState, destination: Vector2i, distances: Dictionary) -> Vector2i:
-	var best := unit.overworld_position
-	var best_distance := 999999
-	for step in STEPS:
-		var origin: Vector2i = destination - step
-		if not distances.has(origin):
-			continue
-		var distance: int = distances[origin]
-		if distance < best_distance:
-			best_distance = distance
-			best = origin
-	return best
-
-
 static func _nearest_player_from(origin: Vector2i, everyone: Array[MechState]) -> MechState:
 	var nearest: MechState = null
 	var nearest_distance := 999999

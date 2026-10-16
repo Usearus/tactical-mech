@@ -8,9 +8,5 @@ var cover: int = 0
 var elevation: int = 0
 
 
-func is_occupied() -> bool:
-	return occupant_id != ""
-
-
 func is_solid() -> bool:
 	return terrain_type == "solid"
