@@ -1,9 +1,13 @@
 class_name StartingRoster
 extends RefCounted
 
+## Off the map until the player drags this mech onto a starting square.
+const UNPLACED := Vector2i(-1, -1)
+
 const PLAYER_MECHS: Array[String] = [
 	"res://data/mechs/player/raven.tres",
 	"res://data/mechs/player/bulldog.tres",
+	"res://data/mechs/player/bastion.tres",
 	"res://data/mechs/player/lancer.tres",
 	"res://data/mechs/player/barrage.tres",
 	"res://data/mechs/player/comet.tres",
@@ -33,7 +37,7 @@ static func squad_size() -> int:
 	return player_slots().size()
 
 
-## Chosen mechs fill the stage's player slots in pick order.
+## Chosen mechs wait off the map. The stage's numbered spawns are the squares they can be dragged onto.
 static func deploy_players(chosen: Array[MechData]) -> Array[MechState]:
 	var slots := player_slots()
 	var players: Array[MechState] = []
@@ -42,7 +46,7 @@ static func deploy_players(chosen: Array[MechData]) -> Array[MechState]:
 		var data := chosen[index]
 		if data == null:
 			continue
-		players.append(MechState.from_data(data, slots[index].cell()))
+		players.append(MechState.from_data(data, UNPLACED))
 	return players
 
 

@@ -22,7 +22,8 @@
 [ext_resource type="PackedScene" uid="uid://w2vke8x0fk42" path="res://scenes/ui/sci_flashing_button.tscn" id="13_flash"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pile_card_back.tscn" id="14_back"]
 [ext_resource type="Texture2D" uid="uid://dqepltaljtfey" path="res://art/icons/stats/clock.svg" id="15_clock"]
-[ext_resource type="PackedScene" path="res://scenes/ui/card_readout.tscn" id="16_readout"]
+[ext_resource type="PackedScene" uid="uid://ffgwtvttenp4" path="res://scenes/ui/upgrade_pick.tscn" id="17_upgrade"]
+[ext_resource type="PackedScene" path="res://scenes/ui/empty_card_slot.tscn" id="18_slot"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_p86no"]
 animations = [{
@@ -65,30 +66,38 @@ theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 12
 
-[node name="Full Layout" type="HBoxContainer" parent="MarginContainer" unique_id=480009120]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Grid + Hand" type="VBoxContainer" parent="MarginContainer/Full Layout" unique_id=192365957]
+[node name="Full Layout" type="VBoxContainer" parent="MarginContainer" unique_id=480009120]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 12
 
-[node name="GridPanel" type="PanelContainer" parent="MarginContainer/Full Layout/Grid + Hand" unique_id=1607200250]
+[node name="Board Row" type="HBoxContainer" parent="MarginContainer/Full Layout" unique_id=1842201970]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="Grid + Hand" type="VBoxContainer" parent="MarginContainer/Full Layout/Board Row" unique_id=192365957]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="GridPanel" type="PanelContainer" parent="MarginContainer/Full Layout/Board Row/Grid + Hand" unique_id=1607200250]
 layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("2_n6gaa")
 theme_type_variation = &"PrimaryPanel"
 
-[node name="GridHost" type="Control" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel" unique_id=1429523693]
+[node name="GridHost" type="Control" parent="MarginContainer/Full Layout/Board Row/Grid + Hand/GridPanel" unique_id=1429523693]
 unique_name_in_owner = true
 clip_contents = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="Center" type="Control" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost" unique_id=704089889]
+[node name="Center" type="Control" parent="MarginContainer/Full Layout/Board Row/Grid + Hand/GridPanel/GridHost" unique_id=704089889]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -97,96 +106,69 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Field" type="Control" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center" unique_id=1097916829]
+[node name="Field" type="Control" parent="MarginContainer/Full Layout/Board Row/Grid + Hand/GridPanel/GridHost/Center" unique_id=1097916829]
 anchors_preset = 0
 mouse_filter = 2
 
-[node name="Board" type="ColorRect" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field" unique_id=1209883283]
+[node name="Board" type="ColorRect" parent="MarginContainer/Full Layout/Board Row/Grid + Hand/GridPanel/GridHost/Center/Field" unique_id=1209883283]
 layout_mode = 0
 mouse_filter = 2
 color = Color(0.07, 0.08, 0.1, 1)
 
-[node name="Grid" type="GridContainer" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field" unique_id=16955820]
+[node name="Grid" type="GridContainer" parent="MarginContainer/Full Layout/Board Row/Grid + Hand/GridPanel/GridHost/Center/Field" unique_id=16955820]
 unique_name_in_owner = true
 layout_mode = 0
 theme_override_constants/h_separation = 3
 theme_override_constants/v_separation = 3
 columns = 10
 
-[node name="Shots" type="Node2D" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field"]
+[node name="Shots" type="Node2D" parent="MarginContainer/Full Layout/Board Row/Grid + Hand/GridPanel/GridHost/Center/Field" unique_id=1352865581]
 unique_name_in_owner = true
 z_index = 6
 
-[node name="SceneryShade" type="Control" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field" unique_id=898471101]
+[node name="SceneryShade" type="Control" parent="MarginContainer/Full Layout/Board Row/Grid + Hand/GridPanel/GridHost/Center/Field" unique_id=898471101]
 z_index = 8
 anchors_preset = 0
 mouse_filter = 2
 
-[node name="Top" type="ColorRect" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field/SceneryShade" unique_id=863092068]
+[node name="Top" type="ColorRect" parent="MarginContainer/Full Layout/Board Row/Grid + Hand/GridPanel/GridHost/Center/Field/SceneryShade" unique_id=863092068]
 layout_mode = 0
 mouse_filter = 2
 color = Color(0, 0, 0, 0.3)
 
-[node name="Bottom" type="ColorRect" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field/SceneryShade" unique_id=1021837926]
+[node name="Bottom" type="ColorRect" parent="MarginContainer/Full Layout/Board Row/Grid + Hand/GridPanel/GridHost/Center/Field/SceneryShade" unique_id=1021837926]
 layout_mode = 0
 mouse_filter = 2
 color = Color(0, 0, 0, 0.3)
 
-[node name="Left" type="ColorRect" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field/SceneryShade" unique_id=748223457]
+[node name="Left" type="ColorRect" parent="MarginContainer/Full Layout/Board Row/Grid + Hand/GridPanel/GridHost/Center/Field/SceneryShade" unique_id=748223457]
 layout_mode = 0
 mouse_filter = 2
 color = Color(0, 0, 0, 0.3)
 
-[node name="Right" type="ColorRect" parent="MarginContainer/Full Layout/Grid + Hand/GridPanel/GridHost/Center/Field/SceneryShade" unique_id=287390444]
+[node name="Right" type="ColorRect" parent="MarginContainer/Full Layout/Board Row/Grid + Hand/GridPanel/GridHost/Center/Field/SceneryShade" unique_id=287390444]
 layout_mode = 0
 mouse_filter = 2
 color = Color(0, 0, 0, 0.3)
 
-[node name="Hand Margin" type="MarginContainer" parent="MarginContainer/Full Layout/Grid + Hand" unique_id=1690501970]
-custom_maximum_size = Vector2(-1, 280)
+[node name="SideBar" type="VBoxContainer" parent="MarginContainer/Full Layout/Board Row" unique_id=520126229]
 layout_mode = 2
 size_flags_vertical = 3
-
-[node name="HandAnchor" type="Control" parent="MarginContainer/Full Layout/Grid + Hand/Hand Margin" unique_id=628211980]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-mouse_filter = 2
-
-[node name="HandRow" type="HBoxContainer" parent="MarginContainer/Full Layout/Grid + Hand/Hand Margin/HandAnchor" unique_id=754585897]
-layout_mode = 0
-offset_bottom = 264.0
-theme_override_constants/separation = 12
-
-[node name="Hand" type="HBoxContainer" parent="MarginContainer/Full Layout/Grid + Hand/Hand Margin/HandAnchor/HandRow" unique_id=1320627133]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 4
-theme_override_constants/separation = 12
-
-[node name="HandGap" type="Control" parent="MarginContainer/Full Layout/Grid + Hand/Hand Margin/HandAnchor/HandRow" unique_id=196039570]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-
-[node name="SideBar" type="VBoxContainer" parent="MarginContainer/Full Layout" unique_id=520126229]
-layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="MenuMargin" type="MarginContainer" parent="MarginContainer/Full Layout/SideBar" unique_id=126037905]
+[node name="MenuMargin" type="MarginContainer" parent="MarginContainer/Full Layout/Board Row/SideBar" unique_id=126037905]
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_constants/margin_left = 4
 theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 0
 
-[node name="MenuRow" type="HBoxContainer" parent="MarginContainer/Full Layout/SideBar/MenuMargin" unique_id=122789961]
+[node name="MenuRow" type="HBoxContainer" parent="MarginContainer/Full Layout/Board Row/SideBar/MenuMargin" unique_id=122789961]
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="MarginContainer/Full Layout/SideBar/MenuMargin/MenuRow" unique_id=437555577]
+[node name="Title" type="Label" parent="MarginContainer/Full Layout/Board Row/SideBar/MenuMargin/MenuRow" unique_id=437555577]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
@@ -196,76 +178,33 @@ theme_override_font_sizes/font_size = 40
 text = "Round 1/2"
 vertical_alignment = 1
 
-[node name="MenuCorner" parent="MarginContainer/Full Layout/SideBar/MenuMargin/MenuRow" unique_id=568833171 instance=ExtResource("6_menu")]
+[node name="MenuCorner" parent="MarginContainer/Full Layout/Board Row/SideBar/MenuMargin/MenuRow" unique_id=568833171 instance=ExtResource("6_menu")]
 layout_mode = 2
 size_flags_vertical = 0
 
-[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/Full Layout/SideBar" unique_id=1244089151]
-layout_mode = 2
-size_flags_vertical = 3
-theme = ExtResource("2_n6gaa")
-theme_type_variation = &"SecondaryPanel"
-
-[node name="Sidebar" type="VBoxContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer" unique_id=174363870]
-custom_minimum_size = Vector2(296, 0)
+[node name="Sidebar Column" type="VBoxContainer" parent="MarginContainer/Full Layout/Board Row/SideBar" unique_id=1847293311]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 20
 
-[node name="LogSwap" type="Control" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar"]
+[node name="PanelContainer3" type="PanelContainer" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column" unique_id=1593714073]
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-mouse_filter = 2
-
-[node name="BattleLog" type="RichTextLabel" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/LogSwap" unique_id=1612687693]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/default_color = Color(0.9, 0.91, 0.94, 1)
-theme_override_constants/line_separation = 6
-theme_override_font_sizes/normal_font_size = 22
-scroll_following = true
-
-[node name="CardReadout" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/LogSwap" instance=ExtResource("16_readout")]
-unique_name_in_owner = true
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Sidebar Column" type="VBoxContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar" unique_id=1847293311]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 10
-theme_override_constants/separation = 20
-
-[node name="PanelContainer3" type="PanelContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column" unique_id=1593714073]
-layout_mode = 2
-size_flags_vertical = 10
 theme = ExtResource("2_n6gaa")
 theme_type_variation = &"SecondaryPanel"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PanelContainer3" unique_id=1301167218]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PanelContainer3" unique_id=1301167218]
 layout_mode = 2
 size_flags_vertical = 8
 
-[node name="GaugeFace" type="Control" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PanelContainer3/VBoxContainer" unique_id=841762110]
+[node name="GaugeFace" type="Control" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PanelContainer3/VBoxContainer" unique_id=841762110]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 1
 
-[node name="GaugeAlign" type="HBoxContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PanelContainer3/VBoxContainer/GaugeFace" unique_id=1526875890]
+[node name="GaugeAlign" type="HBoxContainer" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PanelContainer3/VBoxContainer/GaugeFace" unique_id=1526875890]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -275,63 +214,224 @@ grow_vertical = 2
 mouse_filter = 2
 alignment = 2
 
-[node name="PlayerGauge" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PanelContainer3/VBoxContainer/GaugeFace/GaugeAlign" unique_id=2124016887 instance=ExtResource("12_meter")]
+[node name="PlayerGauge" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PanelContainer3/VBoxContainer/GaugeFace/GaugeAlign" unique_id=2124016887 instance=ExtResource("12_meter")]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="ActivateButton" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PanelContainer3/VBoxContainer" unique_id=636293191 instance=ExtResource("13_flash")]
+[node name="ActivateButton" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PanelContainer3/VBoxContainer" unique_id=636293191 instance=ExtResource("13_flash")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 disabled = true
 text = "Activate Overdrive"
 
-[node name="PileRow" type="HBoxContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column" unique_id=1041843381]
-custom_minimum_size = Vector2(0, 160)
+[node name="PileRow" type="Control" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column" unique_id=1041843381]
+custom_minimum_size = Vector2(0, 116)
 layout_mode = 2
-size_flags_vertical = 10
-theme_override_constants/separation = 8
-
-[node name="DiscardStack" type="Control" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow" unique_id=1842201941]
-custom_minimum_size = Vector2(135, 160)
-layout_mode = 2
-size_flags_vertical = 8
-offset_transform_enabled = true
-offset_transform_position = Vector2(0, -16)
+size_flags_horizontal = 3
+size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="DiscardBackFar" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DiscardStack" unique_id=1842201942 instance=ExtResource("14_back")]
+[node name="DeckStack" type="Control" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow" unique_id=1842201944]
+custom_minimum_size = Vector2(60, 75)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -68.0
+offset_top = -76.70328
+offset_right = -8.0
+offset_bottom = -1.7032776
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="DeckBackFar" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow/DeckStack" unique_id=1842201945 instance=ExtResource("14_back")]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 12.0
-offset_top = 16.0
-offset_right = 12.0
-offset_bottom = 16.0
+offset_left = 8.0
+offset_top = 10.0
+offset_right = 8.0
+offset_bottom = 10.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="DiscardBackNear" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DiscardStack" unique_id=1842201943 instance=ExtResource("14_back")]
+[node name="DeckBackNear" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow/DeckStack" unique_id=1842201946 instance=ExtResource("14_back")]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 8.0
-offset_right = 6.0
-offset_bottom = 8.0
+offset_left = 4.0
+offset_top = 5.0
+offset_right = 4.0
+offset_bottom = 5.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="DiscardPile" type="Button" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DiscardStack" unique_id=1445833075]
+[node name="DeckPile" type="Button" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow/DeckStack" unique_id=1281074807]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(124, 140)
 clip_contents = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_n6gaa")
+theme_type_variation = &"PrimaryButtonSquare"
+
+[node name="DeckMargin" type="MarginContainer" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow/DeckStack/DeckPile" unique_id=2089224455]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="DeckBody" type="VBoxContainer" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow/DeckStack/DeckPile/DeckMargin" unique_id=1395742293]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="DeckTitle" type="Label" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow/DeckStack/DeckPile/DeckMargin/DeckBody" unique_id=577412592]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "Deck"
+horizontal_alignment = 1
+
+[node name="DeckCount" type="Label" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow/DeckStack/DeckPile/DeckMargin/DeckBody" unique_id=2105742526]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "0"
+horizontal_alignment = 1
+
+[node name="Hand Margin" type="MarginContainer" parent="MarginContainer/Full Layout" unique_id=1690501970]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+
+[node name="HandAnchor" type="Control" parent="MarginContainer/Full Layout/Hand Margin" unique_id=628211980]
+custom_minimum_size = Vector2(0, 240)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="HandRow" type="HBoxContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor" unique_id=754585897]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -240.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 4
+
+[node name="Hand" type="HBoxContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/HandRow" unique_id=1320627133]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+theme_override_constants/separation = 12
+
+[node name="CardSlot1" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/HandRow/Hand" unique_id=1842201971 instance=ExtResource("18_slot")]
+custom_minimum_size = Vector2(157, 240)
+layout_mode = 2
+
+[node name="CardSlot2" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/HandRow/Hand" unique_id=1842201972 instance=ExtResource("18_slot")]
+custom_minimum_size = Vector2(157, 240)
+layout_mode = 2
+
+[node name="CardSlot3" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/HandRow/Hand" unique_id=1842201973 instance=ExtResource("18_slot")]
+custom_minimum_size = Vector2(157, 240)
+layout_mode = 2
+
+[node name="CardSlot4" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/HandRow/Hand" unique_id=1842201974 instance=ExtResource("18_slot")]
+custom_minimum_size = Vector2(157, 240)
+layout_mode = 2
+
+[node name="CardSlot5" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/HandRow/Hand" unique_id=1842201975 instance=ExtResource("18_slot")]
+custom_minimum_size = Vector2(157, 240)
+layout_mode = 2
+
+[node name="CardSlot6" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/HandRow/Hand" unique_id=1842201976 instance=ExtResource("18_slot")]
+custom_minimum_size = Vector2(157, 240)
+layout_mode = 2
+
+[node name="HandGap" type="Control" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/HandRow" unique_id=196039570]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="CornerColumn" type="VBoxContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor" unique_id=1842201980]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -140.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_constants/separation = 4
+
+[node name="DiscardStack" type="Control" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn" unique_id=1842201941]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="DiscardBackFar" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/DiscardStack" unique_id=1842201942 instance=ExtResource("14_back")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 37.0
+offset_top = 12.0
+offset_right = -4.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DiscardBackNear" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/DiscardStack" unique_id=1842201943 instance=ExtResource("14_back")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 33.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DiscardPile" type="Button" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/DiscardStack" unique_id=1445833075]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 26.0
+offset_top = 2.0
+offset_right = -14.0
+offset_bottom = -14.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
@@ -339,7 +439,7 @@ theme = ExtResource("2_n6gaa")
 theme_type_variation = &"PrimaryButtonSquare"
 disabled = true
 
-[node name="DiscardMargin" type="MarginContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DiscardStack/DiscardPile" unique_id=1769898166]
+[node name="DiscardMargin" type="MarginContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/DiscardStack/DiscardPile" unique_id=1769898166]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -348,11 +448,11 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/margin_left = 6
-theme_override_constants/margin_top = 8
+theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_bottom = 6
 
-[node name="DiscardBody" type="VBoxContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DiscardStack/DiscardPile/DiscardMargin" unique_id=585571863]
+[node name="DiscardBody" type="VBoxContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/DiscardStack/DiscardPile/DiscardMargin" unique_id=585571863]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -360,110 +460,31 @@ mouse_filter = 2
 theme_override_constants/separation = 2
 alignment = 1
 
-[node name="DiscardTitle" type="Label" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DiscardStack/DiscardPile/DiscardMargin/DiscardBody" unique_id=1538672417]
+[node name="DiscardTitle" type="Label" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/DiscardStack/DiscardPile/DiscardMargin/DiscardBody" unique_id=1538672417]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 0.5)
+theme_override_font_sizes/font_size = 28
 text = "Discard"
 horizontal_alignment = 1
 
-[node name="DiscardLabel" type="Label" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DiscardStack/DiscardPile/DiscardMargin/DiscardBody" unique_id=352864903]
+[node name="DiscardLabel" type="Label" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/DiscardStack/DiscardPile/DiscardMargin/DiscardBody" unique_id=352864903]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 0.5)
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 28
 text = "0"
 horizontal_alignment = 1
 
-[node name="DeckStack" type="Control" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow" unique_id=1842201944]
-custom_minimum_size = Vector2(135, 160)
-layout_mode = 2
-size_flags_vertical = 8
-offset_transform_enabled = true
-offset_transform_position = Vector2(0, -16)
-mouse_filter = 2
-
-[node name="DeckBackFar" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DeckStack" unique_id=1842201945 instance=ExtResource("14_back")]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 12.0
-offset_top = 16.0
-offset_right = 12.0
-offset_bottom = 16.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="DeckBackNear" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DeckStack" unique_id=1842201946 instance=ExtResource("14_back")]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 8.0
-offset_right = 6.0
-offset_bottom = 8.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="DeckPile" type="Button" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DeckStack" unique_id=1281074807]
+[node name="SkipButton" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn" unique_id=976583124 instance=ExtResource("10_btn")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(124, 140)
-clip_contents = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_default_cursor_shape = 2
-theme = ExtResource("2_n6gaa")
-theme_type_variation = &"PrimaryButtonSquare"
-
-[node name="DeckMargin" type="MarginContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DeckStack/DeckPile" unique_id=2089224455]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_constants/margin_left = 6
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 6
-theme_override_constants/margin_bottom = 8
-
-[node name="DeckBody" type="VBoxContainer" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DeckStack/DeckPile/DeckMargin" unique_id=1395742293]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-mouse_filter = 2
-theme_override_constants/separation = 2
-alignment = 1
-
-[node name="DeckTitle" type="Label" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DeckStack/DeckPile/DeckMargin/DeckBody" unique_id=577412592]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-text = "Deck"
-horizontal_alignment = 1
-
-[node name="DeckCount" type="Label" parent="MarginContainer/Full Layout/SideBar/PanelContainer/Sidebar/Sidebar Column/PileRow/DeckStack/DeckPile/DeckMargin/DeckBody" unique_id=2105742526]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 40
-text = "0"
-horizontal_alignment = 1
-
-[node name="SkipButton" parent="MarginContainer/Full Layout/SideBar" unique_id=976583124 instance=ExtResource("10_btn")]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 56)
+custom_minimum_size = Vector2(140, 100)
+custom_maximum_size = Vector2(-1, -1)
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
-text = ""
+theme_type_variation = &"PrimaryButtonSquare"
 
-[node name="Content" type="HBoxContainer" parent="MarginContainer/Full Layout/SideBar/SkipButton" unique_id=1842201960]
+[node name="Content" type="VBoxContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/SkipButton" unique_id=1842201960]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -471,26 +492,25 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 alignment = 1
 
-[node name="Caption" type="Label" parent="MarginContainer/Full Layout/SideBar/SkipButton/Content" unique_id=1842201961]
+[node name="Caption" type="Label" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/SkipButton/Content" unique_id=1842201961]
 layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 28
 text = "End round"
+horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Cost" type="HBoxContainer" parent="MarginContainer/Full Layout/SideBar/SkipButton/Content" unique_id=1842201962]
+[node name="Cost" type="HBoxContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/SkipButton/Content" unique_id=1842201962]
 layout_mode = 2
-size_flags_vertical = 4
+size_flags_horizontal = 4
 mouse_filter = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 4
+alignment = 1
 
-[node name="Icon" type="TextureRect" parent="MarginContainer/Full Layout/SideBar/SkipButton/Content/Cost" unique_id=1842201963]
-modulate = Color(1, 1, 1, 1)
+[node name="Icon" type="TextureRect" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/SkipButton/Content/Cost" unique_id=1842201963]
 custom_minimum_size = Vector2(22, 22)
 layout_mode = 2
 size_flags_vertical = 4
@@ -499,13 +519,12 @@ texture = ExtResource("15_clock")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Amount" type="Label" parent="MarginContainer/Full Layout/SideBar/SkipButton/Content/Cost" unique_id=1842201964]
+[node name="Amount" type="Label" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/SkipButton/Content/Cost" unique_id=1842201964]
 layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 22
 text = "1"
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Resolution" type="Control" parent="." unique_id=1842201934]
@@ -728,6 +747,8 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 20.0
+offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -740,6 +761,14 @@ layout_mode = 0
 unique_name_in_owner = true
 visible = false
 z_index = 60
+layout_mode = 1
+
+[node name="UpgradeLayer" type="CanvasLayer" parent="."]
+layer = 90
+
+[node name="UpgradePick" parent="UpgradeLayer" unique_id=621985543 instance=ExtResource("17_upgrade")]
+unique_name_in_owner = true
+visible = false
 layout_mode = 1
 
 [node name="HandPromptLayer" type="CanvasLayer" parent="." unique_id=1928374651]

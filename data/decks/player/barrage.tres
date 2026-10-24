@@ -25,20 +25,21 @@ move_timing = "Before"
 
 [sub_resource type="Resource" id="c3"]
 script = ExtResource("2_card")
-id = "barrage_heavy_missle"
+id = "barrage_heavy_missile"
 display_name = "Heavy Missile"
 description = "A heavy shot exactly 2 cells away."
-damage = 9
+damage = 8
 reach = 2
 exact_range = true
 
 [sub_resource type="Resource" id="c4"]
 script = ExtResource("2_card")
-id = "barrage_flak"
-display_name = "Flak"
-description = "Hit an enemy at mid range."
-damage = 5
+id = "barrage_heavy_missile_2"
+display_name = "Heavy Missile"
+description = "A heavy shot exactly 2 cells away."
+damage = 8
 reach = 2
+exact_range = true
 
 [sub_resource type="Resource" id="c5"]
 script = ExtResource("2_card")

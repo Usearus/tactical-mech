@@ -5,7 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="1_sheet"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_normal"]
-content_margin_left = 56.0
+content_margin_left = 60.0
 content_margin_top = 10.0
 content_margin_right = 10.0
 content_margin_bottom = 10.0
@@ -17,7 +17,7 @@ texture_margin_bottom = 12.0
 region_rect = Rect2(312, 86, 64, 64)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pressed"]
-content_margin_left = 56.0
+content_margin_left = 60.0
 content_margin_top = 10.0
 content_margin_right = 10.0
 content_margin_bottom = 10.0
@@ -29,7 +29,7 @@ texture_margin_bottom = 12.0
 region_rect = Rect2(510, 86, 64, 64)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_hover"]
-content_margin_left = 56.0
+content_margin_left = 60.0
 content_margin_top = 10.0
 content_margin_right = 10.0
 content_margin_bottom = 10.0
@@ -41,7 +41,7 @@ texture_margin_bottom = 12.0
 region_rect = Rect2(378, 86, 64, 64)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_disabled"]
-content_margin_left = 56.0
+content_margin_left = 60.0
 content_margin_top = 10.0
 content_margin_right = 10.0
 content_margin_bottom = 10.0
@@ -53,9 +53,9 @@ texture_margin_bottom = 12.0
 region_rect = Rect2(444, 86, 64, 64)
 
 [node name="RosterRow" type="Button" unique_id=299772481]
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 60)
 offset_right = 160.0
-offset_bottom = 56.0
+offset_bottom = 60.0
 size_flags_horizontal = 3
 focus_mode = 0
 theme = ExtResource("1_3bh40")
@@ -63,6 +63,7 @@ theme_type_variation = &"PrimaryButtonSquare"
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 36
 theme_override_styles/normal = SubResource("StyleBoxTexture_normal")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_pressed")
 theme_override_styles/hover = SubResource("StyleBoxTexture_hover")
@@ -74,12 +75,14 @@ alignment = 0
 
 [node name="Check" parent="." unique_id=377877961 instance=ExtResource("1_check")]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
 offset_left = 12.0
-offset_top = -16.0
-offset_right = 44.0
-offset_bottom = 16.0
+offset_top = -20.0
+offset_right = 52.0
+offset_bottom = 20.0
 grow_vertical = 2
+expand_icon = true

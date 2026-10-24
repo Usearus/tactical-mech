@@ -1,0 +1,95 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/story/story.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/story/story_line.gd" id="2_line"]
+[ext_resource type="Texture2D" uid="uid://dm65y6nga4i2m" path="res://art/backgrounds/NYC_pallette.jpg" id="3_bg"]
+[ext_resource type="Texture2D" uid="uid://dtcn3mffw0nti" path="res://art/characters/player/purple/pilot.png" id="4_raven"]
+[ext_resource type="Texture2D" uid="uid://dj4ec55gtrtip" path="res://art/characters/player/white/pilot.png" id="5_comet"]
+[ext_resource type="Texture2D" uid="uid://cd7cswcd8k2ja" path="res://art/mechs/player/white/white.idle.png" id="6_white"]
+[ext_resource type="Texture2D" uid="uid://tf0wj5tn2i20" path="res://art/mechs/player/purple/purple.idle.png" id="7_purple"]
+
+[sub_resource type="Resource" id="l1"]
+script = ExtResource("2_line")
+speaker = "Comet"
+text = "The bridge is the only line across. Red corp owns the other end."
+portrait = ExtResource("5_comet")
+art_id = "white"
+
+[sub_resource type="Resource" id="l2"]
+script = ExtResource("2_line")
+speaker = "Raven"
+text = "They shoot farther than the citadel did. Don't give them a straight walk."
+portrait = ExtResource("4_raven")
+art_id = "purple"
+
+[sub_resource type="Resource" id="l3"]
+script = ExtResource("2_line")
+speaker = "Comet"
+text = "Rain hides the first step. After that, they see us. Spread out."
+portrait = ExtResource("5_comet")
+art_id = "white"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_white"]
+atlas = ExtResource("6_white")
+region = Rect2(0, 0, 65, 65)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_white"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_white")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 6.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_purple"]
+atlas = ExtResource("7_purple")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_purple"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_purple")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 6.0
+}]
+
+[node name="Story2" instance=ExtResource("1_base")]
+lines = Array[ExtResource("2_line")]([SubResource("l1"), SubResource("l2"), SubResource("l3")])
+next_scene = "res://scenes/select/mech_select.tscn"
+
+[node name="Background" parent="." index="0"]
+texture = ExtResource("3_bg")
+
+[node name="Comet" type="AnimatedSprite2D" parent="Cast" index="0"]
+position = Vector2(350, 650)
+scale = Vector2(8, 8)
+sprite_frames = SubResource("SpriteFrames_white")
+animation = &"idle"
+offset = Vector2(0, -31)
+metadata/art_id = "white"
+
+[node name="Raven" type="AnimatedSprite2D" parent="Cast" index="1"]
+position = Vector2(950, 650)
+scale = Vector2(8, 8)
+sprite_frames = SubResource("SpriteFrames_purple")
+animation = &"idle"
+offset = Vector2(0, -31)
+flip_h = true
+metadata/art_id = "purple"
+
+[node name="Portrait" parent="DialogueBar/Dialogue/PortraitWell" index="1"]
+texture = ExtResource("5_comet")
+
+[node name="Speaker" parent="DialogueBar/Dialogue" index="2"]
+text = "Comet"
+
+[node name="Body" parent="DialogueBar/Dialogue" index="3"]
+text = "The bridge is the only line across. Red corp owns the other end."
+
+[editable path="DialogueBar"]

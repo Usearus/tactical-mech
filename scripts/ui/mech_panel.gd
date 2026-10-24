@@ -84,7 +84,7 @@ func _present_overworld(unit: MechState) -> void:
 	_set_badge(action_row, enemy, str(unit.turn_count))
 	_present_attack(unit, enemy)
 	map_line.visible = true
-	map_line.text = "MOV %d, ATR %d, SPD %d" % [unit.move_range, unit.attack_range, unit.speed]
+	map_line.text = "MOV %d, ATR %s, SPD %d" % [unit.move_range, unit.attack_range_text(), unit.speed]
 
 
 func _present_rows(unit: MechState) -> void:

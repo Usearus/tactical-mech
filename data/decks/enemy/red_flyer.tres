@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="MechDeck" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/mech_deck.gd" id="1_deck"]
+[ext_resource type="Script" path="res://scripts/cards/card_data.gd" id="2_card"]
+
+[sub_resource type="Resource" id="c1"]
+script = ExtResource("2_card")
+id = "red_flyer_strafe"
+display_name = "Strafe"
+description = "A shot at an enemy up to 2 cells away."
+card_type = "Attack"
+damage = 5
+reach = 2
+target_type = "enemy"
+
+[resource]
+script = ExtResource("1_deck")
+mech_id = "red_flyer"
+cards = Array[ExtResource("2_card")]([SubResource("c1")])

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MechData" format=3 uid="uid://c44coj3pejcy8"]
+
+[ext_resource type="Script" uid="uid://cftw0ab1yp2yk" path="res://scripts/mechs/mech_data.gd" id="1_mech"]
+
+[resource]
+script = ExtResource("1_mech")
+id = "red_flyer"
+display_name = "Flyer"
+short_name = "FLY"
+team = "enemy"
+max_hp = 6
+move_range = 4
+speed = 10
+turn_count = 2
+color = Color(0.85, 0.28, 0.32, 1)
+art_id = "red_flyer"
+sprite_scale = 0.8

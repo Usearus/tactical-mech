@@ -24,12 +24,11 @@ func is_open() -> bool:
 func open_for(unit: MechState) -> void:
 	if unit == null or unit.data == null or unit.team != "player":
 		return
-	var deck := MechDecks.for_mech(unit.data)
-	if deck == null:
+	if MechDecks.for_mech(unit.data) == null:
 		return
 	_title.text = "Deck"
 	_overlay.visible = true
-	_fill.call_deferred(unit, deck)
+	_fill.call_deferred(unit, UpgradeDeck.runtime_cards(unit.data, GameManager.mission_upgrades))
 
 
 func close() -> void:
@@ -40,8 +39,8 @@ func close() -> void:
 	_clear()
 
 
-func _fill(unit: MechState, deck: MechDeck) -> void:
-	if not is_inside_tree() or not is_open() or unit == null or deck == null:
+func _fill(unit: MechState, cards: Array[CardData]) -> void:
+	if not is_inside_tree() or not is_open() or unit == null:
 		return
 	_clear()
 	var width := _scroll.size.x
@@ -49,10 +48,6 @@ func _fill(unit: MechState, deck: MechDeck) -> void:
 		width = 1100.0
 	var stride := CARD_SIZE.x + 16.0
 	_list.columns = maxi(1, int((width + 16.0) / stride))
-	var cards: Array[CardData] = []
-	for card in deck.cards:
-		if card != null:
-			cards.append(card)
 	cards.sort_custom(func(a: CardData, b: CardData) -> bool:
 		return a.display_name < b.display_name
 	)

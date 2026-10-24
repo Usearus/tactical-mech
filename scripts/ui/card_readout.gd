@@ -3,6 +3,7 @@ extends VBoxContainer
 
 const ENHANCED_COLOR := Color(0.45, 0.78, 1.0)
 const CHARGE_SHADER: Shader = preload("res://shaders/icon_white.gdshader")
+const CLOCK_ICON: Texture2D = preload("res://art/icons/stats/clock.svg")
 const ICONS := {
 	"atk": preload("res://art/icons/stats/attack.svg"),
 	"rng": preload("res://art/icons/stats/range.svg"),
@@ -19,6 +20,7 @@ var _shown_key: String = ""
 @onready var title_label: Label = %Title
 @onready var kind_label: Label = %Kind
 @onready var action_amount: Label = %ActionCost/Amount
+@onready var action_icon: TextureRect = %ActionCost/Icon
 @onready var special_label: Label = %Special
 @onready var body: RichTextLabel = %Body
 @onready var stats: HBoxContainer = %Stats
@@ -36,17 +38,19 @@ func _ready() -> void:
 func present(card: CardData, damage: int, block: int) -> void:
 	if card == null:
 		return
-	var key := "%d|%d|%d" % [card.get_instance_id(), damage, block]
+	var overdrive := GameManager.battle_offense
+	var key := "%d|%d|%d|%d" % [card.get_instance_id(), damage, block, card.charge_due(overdrive)]
 	if key == _shown_key:
 		return
 	_shown_key = key
 	title_label.text = card.display_name
 	kind_label.text = _kind_line(card)
-	action_amount.text = str(maxi(card.action_cost, 0))
+	_show_cost(card, overdrive)
 	special_label.text = MechCard.SPECIAL_NOTE
 	special_label.visible = card.is_special
 	var copy := card.description.strip_edges()
-	body.text = copy
+	body.bbcode_enabled = true
+	body.text = MechCard.tint_upgrade_copy(copy, card)
 	body.visible = copy != ""
 	_show_stats(card, damage, block)
 
@@ -57,16 +61,31 @@ func _kind_line(card: CardData) -> String:
 		kind = "Move"
 	elif card.is_dodge():
 		kind = "Dodge"
-	elif card.is_guard():
-		kind = "Guard"
 	elif card.barrier > 0 and card.card_type == "Defense":
 		kind = "Barrier"
-	var cost := maxi(card.action_cost, 0)
-	if cost == 0:
-		return "%s · Free" % kind
-	if cost == 1:
-		return "%s · 1 action" % kind
-	return "%s · %d actions" % [kind, cost]
+	elif card.is_guard():
+		kind = "Guard"
+	return "%s · %s" % [kind, card.cost_phrase(GameManager.battle_offense)]
+
+
+func _show_cost(card: CardData, overdrive: bool) -> void:
+	var charge := card.pays_charge()
+	action_amount.text = str(card.charge_due(overdrive) if charge else (1 if card.pays_action() else 0))
+	if action_icon == null:
+		return
+	if charge:
+		action_icon.texture = ICONS["chg"]
+		action_icon.modulate = Color.WHITE
+		var bolt := action_icon.material as ShaderMaterial
+		if bolt == null:
+			bolt = ShaderMaterial.new()
+			bolt.shader = CHARGE_SHADER
+			action_icon.material = bolt
+		bolt.set_shader_parameter("ink", MechCard.COST_COLOR)
+	else:
+		action_icon.texture = CLOCK_ICON
+		action_icon.modulate = MechCard.COST_COLOR
+		action_icon.material = null
 
 
 func _show_stats(card: CardData, damage: int, block: int) -> void:

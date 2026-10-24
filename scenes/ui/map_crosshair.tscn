@@ -1,0 +1,155 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/map_crosshair.gd" id="1_cross"]
+
+[node name="MapCrosshair" type="Control"]
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 0
+offset_right = 96.0
+offset_bottom = 96.0
+mouse_filter = 2
+script = ExtResource("1_cross")
+
+[node name="ShadeTopLeftH" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = 34.0
+offset_bottom = 16.0
+mouse_filter = 2
+color = Color(0.04, 0.03, 0.08, 0.9)
+
+[node name="ShadeTopLeftV" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = 16.0
+offset_bottom = 34.0
+mouse_filter = 2
+color = Color(0.04, 0.03, 0.08, 0.9)
+
+[node name="ShadeTopRightH" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 66.0
+offset_top = 6.0
+offset_right = 94.0
+offset_bottom = 16.0
+mouse_filter = 2
+color = Color(0.04, 0.03, 0.08, 0.9)
+
+[node name="ShadeTopRightV" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 86.0
+offset_top = 6.0
+offset_right = 96.0
+offset_bottom = 34.0
+mouse_filter = 2
+color = Color(0.04, 0.03, 0.08, 0.9)
+
+[node name="ShadeBottomLeftH" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 86.0
+offset_right = 34.0
+offset_bottom = 96.0
+mouse_filter = 2
+color = Color(0.04, 0.03, 0.08, 0.9)
+
+[node name="ShadeBottomLeftV" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 66.0
+offset_right = 16.0
+offset_bottom = 94.0
+mouse_filter = 2
+color = Color(0.04, 0.03, 0.08, 0.9)
+
+[node name="ShadeBottomRightH" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 66.0
+offset_top = 86.0
+offset_right = 94.0
+offset_bottom = 96.0
+mouse_filter = 2
+color = Color(0.04, 0.03, 0.08, 0.9)
+
+[node name="ShadeBottomRightV" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 86.0
+offset_top = 66.0
+offset_right = 96.0
+offset_bottom = 94.0
+mouse_filter = 2
+color = Color(0.04, 0.03, 0.08, 0.9)
+
+[node name="TopLeftH" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 32.0
+offset_bottom = 12.0
+mouse_filter = 2
+color = Color(0.45, 0.93, 0.98, 1)
+
+[node name="TopLeftV" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 12.0
+offset_bottom = 32.0
+mouse_filter = 2
+color = Color(0.45, 0.93, 0.98, 1)
+
+[node name="TopRightH" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 4.0
+offset_right = 92.0
+offset_bottom = 12.0
+mouse_filter = 2
+color = Color(0.45, 0.93, 0.98, 1)
+
+[node name="TopRightV" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 84.0
+offset_top = 4.0
+offset_right = 92.0
+offset_bottom = 32.0
+mouse_filter = 2
+color = Color(0.45, 0.93, 0.98, 1)
+
+[node name="BottomLeftH" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 4.0
+offset_top = 84.0
+offset_right = 32.0
+offset_bottom = 92.0
+mouse_filter = 2
+color = Color(0.45, 0.93, 0.98, 1)
+
+[node name="BottomLeftV" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 4.0
+offset_top = 64.0
+offset_right = 12.0
+offset_bottom = 92.0
+mouse_filter = 2
+color = Color(0.45, 0.93, 0.98, 1)
+
+[node name="BottomRightH" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 84.0
+offset_right = 92.0
+offset_bottom = 92.0
+mouse_filter = 2
+color = Color(0.45, 0.93, 0.98, 1)
+
+[node name="BottomRightV" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 84.0
+offset_top = 64.0
+offset_right = 92.0
+offset_bottom = 92.0
+mouse_filter = 2
+color = Color(0.45, 0.93, 0.98, 1)

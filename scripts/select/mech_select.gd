@@ -3,7 +3,6 @@ extends Control
 const CARD_SCENE := preload("res://scenes/ui/mech_card.tscn")
 const SLOT_SCENE := preload("res://scenes/ui/strip_card_slot.tscn")
 const ROW_SCENE := preload("res://scenes/ui/roster_row.tscn")
-const OVERDRIVE_NOTE := "Charge Gauge: Each charge requires a mech to move or a card to be discarded to fill this gauge. This stage sets a minimum of 4. Once charge gauge is full Overdrive can be activated in battle, boosting attack and guard."
 const TIER_GOLD := Color(0.98, 0.84, 0.32)
 ## Screen pixels the cut moves right for each pixel down. Matches the squad-screen reference.
 const SHAPE_SLOPE := 0.46
@@ -15,9 +14,13 @@ const STAGE_ROW_MAX_X := 400.0
 const STACKED_PORTRAIT_RATIO := 0.6
 ## Where the cut crosses the bottom of the portrait, as a fraction of that panel's width.
 const SHAPE_ANCHOR := 0.98
+## Seconds from one preview attack to the next. The first plays as soon as the mech is shown.
+const PREVIEW_ATTACK_WAIT := 10.0
 
 var _squad: Array[MechData] = []
 var _focused: MechData
+var _preview_mech_id := ""
+var _attack_clock: Timer
 var _deck_mech_id := ""
 var _deal_token := 0
 var _deal_tries := 0
@@ -27,7 +30,7 @@ var _syncing := false
 
 @onready var _special_note: InfoNote = %SpecialNote
 
-@onready var back_button: Button = %BackButton
+@onready var back_button: TextureButton = %BackButton
 @onready var roster: VBoxContainer = %Roster
 @onready var identity: HBoxContainer = %Identity
 @onready var stage: Panel = %Stage
@@ -50,17 +53,20 @@ var _syncing := false
 @onready var mov_grade: Label = %MovGrade
 @onready var spd_stat: Label = %SpdStat
 @onready var spd_grade: Label = %SpdGrade
-@onready var ovd_stat: Label = %OvdStat
-@onready var ovd_grade: Label = %OvdGrade
 @onready var deck_lead: MarginContainer = %DeckLead
 @onready var deck: HBoxContainer = %Deck
 @onready var deck_scroll: ScrollContainer = %DeckScroll
 @onready var card_fade: TextureRect = %CardFade
-@onready var overdrive_preview: OverdrivePreview = %OverdrivePreview
 @onready var deploy_button: Button = %DeployButton
 
 
 func _ready() -> void:
+	_attack_clock = Timer.new()
+	_attack_clock.name = "PreviewAttack"
+	_attack_clock.wait_time = PREVIEW_ATTACK_WAIT
+	_attack_clock.timeout.connect(_play_preview_attack)
+	add_child(_attack_clock)
+	mech_sprite.animation_finished.connect(_on_preview_attack_finished)
 	if GameManager.available_mechs.is_empty():
 		GameManager.available_mechs = StartingRoster.player_roster()
 	back_button.pressed.connect(func() -> void:
@@ -80,7 +86,6 @@ func _ready() -> void:
 	resized.connect(_arrange_details)
 	identity.resized.connect(_arrange_details)
 	_arrange_details()
-	_add_overdrive_info()
 	_watch_stat_tips()
 	_build_roster()
 	if not GameManager.available_mechs.is_empty():
@@ -151,7 +156,6 @@ func _refresh() -> void:
 			check.button_pressed = slot >= 0
 	_syncing = false
 	_show_focused()
-	_show_totals()
 	deploy_button.disabled = _squad.size() != _squad_limit()
 	_place_pair()
 
@@ -164,6 +168,7 @@ func _show_focused() -> void:
 		preview_name.text = "Select a mech"
 		pilot_sprite.visible = false
 		mech_sprite.visible = false
+		_stop_preview_attack()
 		_show_deck()
 		return
 	preview_name.text = _focused.display_name
@@ -175,11 +180,46 @@ func _show_focused() -> void:
 	_show_span(rng_stat, rng_grade, reach.x, reach.y, _focused.rng_grade, true)
 	_show_stat(mov_stat, mov_grade, _focused.move_range, _focused.move_grade)
 	_show_stat(spd_stat, spd_grade, _focused.speed, _focused.speed_grade)
-	_show_stat(ovd_stat, ovd_grade, _focused.charge, _focused.charge_grade)
 	var pilot := MechSprites.pilot_frames(_focused.art_id)
 	_apply_sprite(pilot_sprite, pilot, MechSprites.portrait_plays(pilot))
 	_apply_sprite(mech_sprite, MechSprites.frames_for(_focused.art_id), true)
+	_cue_preview_attack()
 	_show_deck()
+
+
+## Plays the attack once when a mech is shown, then again every 10 seconds.
+func _cue_preview_attack() -> void:
+	var frames := mech_sprite.sprite_frames
+	if frames == null or not frames.has_animation("attack"):
+		_stop_preview_attack()
+		return
+	if _preview_mech_id == _focused.id and not _attack_clock.is_stopped():
+		return
+	_preview_mech_id = _focused.id
+	_play_preview_attack()
+	_attack_clock.start()
+
+
+func _play_preview_attack() -> void:
+	if mech_sprite.sprite_frames == null or not mech_sprite.sprite_frames.has_animation("attack"):
+		return
+	mech_sprite.play("attack")
+	mech_sprite.offset = MechSprites.reach_offset(mech_sprite)
+
+
+func _on_preview_attack_finished() -> void:
+	if mech_sprite.animation != "attack":
+		return
+	if mech_sprite.sprite_frames != null and mech_sprite.sprite_frames.has_animation("idle"):
+		mech_sprite.play("idle")
+	mech_sprite.offset = Vector2.ZERO
+
+
+func _stop_preview_attack() -> void:
+	_preview_mech_id = ""
+	if _attack_clock != null:
+		_attack_clock.stop()
+	mech_sprite.offset = Vector2.ZERO
 
 
 ## Lowest and highest damage on this mech's attack cards.
@@ -318,14 +358,6 @@ func _start_deal(views: Array[MechCard], token: int) -> void:
 			continue
 		view.visible = true
 		view.deal_from(origin, float(index) * MechCard.DEAL_STAGGER, index, views.size())
-
-
-func _show_totals() -> void:
-	var total_charge := 0
-	for data in _squad:
-		total_charge += data.charge
-	if overdrive_preview != null:
-		overdrive_preview.show_squad(total_charge, GameManager.SQUAD_ATTACK_MAX)
 
 
 func _apply_sprite(sprite: AnimatedSprite2D, frames: SpriteFrames, animate: bool) -> void:
@@ -476,13 +508,6 @@ func _index_of(data: MechData) -> int:
 		if _squad[index] == data:
 			return index
 	return -1
-
-
-func _add_overdrive_info() -> void:
-	if overdrive_preview == null or overdrive_preview.info_badge == null or _special_note == null:
-		return
-	overdrive_preview.info_badge.set_meta("tip_width", 480.0)
-	_special_note.attach(overdrive_preview.info_badge, OVERDRIVE_NOTE)
 
 
 func _add_special_info(view: MechCard) -> void:

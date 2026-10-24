@@ -1,6 +1,7 @@
 extends Control
 
 const DESIGN := Vector2(1280.0, 720.0)
+const ISO_STAGE := "res://scenes/stage/stage-isometric.tscn"
 const MECH_FRAME := 64.0
 ## Bottom of the drawn mech inside the 64px idle frame.
 const MECH_FEET := 63.0
@@ -8,6 +9,7 @@ const MECH_FEET := 63.0
 const PILOT_THIGH := 82.0
 
 @onready var start_button: Button = %StartButton
+@onready var test_button: Button = %TestButton
 @onready var mech_sprite: AnimatedSprite2D = %Mech
 @onready var pilot_sprite: Sprite2D = %Pilot
 
@@ -16,6 +18,7 @@ var _leaving := false
 
 func _ready() -> void:
 	start_button.pressed.connect(_on_start_pressed)
+	test_button.pressed.connect(_on_test_pressed)
 	_setup_cast()
 	resized.connect(_layout_cast)
 	_layout_cast()
@@ -58,4 +61,14 @@ func _on_start_pressed() -> void:
 		return
 	_leaving = true
 	start_button.disabled = true
+	test_button.disabled = true
 	GameManager.start_mission()
+
+
+func _on_test_pressed() -> void:
+	if _leaving:
+		return
+	_leaving = true
+	start_button.disabled = true
+	test_button.disabled = true
+	get_tree().change_scene_to_file(ISO_STAGE)

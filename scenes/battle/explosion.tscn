@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[node name="Explosion" type="AnimatedSprite2D"]
+z_index = 6
+texture_filter = 1
+centered = true

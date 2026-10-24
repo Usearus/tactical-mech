@@ -77,16 +77,24 @@ func play(unit: MechState) -> void:
 
 func _show_unit(unit: MechState) -> void:
 	pilot.texture = _load_pilot(unit.art_id)
-	if _show_raven_fire(unit):
+	if _show_attack_strip(unit):
 		return
 	_stop_fire_pose()
 	pose.texture = _pose_for(unit.art_id)
 
 
-## Raven's finisher uses her firing strip instead of a still pose.
-func _show_raven_fire(unit: MechState) -> bool:
-	var raven := unit.art_id == "purple" or (unit.data != null and unit.data.id == "raven")
-	if not raven:
+## Raven and Bastion play their attack strip. A still pose is used for everyone else.
+static func uses_attack_strip(unit: MechState) -> bool:
+	if unit == null:
+		return false
+	var mech_id := ""
+	if unit.data != null:
+		mech_id = unit.data.id
+	return unit.art_id == "purple" or mech_id == "raven" or unit.art_id == "blue" or mech_id == "bastion"
+
+
+func _show_attack_strip(unit: MechState) -> bool:
+	if not uses_attack_strip(unit):
 		return false
 	var frames := MechSprites.frames_for(unit.art_id)
 	if frames == null or not frames.has_animation("attack"):
@@ -126,7 +134,10 @@ func _stop_fire_pose() -> void:
 func _pose_for(art_id: String) -> Texture2D:
 	if art_id == "":
 		return null
-	var named := _load_art(art_id, "%s-fire-pose.png" % art_id)
+	var named := _load_art(art_id, "%s.fire-pose.png" % art_id)
+	if named != null:
+		return named
+	named = _load_art(art_id, "%s-fire-pose.png" % art_id)
 	if named != null:
 		return named
 	return _load_art(art_id, "fire_pose.png")

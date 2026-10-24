@@ -10,11 +10,17 @@ const STROKE_SWATCH := {
 	"purple": &"PurpleLight",
 	"white": &"GrayLight",
 	"cyan": &"BlueLight",
+	"blue": &"Blue",
 	"grunt_rifle": &"Red",
 	"grunt_dog": &"RedDark",
 	"grunt_slasher": &"BrownDark",
 	"grunt_flyer": &"PurpleLight",
 	"boss_green": &"OliveDark",
+	"red_grunt": &"Red",
+	"red_sentinel": &"RedDark",
+	"red_quad": &"Red",
+	"red_flyer": &"RedLight",
+	"red_boss": &"RedDark",
 }
 
 const BODY_COLOR := Color(0.14, 0.15, 0.19)
@@ -29,13 +35,16 @@ const DODGE_ICON: Texture2D = preload("res://art/icons/stats/dodge.svg")
 const DEFEND_ICON: Texture2D = preload("res://art/icons/stats/defend.svg")
 const BARRIER_ICON: Texture2D = preload("res://art/icons/stats/crescent.svg")
 const CHARGE_ICON: Texture2D = preload("res://icodot-svg/ui/weather-nature/icon-lightning-ui.svg")
+const CLOCK_ICON: Texture2D = preload("res://art/icons/stats/clock.svg")
 const CHARGE_SHADER: Shader = preload("res://shaders/icon_white.gdshader")
 const ENHANCED_COLOR := Color(0.45, 0.78, 1.0)
+const INSTANT_LEAD := "Instant use:"
+## Clock and charge cost on a card. The action badge scene stores the same gold.
+const COST_COLOR := Color(1, 0.92, 0.55)
 const CHIP_SCENE := preload("res://scenes/ui/stat_chip.tscn")
 const INFO_BADGE := preload("res://scenes/ui/info_badge.tscn")
 const OWNER_BADGE := preload("res://scenes/ui/hand_owner_badge.tscn")
 const SPECIAL_NOTE := "Special card: Can only be used when in overdrive mode."
-const ACTION_COST_NOTE := "Cost: Card costs %d action to use."
 
 signal pulled
 signal undo_dragged
@@ -59,6 +68,10 @@ var _dragging := false
 var _pulling := false
 var _press_global := Vector2.ZERO
 var _start_position := Vector2.ZERO
+var _grab_local := Vector2.ZERO
+var _grab_scale := Vector2.ONE
+var _grab_rotation := 0.0
+var _drag_delta := Vector2.ZERO
 var _lifted := false
 var _gliding := false
 var _glide_token := 0
@@ -86,6 +99,7 @@ var _badge_art := ""
 var _badge_rim := Color.WHITE
 
 @onready var _gauge_tag: Control = $Clip/GaugeTag
+@onready var _face: Control = $Clip/Inset
 @onready var _wave_host: Control = $Clip/OverdriveWave
 @onready var _wave_band: TextureRect = $Clip/OverdriveWave/Band
 @onready var _power_mark: Control = $Clip/OverdriveWave/PowerMark
@@ -97,10 +111,11 @@ var _badge_rim := Color.WHITE
 @onready var footer: MarginContainer = %Footer
 @onready var title_label: Label = %CardTitle
 @onready var strength_label: Label = %Strength
-@onready var detail_label: Label = %Detail
+@onready var detail_label: RichTextLabel = %Detail
 @onready var stat_row: HBoxContainer = %Stats
 @onready var _plate: NinePatchRect = %Plate
 @onready var _action_cost: Label = %ActionCost/Amount
+@onready var _action_icon: TextureRect = %ActionCost/Icon
 
 
 func _ready() -> void:
@@ -175,10 +190,9 @@ func fit_strip() -> void:
 	size_flags_vertical = SIZE_SHRINK_CENTER
 	if header != null:
 		header.custom_minimum_size = Vector2(0, 40)
-	var detail := get_node_or_null("%Detail") as Label
+	var detail := get_node_or_null("%Detail") as RichTextLabel
 	if detail != null:
 		detail.custom_minimum_size = Vector2(0, 100)
-		detail.max_lines_visible = 5
 	var card_footer := get_node_or_null("%Footer") as PanelContainer
 	if card_footer != null:
 		card_footer.custom_minimum_size = Vector2(0, 40)
@@ -280,12 +294,79 @@ func present(card: CardData, stroke: Color, damage := -1, block := -1) -> void:
 	var badge := special_badge()
 	if badge != null:
 		badge.modulate = Color.WHITE
-	detail_label.text = card.description
+	detail_label.bbcode_enabled = true
+	detail_label.text = tint_upgrade_copy(card.description, card)
 	_show_action_cost(card)
 	_set_power_amount(_power_amount)
 	_apply_stats()
 	_sync_special_mark(card)
 	_bind_tips()
+
+
+## A boosted step shows the new distance in blue. The note at the end is the added bonus, in parentheses.
+static func tint_upgrade_copy(copy: String, card: CardData = null) -> String:
+	var shown := copy
+	if card != null and card.has_upgrade_mark("movement"):
+		shown = _tint_movement(shown, card.movement)
+	return _parenthesize_upgrades(shown)
+
+
+static func _tint_movement(copy: String, amount: int) -> String:
+	var finder := RegEx.new()
+	if finder.compile("(?i)\\b(step|move|slip|fall back)\\s+\\d+(\\s+cells?)?") != OK:
+		return copy
+	var found := finder.search_all(copy)
+	if found.is_empty():
+		return copy
+	var hex := ENHANCED_COLOR.to_html(false)
+	var built := ""
+	var cursor := 0
+	for hit in found:
+		var noun := ""
+		if hit.get_string(2) != "":
+			noun = " cell" if amount == 1 else " cells"
+		var phrase := "%s %d%s" % [hit.get_string(1), amount, noun]
+		built += copy.substr(cursor, hit.get_start() - cursor)
+		built += "[color=#%s]%s[/color]" % [hex, phrase]
+		cursor = hit.get_end()
+	return built + copy.substr(cursor)
+
+
+static func _parenthesize_upgrades(copy: String) -> String:
+	var label := "Upgraded:"
+	if not copy.contains(label):
+		return copy
+	var hex := ENHANCED_COLOR.to_html(false)
+	var built := ""
+	var rest := copy
+	while not rest.is_empty():
+		var at := rest.find(label)
+		if at < 0:
+			built += rest
+			break
+		built += rest.substr(0, at)
+		var tail := rest.substr(at + label.length()).lstrip(" ")
+		var stop := tail.find(". ")
+		var phrase := tail.rstrip(".") if stop < 0 else tail.substr(0, stop)
+		built += "[color=#%s](%s)[/color]" % [hex, phrase]
+		rest = "" if stop < 0 else tail.substr(stop + 1)
+	return built
+
+
+## Blue lead-in for a group effect, placed ahead of the card copy.
+static func instant_use_copy(copy: String) -> String:
+	var hex := ENHANCED_COLOR.to_html(false)
+	var lead := "[color=#%s]%s[/color]" % [hex, INSTANT_LEAD]
+	if copy.is_empty():
+		return lead
+	return "%s %s" % [lead, copy]
+
+
+func show_instant_use() -> void:
+	if detail_label == null or _shown == null:
+		return
+	detail_label.bbcode_enabled = true
+	detail_label.text = instant_use_copy(tint_upgrade_copy(_shown.description))
 
 
 func special_badge() -> TextureButton:
@@ -382,17 +463,36 @@ func set_drop_handler(handler: Callable) -> void:
 
 func set_discard_preview(active: bool) -> void:
 	var preview := active and _dragging
-	if preview == _discard_preview:
-		return
+	var changed := preview != _discard_preview
 	_discard_preview = preview
-	if not _dragging:
+	# `active` is still true on the release frame, after dragging has already stopped.
+	_show_card_face(not active)
+	if not changed or not _dragging:
 		return
 	var target := Vector2(DISCARD_PREVIEW_SCALE, DISCARD_PREVIEW_SCALE) if preview else _drag_scale()
 	_tween_preview_scale(target)
 
 
 func set_gauge_pitch_visible(show_tag: bool) -> void:
+	if _gauge_tag == null:
+		return
 	_gauge_tag.visible = show_tag
+	if show_tag:
+		_raise_node(_gauge_tag)
+	if _discard_preview or show_tag:
+		_show_card_face(false)
+
+
+## Title, rules, cost, and stats leave while the discard +1 is the thing to read.
+func _show_card_face(show_face: bool) -> void:
+	if _face != null:
+		_face.visible = show_face
+	if _shine_host == null:
+		return
+	if not show_face:
+		_shine_host.visible = false
+		return
+	_shine_host.visible = _shine_tween != null and _shine_tween.is_valid()
 
 
 func release_for_discard() -> void:
@@ -483,6 +583,20 @@ func set_chosen(chosen: bool) -> void:
 	modulate = Color(1.08, 1.0, 0.72) if chosen else Color.WHITE
 
 
+## A play the gauge or the board refused. Snap home and flash, so the card does not stay where the drag left it.
+func refuse() -> void:
+	_dragging = false
+	_pulling = false
+	_lifted = false
+	rotation = 0.0
+	z_index = 0
+	_set_slot_z(0)
+	_tween_to(Vector2.ZERO, Vector2.ONE, 0.0, false, 0.16)
+	var flash := create_tween()
+	flash.tween_property(self, "modulate", Color(1.0, 0.45, 0.42), 0.08)
+	flash.tween_property(self, "modulate", Color.WHITE, 0.2)
+
+
 func settle(lifted: bool) -> void:
 	if _dragging or _pulling or _gliding:
 		return
@@ -527,28 +641,37 @@ func _begin_drag(global_pos: Vector2) -> void:
 	_dragging = true
 	_start_position = position
 	_press_global = global_pos
+	_grab_scale = scale
+	_grab_rotation = rotation
+	_grab_local = get_global_transform().affine_inverse() * global_pos
+	_drag_delta = Vector2.ZERO
 	z_index = HandOwnerBadge.DRAW_Z + 1
 	_set_slot_z(20)
 
 
 func _follow_drag(global_pos: Vector2) -> void:
+	var delta := _pointer_delta(global_pos)
+	_drag_delta = delta
 	if _undo_drag:
-		var next_y := _start_position.y + (global_pos.y - _press_global.y)
-		next_y = clampf(next_y, _start_position.y, 8.0)
+		# Down past the slot undoes the step. Up still follows the pointer.
+		var next_y := minf(_start_position.y + delta.y, 8.0)
 		position = Vector2(_start_position.x, next_y)
 		rotation = 0.0
 		return
-	var delta := global_pos - _press_global
-	position = _start_position + delta
+	var next_scale := scale
 	if not _discard_preview and not _preview_playing():
-		scale = _drag_scale()
-	rotation = deg_to_rad(clampf(delta.x / 22.0, -8.0, 8.0))
+		next_scale = _drag_scale()
+	var next_rot := deg_to_rad(clampf(delta.x / 22.0, -8.0, 8.0))
+	position = _drag_position(delta, next_scale, next_rot)
+	scale = next_scale
+	rotation = next_rot
 	_notify_drop(global_pos, false)
 
 
 func _end_drag(global_pos: Vector2) -> void:
 	_dragging = false
-	var tap := _press_global.distance_to(global_pos) <= TAP_SLOP
+	var delta := _pointer_delta(global_pos)
+	var tap := delta.length() <= TAP_SLOP
 	if _undo_drag:
 		await _finish_undo_drag(tap)
 		return
@@ -557,15 +680,29 @@ func _end_drag(global_pos: Vector2) -> void:
 	if tap:
 		_finish_tap()
 		return
-	var delta := position - _start_position
 	if delta.length() >= PULL_DISTANCE:
-		_pulling = true
-		await _play_pull(delta)
-		_pulling = false
 		if is_inside_tree():
 			pulled.emit()
-	else:
-		settle(_lifted)
+		# A refused play, such as Ward with an empty gauge, used to stay where the drag left it.
+		if is_inside_tree() and _pull_enabled and not _pulling and not _gliding:
+			settle(_lifted)
+		return
+	settle(_lifted)
+
+
+func _pointer_delta(global_pos: Vector2) -> Vector2:
+	var parent_item := get_parent() as CanvasItem
+	if parent_item == null:
+		return global_pos - _press_global
+	return parent_item.get_global_transform().affine_inverse().basis_xform(global_pos - _press_global)
+
+
+## Scale and tilt pivot on the bottom edge. Keep the pressed point under the pointer.
+func _drag_position(delta: Vector2, next_scale: Vector2, next_rot: float) -> Vector2:
+	var held := _grab_local - pivot_offset
+	var was := (held * _grab_scale).rotated(_grab_rotation)
+	var now := (held * next_scale).rotated(next_rot)
+	return _start_position + delta + was - now
 
 
 func _finish_tap() -> void:
@@ -602,17 +739,9 @@ func _notify_drop(global_pos: Vector2, released: bool) -> bool:
 	return bool(_drop_handler.call(global_pos, released))
 
 
-func _play_pull(delta: Vector2) -> void:
-	var direction := delta.normalized() if delta.length() > 1.0 else Vector2.UP
-	var tilt := clampf(direction.x * 8.0, -8.0, 8.0)
-	_tween_to(position + direction * 48.0, Vector2(1.1, 1.1), deg_to_rad(tilt), false)
-	if _motion != null:
-		await _motion.finished
-
-
 func _drag_scale() -> Vector2:
-	var amount := clampf((position - _start_position).length() / 160.0, 0.0, 1.0)
-	return Vector2.ONE.lerp(Vector2(1.07, 1.07), amount)
+	var amount := clampf(_drag_delta.length() / 160.0, 0.0, 1.0)
+	return _grab_scale.lerp(Vector2(1.07, 1.07), amount)
 
 
 func _tween_preview_scale(target: Vector2) -> void:
@@ -674,14 +803,48 @@ func _ignore_mouse(node: Node) -> void:
 func _show_action_cost(card: CardData) -> void:
 	if _action_cost == null:
 		return
-	var cost := 0 if card == null else maxi(card.action_cost, 0)
-	_action_cost.text = str(cost)
+	var cost_row := _action_cost.get_parent() as CanvasItem
+	if card != null and card.hide_cost:
+		if cost_row != null:
+			cost_row.visible = false
+		return
+	if cost_row != null:
+		cost_row.visible = true
+	var overdrive := GameManager.battle_offense
+	var charge := card != null and card.pays_charge()
+	var owed := 1
+	if card == null:
+		owed = 1
+	elif charge:
+		owed = card.charge_due(overdrive)
+	elif card.pays_action():
+		owed = 1
+	else:
+		owed = 0
+	_action_cost.text = str(owed)
+	var tint := ENHANCED_COLOR if card != null and card.has_upgrade_mark("cost") else COST_COLOR
+	_action_cost.add_theme_color_override("font_color", tint)
+	if _action_icon == null:
+		return
+	if charge:
+		_action_icon.texture = CHARGE_ICON
+		_action_icon.modulate = Color.WHITE
+		var bolt := _action_icon.material as ShaderMaterial
+		if bolt == null:
+			bolt = ShaderMaterial.new()
+			bolt.shader = CHARGE_SHADER
+			_action_icon.material = bolt
+		bolt.set_shader_parameter("ink", tint)
+	else:
+		_action_icon.texture = CLOCK_ICON
+		_action_icon.modulate = tint
+		_action_icon.material = null
 
 
 func _apply_stats() -> void:
 	if _shown == null or strength_label == null:
 		return
-	var key := "%s|%s|%d|%d|%d|%d|%d|%d|%d|%d" % [
+	var key := "%s|%s|%d|%d|%d|%d|%d|%d|%d|%d|%s|%s|%d" % [
 		_shown.card_type,
 		_shown.defense_kind,
 		_shown.damage,
@@ -692,6 +855,9 @@ func _apply_stats() -> void:
 		_shown.reach,
 		_shown.movement,
 		1 if _shown.intercept else 0,
+		_shown.cost_kind,
+		",".join(_shown.upgrade_marks),
+		1 if _shown.hide_cost else 0,
 	]
 	if key == _stat_key:
 		return
@@ -703,13 +869,14 @@ func _apply_stats() -> void:
 func _show_icon_stats(card: CardData) -> void:
 	var row := _ensure_stat_row()
 	_clear_stat_row()
+	var move_boosted := card.has_upgrade_mark("movement")
 	match card.card_type:
 		"Attack":
-			_add_stat(row, "atk", _stat_damage, _stat_damage > card.damage)
+			_add_stat(row, "atk", _stat_damage, _stat_damage > card.damage or card.has_upgrade_mark("damage"))
 			if card.reach > 0:
 				_add_stat(row, "rng", card.reach)
 			if card.movement > 0:
-				_add_stat(row, "mov", card.movement)
+				_add_stat(row, "mov", card.movement, move_boosted)
 		"Defense":
 			if card.target_type == "squad":
 				_add_stat(row, "chg", GameManager.SPARK_CHARGE)
@@ -720,9 +887,9 @@ func _show_icon_stats(card: CardData) -> void:
 			elif card.block > 0:
 				_add_stat(row, "def", _stat_block, _stat_block > card.block)
 			if card.movement > 0:
-				_add_stat(row, "mov", card.movement)
+				_add_stat(row, "mov", card.movement, move_boosted)
 		"Move":
-			_add_stat(row, "mov", card.movement)
+			_add_stat(row, "mov", card.movement, move_boosted)
 	if card.intercept and not card.is_dodge():
 		_add_stat(row, "dodge", 1)
 	row.visible = row.get_child_count() > 0
@@ -753,8 +920,11 @@ func _bind_tips() -> void:
 	if _action_cost != null:
 		cost_row = _action_cost.get_parent() as Control
 	if cost_row != null:
-		var cost := 1 if _shown == null else maxi(_shown.action_cost, 0)
-		note.watch(cost_row, ACTION_COST_NOTE % cost)
+		var overdrive := GameManager.battle_offense
+		var phrase := "Cost: Card costs 1 action to use."
+		if _shown != null:
+			phrase = _shown.cost_note(overdrive)
+		note.watch(cost_row, phrase)
 	var badge := special_badge()
 	if badge != null and _shown != null and _shown.is_special:
 		note.attach(badge, SPECIAL_NOTE)

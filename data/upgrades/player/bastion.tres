@@ -1,0 +1,110 @@
+[gd_resource type="Resource" script_class="UpgradeCatalog" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/upgrade_catalog.gd" id="1_cat"]
+[ext_resource type="Script" path="res://scripts/cards/upgrade_offer.gd" id="2_offer"]
+[ext_resource type="Script" path="res://scripts/cards/card_data.gd" id="3_card"]
+
+[sub_resource type="Resource" id="ram"]
+script = ExtResource("3_card")
+id = "bastion_ram"
+display_name = "Ram"
+description = "Step 2, then a heavy strike."
+card_type = "Attack"
+damage = 7
+reach = 1
+movement = 2
+move_timing = "Before"
+target_type = "enemy"
+
+[sub_resource type="Resource" id="fortify"]
+script = ExtResource("3_card")
+id = "bastion_bulwark"
+display_name = "Bulwark"
+description = "Guard, catch the next hit on an ally, then step 2."
+card_type = "Defense"
+defense_kind = "Guard"
+block = 5
+reach = 0
+movement = 2
+target_type = "self"
+intercept = true
+
+[sub_resource type="Resource" id="o1"]
+script = ExtResource("2_offer")
+id = "bastion_piledriver_damage"
+kind = "Modify"
+rarity = 2
+mech_id = "bastion"
+card_family = "bastion_piledriver"
+damage_add = 3
+blurb = "Upgraded: +3 damage."
+
+[sub_resource type="Resource" id="o2"]
+script = ExtResource("2_offer")
+id = "bastion_piledriver_free"
+kind = "Modify"
+rarity = 3
+mech_id = "bastion"
+card_family = "bastion_piledriver"
+make_free = true
+blurb = "Upgraded: costs no action."
+
+[sub_resource type="Resource" id="o3"]
+script = ExtResource("2_offer")
+id = "bastion_spike_damage"
+kind = "Modify"
+rarity = 1
+mech_id = "bastion"
+card_family = "bastion_spike"
+damage_add = 2
+blurb = "Upgraded: +2 damage."
+
+[sub_resource type="Resource" id="o4"]
+script = ExtResource("2_offer")
+id = "bastion_close_in_move"
+kind = "Modify"
+rarity = 1
+mech_id = "bastion"
+card_family = "bastion_close_in"
+movement_add = 1
+blurb = "Upgraded: +1 movement."
+
+[sub_resource type="Resource" id="o5"]
+script = ExtResource("2_offer")
+id = "bastion_brace_free"
+kind = "Modify"
+rarity = 2
+mech_id = "bastion"
+card_family = "bastion_brace"
+make_free = true
+blurb = "Upgraded: costs no action."
+
+[sub_resource type="Resource" id="o6"]
+script = ExtResource("2_offer")
+id = "bastion_anchor_move"
+kind = "Modify"
+rarity = 3
+mech_id = "bastion"
+card_family = "bastion_anchor"
+movement_add = 1
+blurb = "Upgraded: +1 movement."
+
+[sub_resource type="Resource" id="o7"]
+script = ExtResource("2_offer")
+id = "bastion_grant_ram"
+kind = "Grant"
+rarity = 2
+mech_id = "bastion"
+card = SubResource("ram")
+
+[sub_resource type="Resource" id="o8"]
+script = ExtResource("2_offer")
+id = "bastion_grant_fortify"
+kind = "Grant"
+rarity = 1
+mech_id = "bastion"
+card = SubResource("fortify")
+
+[resource]
+script = ExtResource("1_cat")
+offers = Array[ExtResource("2_offer")]([SubResource("o1"), SubResource("o2"), SubResource("o3"), SubResource("o4"), SubResource("o5"), SubResource("o6"), SubResource("o7"), SubResource("o8")])

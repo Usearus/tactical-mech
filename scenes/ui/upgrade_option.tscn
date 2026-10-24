@@ -1,0 +1,113 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/upgrade_option.gd" id="1_option"]
+[ext_resource type="Texture2D" path="res://icodot-svg/ui/geometry/icon-geo-star-ui.svg" id="2_star"]
+[ext_resource type="Shader" path="res://shaders/icon_white.gdshader" id="3_gold"]
+[ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="4_sheet"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gold"]
+shader = ExtResource("3_gold")
+shader_parameter/ink = Color(0.98, 0.84, 0.32, 1)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_shadow"]
+atlas = ExtResource("4_sheet")
+region = Rect2(196, 206, 132, 156)
+
+[node name="UpgradeOption" type="Control"]
+custom_minimum_size = Vector2(196, 372)
+layout_mode = 3
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("1_option")
+
+[node name="Column" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="PinRoom" type="Control" parent="Column"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CardHost" type="Control" parent="Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(176, 268)
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="RareShadow" type="NinePatchRect" parent="Column/CardHost"]
+unique_name_in_owner = true
+visible = false
+texture_filter = 1
+material = SubResource("ShaderMaterial_gold")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 5.0
+offset_right = 4.0
+offset_bottom = 5.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("AtlasTexture_shadow")
+patch_margin_left = 88
+patch_margin_top = 82
+patch_margin_right = 18
+patch_margin_bottom = 15
+
+[node name="Stars" type="HBoxContainer" parent="Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="Star1" type="TextureRect" parent="Column/Stars"]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_gold")
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Star2" type="TextureRect" parent="Column/Stars"]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_gold")
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Star3" type="TextureRect" parent="Column/Stars"]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_gold")
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Hit" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(1, 1, 1, 0)

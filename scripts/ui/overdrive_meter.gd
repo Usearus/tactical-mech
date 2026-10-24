@@ -4,16 +4,12 @@ class_name OverdriveMeter
 extends HBoxContainer
 
 const SEGMENT_SCENE := preload("res://scenes/ui/overdrive_segment.tscn")
-const NOTE := "Moving on the map and discarding cards fills this gauge. When it is full, press Activate Overdrive. Attacks hit harder, guards block more, and each mech's overdrive card can enter the hand."
-## Same blue as a filled select-screen pill, and the squad gauge's accent fill.
+const NOTE := "Discarding a card fills this gauge, and cards left in hand when a battle ends do too. When it is full, press Activate Overdrive. Attacks hit harder, guards block more, and each mech's overdrive card can enter the hand."
 const MUTED := Color(0.18, 0.38, 0.5)
 const ACCENT := Color(0.25, 0.72, 0.95)
 ## Pulse target, and the type size of the Activate button beside the gauge.
 const FLASH_COLOR := Color(0.72, 0.94, 1.0)
 const TEXT_SIZE := 32
-## How long a "+N charge" tag stays fully visible, then how long it takes to fade.
-const GAIN_HOLD := 1.5
-const GAIN_FADE := 0.4
 ## Matches the squad gauge flash: a short swing toward white, then back.
 const PULSE_STEP := 0.45
 
@@ -68,6 +64,15 @@ func show_charge(charge: int, maximum: int, steady: bool = false, announce: bool
 		for index in range(previous, last):
 			_segments[index].flash_white(ACCENT, _restore_segment.bind(index))
 	_set_pulse(not steady and length > 0 and filled >= length)
+
+
+## Draw the eye to the gauge when a charge card is played with nothing to spend.
+func flash_empty() -> void:
+	for index in _segments.size():
+		if index >= _length:
+			continue
+		var rest := ACCENT if index < _filled else MUTED
+		_segments[index].flash_white(rest, _restore_segment.bind(index))
 
 
 func _restore_segment(index: int) -> void:

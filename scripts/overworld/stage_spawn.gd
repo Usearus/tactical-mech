@@ -76,8 +76,4 @@ func _idle_texture() -> Texture2D:
 
 
 func _art_texture(art_id: String) -> Texture2D:
-	for folder in ["player", "enemy"]:
-		var path := "res://art/mechs/%s/%s/idle.png" % [folder, art_id]
-		if ResourceLoader.exists(path):
-			return load(path) as Texture2D
-	return null
+	return MechSprites.idle_texture(art_id)

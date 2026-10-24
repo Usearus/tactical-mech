@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="UpgradeOffer" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/upgrade_offer.gd" id="1_offer"]
+
+[resource]
+script = ExtResource("1_offer")
+id = "revive"
+kind = "Revive"
+rarity = 3
+blurb = "Returns with half health."

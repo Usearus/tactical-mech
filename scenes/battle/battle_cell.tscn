@@ -48,7 +48,6 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [node name="BattleCell" type="Button"]
-clip_contents = true
 clip_text = true
 focus_mode = 0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
@@ -102,12 +101,6 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_intercept")
 [node name="MechSprite" type="AnimatedSprite2D" parent="."]
 visible = false
 z_index = 4
-texture_filter = 1
-centered = true
-
-[node name="ImpactSprite" type="AnimatedSprite2D" parent="."]
-visible = false
-z_index = 2
 texture_filter = 1
 centered = true
 

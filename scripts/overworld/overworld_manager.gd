@@ -30,15 +30,27 @@ const COMMENCE_TEXT := "COMMENCE"
 const ATTACK_TEXT := "ATTACK"
 const ACTION_BUTTON_SIZE := Vector2(180, 96)
 const PORTRAIT_SCENE := preload("res://scenes/ui/confirm_portrait.tscn")
+const PLACE_CHIP := preload("res://scenes/ui/place_mech_chip.tscn")
+const SPAWN_FILL := Color(0.55, 0.82, 1.0, 0.42)
 const COMMS_PORTRAIT := preload("res://art/characters/misc/comms.png")
+const _MISSION_1_COMMS: PackedStringArray = [
+	"Well that was fast. Citadel approaches. Their mechs are already on the streets.",
+	"Move beside one and the fight starts right there.",
+	"Fight as a squad, you'll be at a disadvantage if you attack alone.",
+	"Clear every hostile and this mission is done. Then we can head back to base.",
+]
+const _MISSION_2_COMMS: PackedStringArray = [
+	"Rain's on the bridge. Red corp holds the far bank.",
+	"Their grunts, flyers, and the boss shoot from two cells out. The quad never fires. When it acts, every red mech gains barrier.",
+	"Spread the squad. A line of them will rake anyone who bunches up.",
+	"Clear the bridge and we pull back to base.",
+]
 const APPROACH_BOX_SCENE := preload("res://scenes/ui/approach_box.tscn")
 const TURN_CHEVRON_SCENE := preload("res://scenes/ui/turn_chevron.tscn")
 const TURN_CHEVRON_BOB := 0.28
 const APPROACH_NONE := Vector2i(-99999, -99999)
 
 var _selected: MechState
-## A step this turn has not yet added its charge. Attacking spends it.
-var _move_charge_pending := false
 ## Squares this mech can still step to, fixed at the start of its turn.
 var _step_actor_id := ""
 var _step_home := Vector2i.ZERO
@@ -112,6 +124,15 @@ var _enemies_before_battle := 0
 var _campaign_over := false
 ## Holds every turn until the opening banner has left the screen.
 var _opening := true
+## The squad is still being dragged onto the blue starting squares.
+var _placing := false
+var _placement_confirmed := false
+var _place_drag_id := ""
+var _block_cell_press_frame := -1
+var _spawn_lookup: Dictionary = {}
+var _placement := SquadPlacement.new()
+var _intro_tween: Tween
+var _intro_finished := false
 
 @onready var grid_host: Control = %GridHost
 @onready var grid: GridContainer = %Grid
@@ -131,15 +152,14 @@ var _opening := true
 @onready var turn_timeline: HBoxContainer = %TurnTimeline
 @onready var player_gauge: OverdriveMeter = %PlayerGauge
 @onready var next_gauge_label: Label = %NextGaugeLabel
-@onready var _charge_gain: Label = %ChargeGain
 @onready var _overdrive_note: InfoNote = %OverdriveNote
-
-var _charge_gain_tween: Tween
+@onready var mission_record: MissionRecord = %MissionRecord
 @onready var resolution_overlay: Control = %Resolution
 @onready var resolution_title: Label = %ResolutionTitle
 @onready var back_to_title_button: Button = %BackToTitleButton
 @onready var mode_banner: ModeBanner = %ModeBanner
 @onready var dialogue_bar: DialogueBar = %DialogueBar
+@onready var place_panel: PlaceMechs = %PlaceMechs
 
 
 func _prompt_enemy_choice() -> bool:
@@ -159,6 +179,7 @@ func _can_attack() -> bool:
 		and not _map_locked
 		and not _turn_busy
 		and not _opening
+		and not _placing
 		and not _enemies_in_range(actor).is_empty()
 	)
 
@@ -167,6 +188,8 @@ func _ready() -> void:
 	end_turn_button.pressed.connect(_on_end_turn)
 	attack_button.pressed.connect(_on_attack_pressed)
 	back_to_title_button.pressed.connect(_on_back_to_title_pressed)
+	if mission_record != null:
+		mission_record.confirmed.connect(_on_back_to_title_pressed)
 	mech_panel.deck_pressed.connect(_on_deck_pressed)
 	mech_panel.inspect_pressed.connect(_on_inspect_pressed)
 	resolution_overlay.visible = false
@@ -183,17 +206,37 @@ func _ready() -> void:
 	_size_action_button(attack_button)
 	_size_action_button(end_turn_button)
 	_build_confirm_strip()
+	if place_panel != null:
+		place_panel.start_pressed.connect(_on_start_mission)
+		place_panel.auto_pressed.connect(_on_auto_place)
+		place_panel.unit_returned.connect(_on_place_returned)
+		place_panel.drag_started.connect(_on_place_drag_started)
 	resized.connect(func() -> void:
 		_pin_hud.call_deferred()
 		_pin_confirm_panel.call_deferred()
+		_pin_place_panel.call_deferred()
 		_pin_target_note.call_deferred()
 	)
 	_fill_round()
+	_open_placement()
 	_rebuild()
 	await GameManager.wait_until_shown()
 	if not is_inside_tree():
 		return
-	await _play_mission_start()
+	_pin_place_panel()
+	var zoom_in := _zoom_from_overview()
+	while not _placement_confirmed:
+		if not is_inside_tree():
+			return
+		await get_tree().process_frame
+	if not is_inside_tree():
+		return
+	var player_has_camera := _intro_finished and not _intro_tweening
+	if zoom_in != null and zoom_in.is_valid() and zoom_in.is_running():
+		zoom_in.kill()
+	if not player_has_camera:
+		_settle_intro_view()
+	await _play_mission_briefing()
 	if not is_inside_tree():
 		return
 	_opening = false
@@ -214,6 +257,11 @@ func _rebuild() -> void:
 			var coords := rect.position + Vector2i(x, y)
 			var button := CELL_SCENE.instantiate() as Button
 			button.pressed.connect(_on_cell_pressed.bind(coords))
+			button.set_drag_forwarding(
+				_cell_drag_data.bind(button, coords),
+				_cell_can_drop.bind(coords),
+				_cell_drop.bind(coords)
+			)
 			button.resized.connect(_on_cell_resized.bind(button))
 			grid.add_child(button)
 			_buttons[coords] = button
@@ -226,10 +274,14 @@ func _face_enemies_toward_squad() -> void:
 	var squad_x := 0.0
 	var count := 0
 	for player in GameManager.player_mechs:
-		if not player.alive:
+		if not player.alive or player.overworld_position == StartingRoster.UNPLACED:
 			continue
 		squad_x += player.overworld_position.x
 		count += 1
+	if count == 0:
+		for coords in _placement.seats:
+			squad_x += coords.x
+			count += 1
 	if count == 0:
 		return
 	squad_x /= float(count)
@@ -589,7 +641,7 @@ func _apply_confirm_bar() -> void:
 	var confirming := _confirming and _confirm_target != null
 	var actor := _current_actor()
 	var choosing := _targeting and actor != null and actor.team == "player"
-	end_turn_button.visible = not confirming and not choosing
+	end_turn_button.visible = not confirming and not choosing and not _placing
 	if _cancel_button != null:
 		_cancel_button.visible = (confirming or choosing) and actor != null and actor.team == "player"
 	_seat_commence_button(confirming)
@@ -759,7 +811,8 @@ func _enemies_in_range(unit: MechState) -> Array[MechState]:
 	if unit == null:
 		return found
 	var reach := maxi(unit.attack_range, 1)
-	for distance in range(1, reach + 1):
+	var near := mini(unit.attack_range_min, reach)
+	for distance in range(near, reach + 1):
 		for step in _attack_ring(distance):
 			var other := _unit_at(unit.overworld_position + step)
 			if other != null and other.alive and other.team == "enemy":
@@ -767,20 +820,22 @@ func _enemies_in_range(unit: MechState) -> Array[MechState]:
 	return found
 
 
-## Cells exactly attack_range away. Allies are left plain. An enemy on the ring is included.
+## Cells this mech can open a fight from. Allies are left plain. An enemy in reach is included.
 func _attack_reach_cells(unit: MechState) -> Dictionary:
 	var cells := {}
 	if unit == null:
 		return cells
 	var reach := maxi(unit.attack_range, 1)
-	for step in _attack_ring(reach):
-		var coords: Vector2i = unit.overworld_position + step
-		if not _buttons.has(coords):
-			continue
-		var standing := _unit_at(coords)
-		if standing != null and standing.alive and standing.team != "enemy":
-			continue
-		cells[coords] = true
+	var near := mini(unit.attack_range_min, reach)
+	for distance in range(near, reach + 1):
+		for step in _attack_ring(distance):
+			var coords: Vector2i = unit.overworld_position + step
+			if not _buttons.has(coords):
+				continue
+			var standing := _unit_at(coords)
+			if standing != null and standing.alive and standing.team != "enemy":
+				continue
+			cells[coords] = true
 	return cells
 
 
@@ -895,7 +950,7 @@ func _fit_grid() -> void:
 	grid.size = grid_size
 	_cell_px = cell
 	_sync_stage()
-	if _opening and not _intro_tweening:
+	if _opening and not _intro_tweening and not _intro_finished:
 		_map_zoom = _overview_zoom()
 		_map_pan = Vector2.ZERO
 		_intro_holds_center = true
@@ -934,6 +989,8 @@ func _seat_on_stage() -> void:
 	var taken := {}
 	for unit in GameManager.all_mechs():
 		if unit == null or not unit.alive:
+			continue
+		if unit.overworld_position == StartingRoster.UNPLACED:
 			continue
 		var spot := unit.overworld_position
 		if StageMap.contains(spot) and not StageMap.blocked(spot) and not taken.has(spot):
@@ -976,7 +1033,7 @@ func _scouting() -> bool:
 		_selected != null
 		and _selected.alive
 		and _selected.team == "enemy"
-		and not _opening
+		and (not _opening or _placing)
 		and not _campaign_over
 		and not _map_locked
 		and not _animating
@@ -1069,6 +1126,7 @@ func _ensure_approach_boxes() -> void:
 		var box := APPROACH_BOX_SCENE.instantiate() as ApproachBox
 		approach_layer.add_child(box)
 		box.direction_chosen.connect(_on_approach_chosen)
+		box.set_drag_forwarding(Callable(), _approach_can_drop.bind(box), _approach_drop.bind(box))
 		_approach_boxes.append(box)
 
 
@@ -1076,7 +1134,7 @@ func _on_approach_chosen(coords: Vector2i) -> void:
 	if _gesture_panned:
 		_gesture_panned = false
 		return
-	if _opening or _campaign_over or _confirming or _turn_busy or _animating:
+	if (_opening and not _placing) or _campaign_over or _confirming or _turn_busy or _animating:
 		return
 	_pick_approach(coords)
 
@@ -1132,7 +1190,10 @@ func _mark_battle_window(button: Button, coords: Vector2i, window: Dictionary) -
 func _input(event: InputEvent) -> void:
 	if _deck_overlay_open():
 		return
-	if _opening or _campaign_over or _map_locked or _animating or grid_host == null:
+	if event is InputEventMouseButton and not (event as InputEventMouseButton).pressed and _place_drag_id != "":
+		_block_cell_press_frame = Engine.get_process_frames()
+		_finish_place_drag.call_deferred()
+	if (_opening and not _placing) or _campaign_over or _map_locked or _animating or grid_host == null:
 		return
 	if event is InputEventMouseButton:
 		_on_map_mouse_button(event)
@@ -1163,7 +1224,8 @@ func _on_map_mouse_button(event: InputEventMouseButton) -> void:
 	if event.pressed:
 		_gesture_panned = false
 		_map_drag_total = 0.0
-		_map_dragging = _pointer_on_map(event.global_position) and (
+		var grabbing := event.button_index == MOUSE_BUTTON_LEFT and _grabbing_placed_player(event.global_position)
+		_map_dragging = not grabbing and _pointer_on_map(event.global_position) and (
 			event.button_index == MOUSE_BUTTON_MIDDLE or _map_can_pan()
 		)
 	else:
@@ -1212,6 +1274,7 @@ func _on_map_touch(event: InputEvent) -> void:
 
 
 func _zoom_map_by(local_pos: Vector2, factor: float) -> void:
+	_release_intro_camera()
 	_stop_reveal()
 	var old := _map_zoom
 	var next := clampf(old * factor, _map_zoom_floor(), MAP_ZOOM_MAX)
@@ -1232,13 +1295,14 @@ func _map_can_pan() -> bool:
 
 
 func _pan_map(delta: Vector2) -> void:
+	_release_intro_camera()
 	_stop_reveal()
 	_map_pan += delta
 	_apply_map_view()
 
 
 func _reveal_unit(unit: MechState) -> void:
-	if unit == null or _opening or _map_locked or _intro_tweening or grid == null or grid_host == null:
+	if unit == null or (_opening and not _placing) or _map_locked or _intro_tweening or grid == null or grid_host == null:
 		return
 	var button := _button_for_unit(unit)
 	if button == null:
@@ -1298,7 +1362,13 @@ func _stop_reveal() -> void:
 
 
 func _pointer_on_map(point: Vector2) -> bool:
-	return grid_host.get_global_rect().has_point(point)
+	if grid_host == null or not grid_host.get_global_rect().has_point(point):
+		return false
+	if place_panel != null and place_panel.visible:
+		var hovered := get_viewport().gui_get_hovered_control()
+		if hovered != null and _has_ancestor(hovered, place_panel):
+			return false
+	return true
 
 
 func _to_map_local(point: Vector2) -> Vector2:
@@ -1345,6 +1415,8 @@ func _on_timeline_input(event: InputEvent, unit: MechState) -> void:
 	var mouse := event as InputEventMouseButton
 	if not mouse.pressed or mouse.button_index != MOUSE_BUTTON_LEFT:
 		return
+	if _placing and unit.overworld_position == StartingRoster.UNPLACED:
+		return
 	if _status_click_blocked() or _blocks_status_tip(unit):
 		_hide_status_tip()
 	_on_cell_pressed(unit.overworld_position)
@@ -1389,7 +1461,8 @@ func _refresh() -> void:
 		and not _map_locked
 		and not _animating
 		and not _turn_busy
-		and not _opening
+		and (not _opening or _placing)
+		and _selected.overworld_position != StartingRoster.UNPLACED
 		and (_selected.team == "enemy" or not _selected.has_moved)
 	)
 	if show_reach and _selected != null:
@@ -1414,7 +1487,7 @@ func _refresh() -> void:
 	for coords in _buttons:
 		var button: Button = _buttons[coords]
 		var unit := _unit_at(coords)
-		if unit == _moving_unit:
+		if unit == _moving_unit or (_place_drag_id != "" and unit != null and unit.id == _place_drag_id):
 			unit = null
 		var focus := _map_locked and GameManager.zoom_focus_cells.has(coords)
 		var sprite := button.get_node_or_null("MechSprite") as AnimatedSprite2D
@@ -1429,6 +1502,9 @@ func _refresh() -> void:
 			button.disabled = _map_locked
 			if move_cells.has(coords) or threat_cells.has(coords):
 				shade = range_tint
+			var spawned := _spawn_paint(coords, null, shade, border)
+			shade = spawned["shade"] as Color
+			border = spawned["border"] as Color
 			_paint(button, Color(0, 0, 0, 0), border)
 			_set_shade(button, shade)
 			_set_attack_inset(button, ATTACK_RANGE_SHADE if attack_cells.has(coords) else Color(0, 0, 0, 0))
@@ -1446,6 +1522,9 @@ func _refresh() -> void:
 				border = SELECT_RED if unit == _confirm_target else Color(0.85, 0.28, 0.22)
 			elif unit.team == "player" and (move_cells.has(coords) or threat_cells.has(coords)):
 				shade = range_tint
+			var spawned := _spawn_paint(coords, unit, shade, border)
+			shade = spawned["shade"] as Color
+			border = spawned["border"] as Color
 			_paint(button, Color(0, 0, 0, 0), border)
 			_set_shade(button, shade)
 			_set_attack_inset(button, ATTACK_RANGE_SHADE if attack_cells.has(coords) else Color(0, 0, 0, 0))
@@ -1471,6 +1550,9 @@ func _refresh() -> void:
 				shade = ATTACK_SHADE
 			elif unit.team == "player" and (move_cells.has(coords) or threat_cells.has(coords)):
 				shade = range_tint
+			var spawned := _spawn_paint(coords, unit, shade, border)
+			shade = spawned["shade"] as Color
+			border = spawned["border"] as Color
 			_paint(button, tint, border)
 			_set_shade(button, shade)
 			_set_attack_inset(button, ATTACK_RANGE_SHADE if attack_cells.has(coords) else Color(0, 0, 0, 0))
@@ -1505,12 +1587,13 @@ func _refresh() -> void:
 		else:
 			_note_status("%sRound %d    %s" % [prefix, GameManager.turn_number, phase_note])
 	end_turn_button.disabled = (
-		_opening or _animating or _turn_busy or actor == null or actor.team != "player"
+		_placing or _opening or _animating or _turn_busy or actor == null or actor.team != "player"
 	)
 	attack_button.visible = false
 	target_note.visible = _prompt_enemy_choice()
 	_sync_status_tip()
 	_apply_confirm_bar()
+	_sync_place_panel()
 	_refresh_timeline()
 	_refresh_gauges()
 
@@ -1545,7 +1628,7 @@ func _try_status_click(point: Vector2, panned: bool) -> void:
 
 
 func _status_click_blocked() -> bool:
-	if _opening or _campaign_over or _map_locked or _animating:
+	if (_opening and not _placing) or _campaign_over or _map_locked or _animating:
 		return true
 	if resolution_overlay != null and resolution_overlay.visible:
 		return true
@@ -1691,6 +1774,11 @@ func _button_for_unit(unit: MechState) -> Button:
 
 
 func _on_cell_pressed(coords: Vector2i) -> void:
+	if Engine.get_process_frames() <= _block_cell_press_frame or _place_drag_id != "":
+		return
+	if _placing:
+		_on_place_click(coords)
+		return
 	if _opening or _campaign_over:
 		return
 	if _gesture_panned:
@@ -1780,7 +1868,7 @@ func _on_cancel_pressed() -> void:
 
 
 func _on_attack_pressed() -> void:
-	if _opening or _campaign_over:
+	if _placing or _opening or _campaign_over:
 		return
 	var actor := _current_actor()
 	if _confirming:
@@ -1847,9 +1935,6 @@ func _try_attack(unit: MechState) -> void:
 	if not _in_attack_range(actor, unit):
 		_note_status("Get within range of %s before attacking." % unit.display_name)
 		return
-	if _move_charge_pending:
-		GameManager.note_move("player")
-		_move_charge_pending = false
 	_targeting = false
 	_animating = true
 	actor.face_toward_x(actor.overworld_position.x, unit.overworld_position.x)
@@ -1878,53 +1963,23 @@ func _move_player_to(coords: Vector2i) -> void:
 	await _animate_move(mover, path)
 	var home := _step_home if _step_actor_id == mover.id else origin
 	mover.has_moved = mover.overworld_position != home
-	_move_charge_pending = mover.has_moved
 	_animating = false
 	_status_override = ""
 	_refresh()
 
 
 func _on_end_turn() -> void:
-	if _opening or _campaign_over or _turn_busy or _animating:
+	if _placing or _opening or _campaign_over or _turn_busy or _animating:
 		return
 	var actor := _current_actor()
 	if actor == null or actor.team != "player":
 		return
 	_targeting = false
 	_clear_confirm()
-	_move_charge_pending = false
 	GameManager.battle_report = ""
-	var already_ready := GameManager.attack_ready("player")
-	var before_charge := GameManager.player_attack_gauge
-	GameManager.note_move("player")
-	if GameManager.player_attack_gauge > before_charge:
-		_show_turn_charge()
-		_refresh_gauges()
 	actor.has_moved = true
-	if not already_ready and GameManager.attack_ready("player"):
-		_refresh()
-		return
 	_advance_actor()
 	await _begin_actor_turn()
-
-
-func _show_turn_charge() -> void:
-	if _charge_gain == null:
-		return
-	_charge_gain.text = "+1 charge"
-	_charge_gain.visible = true
-	_pin_hud.call_deferred()
-	_charge_gain.modulate.a = 1.0
-	if _charge_gain_tween != null and _charge_gain_tween.is_valid():
-		_charge_gain_tween.kill()
-	_charge_gain_tween = create_tween()
-	_charge_gain_tween.tween_interval(OverdriveMeter.GAIN_HOLD)
-	_charge_gain_tween.tween_property(_charge_gain, "modulate:a", 0.0, OverdriveMeter.GAIN_FADE)
-	_charge_gain_tween.finished.connect(func() -> void:
-		if is_instance_valid(_charge_gain):
-			_charge_gain.visible = false
-			_pin_hud.call_deferred()
-	)
 
 
 func _map_zoom_floor() -> float:
@@ -1954,6 +2009,8 @@ func _zoom_from_overview() -> Tween:
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	tween.tween_method(_place_intro_zoom.bind(from_zoom, to_zoom, end_pan), 0.0, 1.0, 1.05)
+	tween.finished.connect(_finish_intro_tween)
+	_intro_tween = tween
 	return tween
 
 
@@ -1963,6 +2020,7 @@ func _settle_intro_view() -> void:
 	_map_zoom = MAP_ZOOM_INTRO
 	_map_pan = _pan_on_point(_intro_focus(), _map_zoom)
 	_map_placed = true
+	_intro_finished = true
 	_apply_map_view()
 
 
@@ -1986,28 +2044,227 @@ func _place_intro_zoom(amount: float, from_zoom: float, to_zoom: float, end_pan:
 	_apply_map_view()
 
 
-func _play_mission_start() -> void:
-	var zoom_in := _zoom_from_overview()
+func _finish_intro_tween() -> void:
+	_intro_tweening = false
+	_intro_holds_center = false
+	_intro_finished = true
+
+
+func _release_intro_camera() -> void:
+	if not _placing or not _intro_tweening:
+		return
+	if _intro_tween != null and _intro_tween.is_valid():
+		_intro_tween.kill()
+	_intro_tweening = false
+	_intro_holds_center = false
+	_intro_finished = true
+
+
+func _open_placement() -> void:
+	_placement = SquadPlacement.new()
+	_spawn_lookup.clear()
+	var seats: Array[Vector2i] = []
+	for slot in StartingRoster.player_slots():
+		var coords := slot.cell()
+		seats.append(coords)
+		_spawn_lookup[coords] = true
+	_placement.seats = seats
+	var squad := GameManager.player_mechs
+	if squad.is_empty() or seats.is_empty() or place_panel == null:
+		_placement_confirmed = true
+		return
+	_placing = true
+	place_panel.bind_squad(squad)
+	place_panel.visible = true
+
+
+func _on_auto_place() -> void:
+	if not _placing:
+		return
+	_placement.auto_place(GameManager.player_mechs)
+	_after_place_edit()
+
+
+func _on_start_mission() -> void:
+	if not _placing or not _placement.all_seated(GameManager.player_mechs):
+		return
+	_placing = false
+	_place_drag_id = ""
+	if place_panel != null:
+		place_panel.visible = false
+	if _intro_tween != null and _intro_tween.is_valid() and _intro_tween.is_running():
+		_intro_tween.kill()
+	if _intro_tweening:
+		_settle_intro_view()
+	_refresh()
+	_placement_confirmed = true
+
+
+func _on_place_returned(unit_id: String) -> void:
+	if not _placing:
+		return
+	var unit := _unit_by_id(unit_id)
+	if unit == null or unit.team != "player":
+		return
+	_placement.return_to_bench(unit)
+	_after_place_edit()
+
+
+func _on_place_drag_started(unit_id: String) -> void:
+	_place_drag_id = unit_id
+	_refresh()
+
+
+func _finish_place_drag() -> void:
+	if _place_drag_id == "":
+		return
+	_place_drag_id = ""
+	if is_inside_tree():
+		_refresh()
+
+
+func _grabbing_placed_player(point: Vector2) -> bool:
+	if not _placing:
+		return false
+	var unit := _unit_at(_coords_at_global(point))
+	return unit != null and unit.team == "player"
+
+
+func _cell_drag_data(_at: Vector2, button: Button, coords: Vector2i) -> Variant:
+	if not _placing:
+		return null
+	var unit := _unit_at(coords)
+	if unit == null or unit.team != "player":
+		return null
+	var preview := PLACE_CHIP.instantiate() as PlaceMechChip
+	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	preview.show_unit(unit)
+	button.set_drag_preview(PlaceMechChip.center_drag_tile(preview))
+	_place_drag_id = unit.id
+	_refresh.call_deferred()
+	return unit.id
+
+
+func _cell_can_drop(_at: Vector2, data: Variant, coords: Vector2i) -> bool:
+	if not _placing or not (data is String) or not _spawn_lookup.has(coords):
+		return false
+	var unit := _unit_by_id(str(data))
+	if unit == null or unit.team != "player":
+		return false
+	var occupant := _unit_at(coords)
+	return occupant == null or occupant.team == "player"
+
+
+func _cell_drop(_at: Vector2, data: Variant, coords: Vector2i) -> void:
+	var unit := _unit_by_id(str(data))
+	if unit == null:
+		return
+	if not _placement.drop_on_seat(unit, coords, _unit_at(coords)):
+		return
+	_after_place_edit()
+
+
+func _approach_can_drop(at: Vector2, data: Variant, box: ApproachBox) -> bool:
+	return _cell_can_drop(at, data, box.approach_cell)
+
+
+func _approach_drop(at: Vector2, data: Variant, box: ApproachBox) -> void:
+	_cell_drop(at, data, box.approach_cell)
+
+
+func _after_place_edit() -> void:
+	if _selected != null and _selected.overworld_position == StartingRoster.UNPLACED:
+		_selected = null
+		_inspecting = false
+		_approach_from = APPROACH_NONE
+		_approach_enemy_id = ""
+		_hide_status_tip()
+	_face_enemies_toward_squad()
+	_refresh()
+
+
+func _on_place_click(coords: Vector2i) -> void:
+	if _gesture_panned:
+		_gesture_panned = false
+		return
+	var unit := _unit_at(coords)
+	if _scouting() and _is_approach_cell(coords):
+		_pick_approach(coords)
+		return
+	if _scouting() and unit == _selected:
+		_open_status_tip(unit)
+		_refresh()
+		return
+	if _scouting():
+		_selected = null
+		_inspecting = false
+		_approach_from = APPROACH_NONE
+		_approach_enemy_id = ""
+		_hide_status_tip()
+		if unit == null or not unit.alive:
+			_refresh()
+			return
+	if unit != null and unit.alive:
+		_selected = unit
+		_open_status_tip(unit)
+		_refresh()
+		return
+	_selected = null
+	_inspecting = false
+	_approach_from = APPROACH_NONE
+	_approach_enemy_id = ""
+	_hide_status_tip()
+	_refresh()
+
+
+func _sync_place_panel() -> void:
+	if place_panel == null:
+		return
+	if not _placing:
+		place_panel.visible = false
+		return
+	place_panel.visible = true
+	for unit in GameManager.player_mechs:
+		place_panel.set_benched(unit, unit.overworld_position == StartingRoster.UNPLACED)
+	place_panel.set_can_start(_placement.all_seated(GameManager.player_mechs))
+	_pin_place_panel()
+
+
+func _pin_place_panel() -> void:
+	if place_panel == null or not place_panel.visible or size.y < 2.0:
+		return
+	var box := place_panel.get_combined_minimum_size()
+	place_panel.size = box
+	var x := (size.x - box.x) * 0.5
+	place_panel.position = Vector2(x, size.y - 8.0 - box.y)
+
+
+func _spawn_paint(coords: Vector2i, unit: MechState, shade: Color, border: Color) -> Dictionary:
+	if not _placing or not _spawn_lookup.has(coords):
+		return {"shade": shade, "border": border}
+	if border.a <= 0.0:
+		border = SELECT_BLUE
+	if unit == null and shade.a <= 0.0:
+		shade = SPAWN_FILL
+	return {"shade": shade, "border": border}
+
+
+func _play_mission_briefing() -> void:
 	if mode_banner != null:
 		await mode_banner.play("Mission start", true)
 	if not is_inside_tree():
 		return
 	if dialogue_bar != null:
 		await dialogue_bar.play(_briefing_lines())
-	if not is_inside_tree():
-		return
-	if zoom_in != null and zoom_in.is_valid() and zoom_in.is_running():
-		await zoom_in.finished
-	if _intro_tweening:
-		_settle_intro_view()
 
 
 func _briefing_lines() -> Array[StoryLine]:
+	var spoken := _MISSION_1_COMMS
+	if GameManager.stage_scene == GameManager.STAGE_0_1:
+		spoken = _MISSION_2_COMMS
 	var lines: Array[StoryLine] = []
-	lines.append(_brief("Comms", COMMS_PORTRAIT, "Well that was fast. Citadel approaches. Their mechs are already on the streets."))
-	lines.append(_brief("Comms", COMMS_PORTRAIT, "Move beside one and the fight starts right there."))
-	lines.append(_brief("Comms", COMMS_PORTRAIT, "Fight as a squad, you'll be at a disadvantage if you attack alone."))
-	lines.append(_brief("Comms", COMMS_PORTRAIT, "Clear every hostile and this mission is done. Then we can head back to base."))
+	for text in spoken:
+		lines.append(_brief("Comms", COMMS_PORTRAIT, text))
 	return lines
 
 
@@ -2020,7 +2277,7 @@ func _brief(speaker: String, portrait: Texture2D, text: String) -> StoryLine:
 
 
 func _begin_actor_turn() -> void:
-	if _opening or _turn_busy:
+	if _placing or _opening or _turn_busy:
 		return
 	_prune_queue()
 	var actor := _current_actor()
@@ -2212,7 +2469,10 @@ func _show_campaign_resolution() -> bool:
 		await mode_banner.play("Mission Complete", true)
 		if not is_inside_tree():
 			return true
-	resolution_title.text = "Game over" if players_wiped else "End of Demo"
+	if won and mission_record != null:
+		mission_record.present(GameManager.player_mechs)
+		return true
+	resolution_title.text = "Game over"
 	resolution_overlay.visible = true
 	return true
 
@@ -2459,16 +2719,10 @@ func _cell_global_position(coords: Vector2i) -> Vector2:
 
 
 func _in_attack_range(attacker: MechState, target: MechState) -> bool:
-	var reach := 1 if attacker == null else maxi(attacker.attack_range, 1)
-	return _within(attacker, target, reach)
-
-
-func _within(a: MechState, b: MechState, reach: int) -> bool:
-	if a == null or b == null:
+	if attacker == null or target == null:
 		return false
-	var delta := a.overworld_position - b.overworld_position
-	var distance := absi(delta.x) + absi(delta.y)
-	return distance > 0 and distance <= reach
+	var delta := attacker.overworld_position - target.overworld_position
+	return attacker.attacks_at(absi(delta.x) + absi(delta.y))
 
 
 func _unit_at(coords: Vector2i) -> MechState:
@@ -2493,6 +2747,7 @@ func _show_unit_sprite(button: Button, unit: MechState, focus: bool) -> bool:
 		sprite.sprite_frames = frames
 		sprite.play("idle")
 	sprite.flip_h = unit.facing < 0
+	sprite.set_meta("body_scale", unit.body_scale())
 	sprite.visible = true
 	var shade := Color.WHITE
 	if not unit.alive:
@@ -2528,9 +2783,11 @@ func _place_unit_sprite(button: Button, sprite: AnimatedSprite2D) -> void:
 	if longest <= 0.0:
 		return
 	var fit := minf(button.size.x, button.size.y) * 0.9 * 1.5 / longest
+	var body := float(sprite.get_meta("body_scale", 1.0))
 	var lift := frame.y * fit * 0.1 + 6.0
-	sprite.position = Vector2(button.size.x * 0.5, button.size.y * 0.5 - lift)
-	sprite.scale = Vector2(fit, fit)
+	var drop := frame.y * fit * (1.0 - body) * 0.5
+	sprite.position = Vector2(button.size.x * 0.5, button.size.y * 0.5 - lift + drop)
+	sprite.scale = Vector2(fit, fit) * body
 
 
 func _sync_barrier(sprite: AnimatedSprite2D, unit: MechState) -> void:
@@ -2598,6 +2855,7 @@ func _player_can_reposition(actor: MechState) -> bool:
 		and not _map_locked
 		and not _turn_busy
 		and not _opening
+		and not _placing
 	)
 
 

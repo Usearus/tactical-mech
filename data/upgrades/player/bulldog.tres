@@ -1,0 +1,92 @@
+[gd_resource type="Resource" script_class="UpgradeCatalog" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/upgrade_catalog.gd" id="1_cat"]
+[ext_resource type="Script" path="res://scripts/cards/upgrade_offer.gd" id="2_offer"]
+[ext_resource type="Script" path="res://scripts/cards/card_data.gd" id="3_card"]
+
+[sub_resource type="Resource" id="cover"]
+script = ExtResource("3_card")
+id = "bulldog_cover_fire"
+display_name = "Cover Fire"
+description = "Fire at long range, then fall back 2."
+card_type = "Attack"
+damage = 4
+reach = 3
+movement = 2
+move_timing = "After"
+target_type = "enemy"
+
+[sub_resource type="Resource" id="interpose"]
+script = ExtResource("3_card")
+id = "bulldog_interpose"
+display_name = "Interpose"
+description = "Step 2, guard an ally, and catch the next hit."
+card_type = "Defense"
+defense_kind = "Guard"
+block = 5
+reach = 0
+movement = 2
+move_timing = "Before"
+target_type = "ally"
+intercept = true
+
+[sub_resource type="Resource" id="o1"]
+script = ExtResource("2_offer")
+id = "bulldog_flak_damage"
+kind = "Modify"
+rarity = 1
+mech_id = "bulldog"
+card_family = "bulldog_flak"
+damage_add = 2
+blurb = "Upgraded: +2 damage."
+
+[sub_resource type="Resource" id="o2"]
+script = ExtResource("2_offer")
+id = "bulldog_flak_move"
+kind = "Modify"
+rarity = 2
+mech_id = "bulldog"
+card_family = "bulldog_flak"
+movement_add = 1
+movement_timing = "Before"
+blurb = "Upgraded: +1 movement."
+
+[sub_resource type="Resource" id="o3"]
+script = ExtResource("2_offer")
+id = "bulldog_volley_damage"
+kind = "Modify"
+rarity = 2
+mech_id = "bulldog"
+card_family = "bulldog_missle_volley"
+damage_add = 3
+blurb = "Upgraded: +3 damage."
+
+[sub_resource type="Resource" id="o4"]
+script = ExtResource("2_offer")
+id = "bulldog_volley_free"
+kind = "Modify"
+rarity = 3
+mech_id = "bulldog"
+card_family = "bulldog_missle_volley"
+make_free = true
+blurb = "Upgraded: costs no action."
+
+[sub_resource type="Resource" id="o5"]
+script = ExtResource("2_offer")
+id = "bulldog_grant_cover"
+kind = "Grant"
+rarity = 2
+mech_id = "bulldog"
+card = SubResource("cover")
+
+[sub_resource type="Resource" id="o6"]
+script = ExtResource("2_offer")
+id = "bulldog_grant_interpose"
+kind = "Grant"
+rarity = 1
+mech_id = "bulldog"
+card = SubResource("interpose")
+
+[resource]
+script = ExtResource("1_cat")
+offers = Array[ExtResource("2_offer")]([SubResource("o1"), SubResource("o2"), SubResource("o3"), SubResource("o4"), SubResource("o5"), SubResource("o6")])

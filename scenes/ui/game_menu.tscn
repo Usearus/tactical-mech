@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" uid="uid://b3te7dqvrcci" path="res://scripts/ui/game_menu.gd" id="1_menu"]
 [ext_resource type="Texture2D" path="res://art/icons/stats/heart.svg" id="2_heart"]
@@ -11,6 +11,13 @@
 [ext_resource type="Texture2D" path="res://art/icons/stats/dodge.svg" id="9_dodge"]
 [ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="10_btn"]
 [ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="11_theme"]
+[ext_resource type="PackedScene" path="res://scenes/ui/rule_topic.tscn" id="12_topic"]
+[ext_resource type="PackedScene" path="res://scenes/ui/rule_section_title.tscn" id="15_title"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_primary_button_square.tscn" id="13_sq"]
+[ext_resource type="Script" path="res://scripts/ui/gold_text.gd" id="14_gold"]
+
+[sub_resource type="RichTextEffect" id="RichTextEffect_gold"]
+script = ExtResource("14_gold")
 
 [node name="GameMenu" type="CanvasLayer"]
 layer = 90
@@ -323,340 +330,269 @@ text = "This card negates one incoming attack."
 autowrap_mode = 3
 vertical_alignment = 1
 
-[node name="HowTo" type="PanelContainer" parent="Root"]
+[node name="HowTo" type="Control" parent="Root"]
 unique_name_in_owner = true
 layout_mode = 1
-anchor_left = 1.0
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -560.0
-offset_top = 72.0
-offset_right = -12.0
-offset_bottom = -16.0
-grow_horizontal = 0
+grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 0
+
+[node name="Backdrop" type="Panel" parent="Root/HowTo"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 theme = ExtResource("11_theme")
 theme_type_variation = &"SecondaryPanel"
 
 [node name="Margin" type="MarginContainer" parent="Root/HowTo"]
-layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 28
 
 [node name="Column" type="VBoxContainer" parent="Root/HowTo/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Pages" type="Control" parent="Root/HowTo/Margin/Column"]
+[node name="Header" type="HBoxContainer" parent="Root/HowTo/Margin/Column"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Root/HowTo/Margin/Column/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "Rule Book"
+vertical_alignment = 1
+
+[node name="HowToClose" parent="Root/HowTo/Margin/Column/Header" instance=ExtResource("13_sq")]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+text = "X"
 
-[node name="Loadout" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Pages"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 16
-
-[node name="Header" type="HBoxContainer" parent="Root/HowTo/Margin/Column/Pages/Loadout"]
-layout_mode = 2
-theme_override_constants/separation = 16
-
-[node name="Title" type="Label" parent="Root/HowTo/Margin/Column/Pages/Loadout/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 40
-text = "Choosing a Loadout"
-vertical_alignment = 1
-autowrap_mode = 3
-
-[node name="Count" type="Label" parent="Root/HowTo/Margin/Column/Pages/Loadout/Header"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 40
-text = "1/7"
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="Body" type="Label" parent="Root/HowTo/Margin/Column/Pages/Loadout"]
+[node name="Split" type="HBoxContainer" parent="Root/HowTo/Margin/Column"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 36
-text = "Choose mechs before starting a mission. Mechs have individual stats to look out for, including their Charge (CHG) value, which determines how many actions it will take to activate the Overdrive mechanic and create bonus' for your team during battle.
+theme_override_constants/separation = 24
 
-HP = Hit points at start of mission
-ATK = Attack power from deck
-RNG = Attack range from deck. Also initiate attack distance.
-MOV = Movement range on map
-SPD = Higher speed moves first on map
-CHG = Additional actions needed to activate Overdrive"
-autowrap_mode = 3
-
-[node name="Map" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Pages"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 16
-
-[node name="Header" type="HBoxContainer" parent="Root/HowTo/Margin/Column/Pages/Map"]
-layout_mode = 2
-theme_override_constants/separation = 16
-
-[node name="Title" type="Label" parent="Root/HowTo/Margin/Column/Pages/Map/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 40
-text = "The Map"
-vertical_alignment = 1
-autowrap_mode = 3
-
-[node name="Count" type="Label" parent="Root/HowTo/Margin/Column/Pages/Map/Header"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 40
-text = "2/7"
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="Body" type="Label" parent="Root/HowTo/Margin/Column/Pages/Map"]
+[node name="TopicList" type="ScrollContainer" parent="Root/HowTo/Margin/Column/Split"]
+custom_minimum_size = Vector2(440, 0)
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 36
-text = "Your mechs take turns on the map. On a mech's turn, move it, then end the turn or attack an enemy within your ATR. Most mechs must stand next to the target. Destroy every hostile to finish the mission."
-autowrap_mode = 3
+horizontal_scroll_mode = 0
 
-[node name="Fight" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Pages"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 16
-
-[node name="Header" type="HBoxContainer" parent="Root/HowTo/Margin/Column/Pages/Fight"]
-layout_mode = 2
-theme_override_constants/separation = 16
-
-[node name="Title" type="Label" parent="Root/HowTo/Margin/Column/Pages/Fight/Header"]
+[node name="Topics" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Split/TopicList"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 40
-text = "Starting a Fight"
-vertical_alignment = 1
-autowrap_mode = 3
+theme_override_constants/separation = 4
 
-[node name="Count" type="Label" parent="Root/HowTo/Margin/Column/Pages/Fight/Header"]
+[node name="LoadoutTitle" parent="Root/HowTo/Margin/Column/Split/TopicList/Topics" instance=ExtResource("15_title")]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 40
-text = "3/7"
-horizontal_alignment = 2
-vertical_alignment = 1
 
-[node name="Body" type="Label" parent="Root/HowTo/Margin/Column/Pages/Fight"]
+[node name="Caption" parent="Root/HowTo/Margin/Column/Split/TopicList/Topics/LoadoutTitle"]
+text = "Loadout"
+
+[node name="Loadout" parent="Root/HowTo/Margin/Column/Split/TopicList/Topics" instance=ExtResource("12_topic")]
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 36
-text = "Stand next to an enemy to attack. Fights are not just 1 on 1 in this game. Mechs inside the highlighted area join the battle. There are big disadvantages to going in battle with one mech, so prioritize keeping your squad nearby when you attack or are attacked by the enemy."
-autowrap_mode = 3
+button_pressed = true
+text = "Choosing Mechs"
 
-[node name="Cards" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Pages"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 16
-
-[node name="Header" type="HBoxContainer" parent="Root/HowTo/Margin/Column/Pages/Cards"]
+[node name="MissionsTitle" parent="Root/HowTo/Margin/Column/Split/TopicList/Topics" instance=ExtResource("15_title")]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/margin_top = 8
 
-[node name="Title" type="Label" parent="Root/HowTo/Margin/Column/Pages/Cards/Header"]
+[node name="Caption" parent="Root/HowTo/Margin/Column/Split/TopicList/Topics/MissionsTitle"]
+text = "Missions"
+
+[node name="MapTimeline" parent="Root/HowTo/Margin/Column/Split/TopicList/Topics" instance=ExtResource("12_topic")]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 40
+text = "The Map Timeline"
+
+[node name="Fight" parent="Root/HowTo/Margin/Column/Split/TopicList/Topics" instance=ExtResource("12_topic")]
+layout_mode = 2
+text = "Starting a Battle"
+
+[node name="BattleTitle" parent="Root/HowTo/Margin/Column/Split/TopicList/Topics" instance=ExtResource("15_title")]
+layout_mode = 2
+theme_override_constants/margin_top = 8
+
+[node name="Caption" parent="Root/HowTo/Margin/Column/Split/TopicList/Topics/BattleTitle"]
+text = "Battle"
+
+[node name="Cards" parent="Root/HowTo/Margin/Column/Split/TopicList/Topics" instance=ExtResource("12_topic")]
+layout_mode = 2
 text = "Cards"
-vertical_alignment = 1
-autowrap_mode = 3
 
-[node name="Count" type="Label" parent="Root/HowTo/Margin/Column/Pages/Cards/Header"]
+[node name="Defense" parent="Root/HowTo/Margin/Column/Split/TopicList/Topics" instance=ExtResource("12_topic")]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 40
-text = "4/7"
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="Body" type="Label" parent="Root/HowTo/Margin/Column/Pages/Cards"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 36
-text = "Each mech has a unique deck of cards that are brought into battle. More mechs in the fight means more cards. Play a card, then choose its target. Attacks deal damage within their range. Move cards step that mech. A battle lasts two rounds."
-autowrap_mode = 3
-
-[node name="Defense" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Pages"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 16
-
-[node name="Header" type="HBoxContainer" parent="Root/HowTo/Margin/Column/Pages/Defense"]
-layout_mode = 2
-theme_override_constants/separation = 16
-
-[node name="Title" type="Label" parent="Root/HowTo/Margin/Column/Pages/Defense/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 40
 text = "Defense"
-vertical_alignment = 1
-autowrap_mode = 3
 
-[node name="Count" type="Label" parent="Root/HowTo/Margin/Column/Pages/Defense/Header"]
+[node name="Timers" parent="Root/HowTo/Margin/Column/Split/TopicList/Topics" instance=ExtResource("12_topic")]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 40
-text = "5/7"
-horizontal_alignment = 2
-vertical_alignment = 1
+text = "Timers"
 
-[node name="Body" type="Label" parent="Root/HowTo/Margin/Column/Pages/Defense"]
+[node name="OverdriveBar" parent="Root/HowTo/Margin/Column/Split/TopicList/Topics" instance=ExtResource("12_topic")]
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 36
-text = "Cards that add Guard to a mech will absorb hits during that battle, then drops afterwards. Cards that add Barrier absorbs hits as well, however it stays when you return to the map. Cards that Dodge stay in hand and negates one incoming attack."
-autowrap_mode = 3
+text = "Overdrive Bar"
 
-[node name="Timers" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Pages"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 16
-
-[node name="Header" type="HBoxContainer" parent="Root/HowTo/Margin/Column/Pages/Timers"]
+[node name="GainingOverdrive" parent="Root/HowTo/Margin/Column/Split/TopicList/Topics" instance=ExtResource("12_topic")]
 layout_mode = 2
-theme_override_constants/separation = 16
+text = "Gaining Overdrive"
 
-[node name="Title" type="Label" parent="Root/HowTo/Margin/Column/Pages/Timers/Header"]
+[node name="UsingOverdrive" parent="Root/HowTo/Margin/Column/Split/TopicList/Topics" instance=ExtResource("12_topic")]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 40
-text = "Enemy Timers"
-vertical_alignment = 1
-autowrap_mode = 3
+text = "Using Overdrive"
 
-[node name="Count" type="Label" parent="Root/HowTo/Margin/Column/Pages/Timers/Header"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 40
-text = "6/7"
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="Body" type="Label" parent="Root/HowTo/Margin/Column/Pages/Timers"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 36
-text = "Each enemy shows how many cards are left before it acts. Playing a card, or ending the turn, counts every timer down. At zero, that enemy takes a turn. Discarding a card does not count down enemy action timers."
-autowrap_mode = 3
-
-[node name="Overdrive" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Pages"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 16
-
-[node name="Header" type="HBoxContainer" parent="Root/HowTo/Margin/Column/Pages/Overdrive"]
-layout_mode = 2
-theme_override_constants/separation = 16
-
-[node name="Title" type="Label" parent="Root/HowTo/Margin/Column/Pages/Overdrive/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 40
-text = "Overdrive"
-vertical_alignment = 1
-autowrap_mode = 3
-
-[node name="Count" type="Label" parent="Root/HowTo/Margin/Column/Pages/Overdrive/Header"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 40
-text = "7/7"
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="Body" type="Label" parent="Root/HowTo/Margin/Column/Pages/Overdrive"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 36
-text = "Moving on the map and discarding cards in battle fills the squad's Overdrive gauge. When the Overdrive gauge is full, press Activate Overdrive in battle to enable Overdrive for the remainder of the battle. Attacks hit harder, guards block more, and each mech's overdrive card can enter the hand. The gauge is spent when the fight ends."
-autowrap_mode = 3
-
-[node name="Nav" type="HBoxContainer" parent="Root/HowTo/Margin/Column"]
-layout_mode = 2
-
-[node name="HowToBack" parent="Root/HowTo/Margin/Column/Nav" instance=ExtResource("10_btn")]
+[node name="Directions" type="ScrollContainer" parent="Root/HowTo/Margin/Column/Split"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(220, 64)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 32
-text = "< Back"
-
-[node name="Gap" type="Control" parent="Root/HowTo/Margin/Column/Nav"]
 layout_mode = 2
 size_flags_horizontal = 3
-mouse_filter = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="HowToNext" parent="Root/HowTo/Margin/Column/Nav" instance=ExtResource("10_btn")]
+[node name="Pages" type="VBoxContainer" parent="Root/HowTo/Margin/Column/Split/Directions"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(220, 64)
 layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 32
-text = "Next >"
+size_flags_horizontal = 3
+
+[node name="Loadout" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 36
+text = "Choose mechs before starting a mission. The squad [gold]Overdrive[/gold] gauge holds 12 charge. Once it is full, [gold]Overdrive[/gold] can be activated in battle.
+
+[gold]HP[/gold] = Hit points at start of mission
+[gold]ATK[/gold] = Attack power from deck
+[gold]RNG[/gold] = Attack range from deck. Also initiate attack distance.
+[gold]MOV[/gold] = Movement range on map
+[gold]SPD[/gold] = Higher speed moves first on map"
+autowrap_mode = 3
+
+[node name="MapTimeline" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 36
+text = "The timeline lists every living mech. [gold]Speed[/gold] ([gold]SPD[/gold]) sets the order, and higher [gold]Speed[/gold] moves first. On your turn, move, then end the turn or attack an enemy within your attack range ([gold]ATR[/gold]). Most mechs must stand next to the target."
+autowrap_mode = 3
+
+[node name="Fight" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 36
+text = "Attack an enemy within your [gold]ATR[/gold] to start a fight. Mechs standing in the highlighted area join, yours and theirs. Going in alone is a disadvantage, so keep the squad nearby when you attack or are attacked."
+autowrap_mode = 3
+
+[node name="Cards" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 36
+text = "Each mech brings its own deck. More mechs in the fight means more cards. Play a card, then choose its target. Attacks deal damage within their range. Move cards step that mech. You can [gold]discard[/gold] a card instead of playing it. A battle lasts two rounds, or ends sooner if one side is wiped out."
+autowrap_mode = 3
+
+[node name="Defense" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 36
+text = "[gold]Guard[/gold] absorbs hits during the battle, then drops when you return to the map. [gold]Barrier[/gold] absorbs hits after [gold]Guard[/gold], and whatever is left stays on the map. A [gold]Dodge[/gold] card stays in hand and negates one incoming attack."
+autowrap_mode = 3
+
+[node name="Timers" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 36
+text = "Each enemy shows how many cards are left before it acts. Playing a card, or ending the round, counts every timer down. At zero, that enemy takes a turn, then its count starts over. [gold]Discarding[/gold] a card does not count the timers down."
+autowrap_mode = 3
+
+[node name="OverdriveBar" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 36
+text = "The [gold]Overdrive[/gold] gauge belongs to the whole squad and holds 12 charge. When the bar is full, [gold]Overdrive[/gold] can be activated. Charge you have not used carries into the next fight."
+autowrap_mode = 3
+
+[node name="GainingOverdrive" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 36
+text = "Discarding a card in battle adds 1 [gold]charge[/gold]. Throwing a hand away for a new one on round 1 adds 1 [gold]charge[/gold] per card. Cards still in hand when the battle ends add 1 [gold]charge[/gold] each."
+autowrap_mode = 3
+
+[node name="UsingOverdrive" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 36
+text = "When the gauge is full, press [gold]Activate Overdrive[/gold] in battle. For the rest of that fight, attacks hit harder, guards block more, and each mech's [gold]Overdrive[/gold] card can enter the hand. The gauge is spent when that fight ends."
+autowrap_mode = 3
 
 [node name="MenuPanel" type="PanelContainer" parent="Root"]
 unique_name_in_owner = true

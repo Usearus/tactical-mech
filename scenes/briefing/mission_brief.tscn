@@ -1,0 +1,289 @@
+[gd_scene format=3 uid="uid://cn0t488lsqmhf"]
+
+[ext_resource type="Script" uid="uid://dr1nm8afcvgth" path="res://scripts/briefing/mission_brief.gd" id="1_brief"]
+[ext_resource type="PackedScene" uid="uid://c3f0iqk8frqh6" path="res://scenes/ui/panel_secondary.tscn" id="2_panel"]
+[ext_resource type="PackedScene" uid="uid://qxdubftejjtg" path="res://scenes/ui/panel_primary.tscn" id="3_window"]
+[ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="4_start"]
+[ext_resource type="Texture2D" uid="uid://dm65y6nga4i2m" path="res://art/backgrounds/NYC_pallette.jpg" id="5_map"]
+[ext_resource type="Texture2D" uid="uid://bfsnt2gcpfks0" path="res://art/backgrounds/scene_alley.jpg" id="6_alley"]
+[ext_resource type="PackedScene" path="res://scenes/ui/map_crosshair.tscn" id="7_cross"]
+[ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="8_sheet"]
+[ext_resource type="PackedScene" uid="uid://c2fvjjatnm6rj" path="res://scenes/ui/menu_corner.tscn" id="9_menu"]
+[ext_resource type="PackedScene" path="res://scenes/ui/rule_topic.tscn" id="10_topic"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_back"]
+atlas = ExtResource("8_sheet")
+region = Rect2(30, 274, 48, 22)
+
+[node name="MissionBrief" type="Control" unique_id=1252528896]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_brief")
+
+[node name="Backdrop" type="ColorRect" parent="." unique_id=325381677]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.07, 0.05, 0.1, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1093742319]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 16
+
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=474564901]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root" unique_id=1696958074]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BackButton" type="TextureButton" parent="Margin/Root/Header" unique_id=1501969710]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 34)
+layout_mode = 2
+size_flags_vertical = 4
+texture_normal = SubResource("AtlasTexture_back")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Margin/Root/Header" unique_id=513491763]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 40
+text = "Select Mission"
+vertical_alignment = 1
+
+[node name="MenuCorner" parent="Margin/Root/Header" unique_id=1868873673 instance=ExtResource("9_menu")]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="MapPanel" parent="Margin/Root" unique_id=585588366 instance=ExtResource("2_panel")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Inset" type="MarginContainer" parent="Margin/Root/MapPanel" unique_id=1788778398]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="Clip" type="Control" parent="Margin/Root/MapPanel/Inset" unique_id=1538398702]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Map" type="TextureRect" parent="Margin/Root/MapPanel/Inset/Clip" unique_id=626267303]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("5_map")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Crosshair" parent="Margin/Root/MapPanel/Inset/Clip" unique_id=69587904 instance=ExtResource("7_cross")]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -48.0
+offset_top = -48.0
+offset_right = 48.0
+offset_bottom = 48.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MissionList" type="VBoxContainer" parent="Margin/Root/MapPanel/Inset/Clip" unique_id=68995106]
+z_index = 30
+layout_mode = 1
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 436.0
+offset_bottom = 180.0
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Tutorial" parent="Margin/Root/MapPanel/Inset/Clip/MissionList" unique_id=2110802872 instance=ExtResource("10_topic")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Tutorial"
+
+[node name="Mission1" parent="Margin/Root/MapPanel/Inset/Clip/MissionList" unique_id=1126293658 instance=ExtResource("10_topic")]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Mission 1"
+
+[node name="Mission2" parent="Margin/Root/MapPanel/Inset/Clip/MissionList" unique_id=1161551364 instance=ExtResource("10_topic")]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Mission 2"
+
+[node name="Locked" parent="." unique_id=1063570413 instance=ExtResource("3_window")]
+unique_name_in_owner = true
+visible = false
+z_index = 20
+custom_minimum_size = Vector2(400, 446)
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+offset_left = -436.0
+offset_top = 114.0
+offset_right = -36.0
+offset_bottom = 560.0
+grow_horizontal = 0
+
+[node name="Margin" type="MarginContainer" parent="Locked" unique_id=841942305]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="Column" type="VBoxContainer" parent="Locked/Margin" unique_id=2108151623]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="LockedTitle" type="Label" parent="Locked/Margin/Column" unique_id=840365279]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.94, 1, 1)
+theme_override_font_sizes/font_size = 40
+text = "Tutorial"
+horizontal_alignment = 1
+
+[node name="Notice" type="Label" parent="Locked/Margin/Column" unique_id=890676583]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "Mission not available in demo"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Briefing" type="VBoxContainer" parent="." unique_id=1742962635]
+z_index = 20
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -436.0
+offset_top = 114.0
+offset_right = -36.0
+offset_bottom = 700.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Window" parent="Briefing" unique_id=1983473387 instance=ExtResource("3_window")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Briefing/Window" unique_id=1825797009]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="Column" type="VBoxContainer" parent="Briefing/Window/Margin" unique_id=1257899040]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BriefingTitle" type="Label" parent="Briefing/Window/Margin/Column" unique_id=1155629546]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.94, 1, 1)
+theme_override_font_sizes/font_size = 40
+text = "Mission 1"
+horizontal_alignment = 1
+
+[node name="ArtClip" type="Control" parent="Briefing/Window/Margin/Column" unique_id=2138978534]
+custom_minimum_size = Vector2(0, 180)
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Alley" type="TextureRect" parent="Briefing/Window/Margin/Column/ArtClip" unique_id=171436005]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("6_alley")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Conditions" type="VBoxContainer" parent="Briefing/Window/Margin/Column" unique_id=212367273]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Win" type="VBoxContainer" parent="Briefing/Window/Margin/Column/Conditions" unique_id=89236067]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Heading" type="Label" parent="Briefing/Window/Margin/Column/Conditions/Win" unique_id=801553790]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.94, 1, 1)
+theme_override_font_sizes/font_size = 36
+text = "Win"
+
+[node name="Body" type="Label" parent="Briefing/Window/Margin/Column/Conditions/Win" unique_id=1277580046]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "Clear every hostile."
+autowrap_mode = 3
+
+[node name="Lose" type="VBoxContainer" parent="Briefing/Window/Margin/Column/Conditions" unique_id=845031102]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Heading" type="Label" parent="Briefing/Window/Margin/Column/Conditions/Lose" unique_id=1116078761]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.62, 0.45, 1)
+theme_override_font_sizes/font_size = 36
+text = "Lose"
+
+[node name="Body" type="Label" parent="Briefing/Window/Margin/Column/Conditions/Lose" unique_id=1453951868]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "Every mech in your squad is destroyed."
+autowrap_mode = 3
+
+[node name="StartButton" parent="Briefing" unique_id=914155951 instance=ExtResource("4_start")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 56)
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_font_sizes/font_size = 44
+text = "Start"

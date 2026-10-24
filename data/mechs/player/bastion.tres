@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="MechData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/mechs/mech_data.gd" id="1_mech"]
+
+[resource]
+script = ExtResource("1_mech")
+id = "bastion"
+display_name = "Bastion"
+short_name = "BAS"
+team = "player"
+max_hp = 22
+move_range = 3
+speed = 4
+blurb = "Holds the line up close and can step in to catch a blow for an ally. It is slow."
+hp_grade = "S"
+atk_grade = "A"
+rng_grade = "D"
+move_grade = "A"
+speed_grade = "D"
+color = Color(0.25, 0.42, 0.78, 1)
+art_id = "blue"

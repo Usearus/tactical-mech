@@ -1,60 +1,52 @@
-[gd_resource type="Resource" script_class="MechDeck" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="MechDeck" format=3 uid="uid://bwllkiucklxok"]
 
-[ext_resource type="Script" path="res://scripts/cards/mech_deck.gd" id="1_deck"]
-[ext_resource type="Script" path="res://scripts/cards/card_data.gd" id="2_card"]
+[ext_resource type="Script" uid="uid://8bdkhchl1ch" path="res://scripts/cards/mech_deck.gd" id="1_deck"]
+[ext_resource type="Script" uid="uid://dnjwmb7f1oxre" path="res://scripts/cards/card_data.gd" id="2_card"]
 
 [sub_resource type="Resource" id="c1"]
 script = ExtResource("2_card")
 id = "raven_burst_fire"
 display_name = "Burst Fire"
 description = "Hit one enemy in range."
-card_type = "Attack"
-damage = 3
+damage = 4
 reach = 2
-target_type = "enemy"
 
 [sub_resource type="Resource" id="c2"]
+script = ExtResource("2_card")
+id = "raven_burst_fire_2"
+display_name = "Burst Fire"
+description = "Hit one enemy in range."
+damage = 4
+reach = 2
+
+[sub_resource type="Resource" id="c3"]
 script = ExtResource("2_card")
 id = "raven_snap_shot"
 display_name = "Snap Shot"
 description = "A quick shot at long range."
-card_type = "Attack"
-damage = 3
+damage = 4
 reach = 3
-target_type = "enemy"
 
-[sub_resource type="Resource" id="c3"]
+[sub_resource type="Resource" id="c4"]
 script = ExtResource("2_card")
 id = "raven_strafe"
 display_name = "Strafe"
 description = "Fire, then move 2 cells."
-card_type = "Attack"
-damage = 3
+damage = 4
 reach = 2
 movement = 2
 move_timing = "After"
-target_type = "enemy"
-
-[sub_resource type="Resource" id="c4"]
-script = ExtResource("2_card")
-id = "raven_needle"
-display_name = "Needle"
-description = "A close, precise hit."
-card_type = "Attack"
-damage = 4
-reach = 1
-target_type = "enemy"
 
 [sub_resource type="Resource" id="c5"]
 script = ExtResource("2_card")
-id = "raven_cover"
-display_name = "Cover"
-description = "Add guard to an adjacent ally."
-card_type = "Defense"
-defense_kind = "Guard"
-block = 5
+id = "raven_blink"
+display_name = "Blink"
+description = "Move 1 cell near instantaneously."
+card_type = "Move"
+cost_kind = "Free"
 reach = 0
-target_type = "ally"
+movement = 1
+target_type = "self"
 
 [sub_resource type="Resource" id="c6"]
 script = ExtResource("2_card")
@@ -62,21 +54,22 @@ id = "raven_evade"
 display_name = "Evade"
 description = "Dodge 1 attack entirely if in hand."
 card_type = "Defense"
+cost_kind = "Free"
 defense_kind = "Dodge"
-block = 0
 reach = 0
 target_type = "self"
 
 [sub_resource type="Resource" id="c7"]
 script = ExtResource("2_card")
-id = "raven_screen"
-display_name = "Screen"
+id = "raven_break"
+display_name = "Break"
+description = "Move 3 cells, then attack all enemies in range."
 is_special = true
-description = "Add barrier to every teammate."
-card_type = "Defense"
-barrier = 4
-reach = 0
-target_type = "team"
+damage = 4
+reach = 2
+movement = 3
+move_timing = "Before"
+target_type = "enemies"
 
 [resource]
 script = ExtResource("1_deck")

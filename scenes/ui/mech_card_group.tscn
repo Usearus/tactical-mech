@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://c7k2mgroupcrd"]
+
+[ext_resource type="PackedScene" uid="uid://cb150a5o2wt70" path="res://scenes/ui/mech_card.tscn" id="1_base"]
+[ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="2_sheet"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_group"]
+atlas = ExtResource("2_sheet")
+region = Rect2(196, 367, 132, 156)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_group"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = SubResource("AtlasTexture_group")
+texture_margin_left = 88.0
+texture_margin_top = 82.0
+texture_margin_right = 18.0
+texture_margin_bottom = 15.0
+
+[node name="MechCard" unique_id=574610271 instance=ExtResource("1_base")]
+theme_override_styles/panel = SubResource("StyleBoxTexture_group")
+
+[node name="Plate" parent="Clip" parent_id_path=PackedInt32Array(2037959445) index="0" unique_id=1840293401]
+material = null
+texture = SubResource("AtlasTexture_group")
+patch_margin_left = 12
+patch_margin_top = 58
+patch_margin_right = 18
+patch_margin_bottom = 14

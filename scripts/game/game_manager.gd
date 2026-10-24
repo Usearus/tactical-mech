@@ -1,23 +1,28 @@
 extends Node
 
-enum Phase { COMMAND, OVERWORLD, BATTLE, SELECT, STORY }
+enum Phase { COMMAND, OVERWORLD, BATTLE, SELECT, STORY, BRIEFING }
 
 const COMMAND_SCENE := "res://scenes/command/command.tscn"
 const SELECT_SCENE := "res://scenes/select/mech_select.tscn"
 const OVERWORLD_SCENE := "res://scenes/overworld/overworld.tscn"
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 const STORY1_SCENE := "res://scenes/story/story1.tscn"
+const STORY2_SCENE := "res://scenes/story/story2.tscn"
+const BRIEFING_SCENE := "res://scenes/briefing/mission_brief.tscn"
 ## Side-by-side battle board, in columns then rows. North-south fights use the swapped size.
 const BATTLE_SIZE := Vector2i(6, 3)
+## stage-{act}-{mission}. Mission 1 is act 0 mission 0. Mission 2 is act 0 mission 1.
+const STAGE_0_0 := "res://scenes/stage/stage-0-0.tscn"
+const STAGE_0_1 := "res://scenes/stage/stage-0-1.tscn"
 ## Stage scene for the current mission. Each stage is a Node2D of tile layers.
-var stage_scene := "res://scenes/stage/stage1b.tscn"
+var stage_scene := STAGE_0_0
 
 
 func overworld_size() -> Vector2i:
 	StageMap.use(stage_scene)
 	return StageMap.bounds.size
-## Gauge size with no penalty. A squad whose charge is higher must fill that total instead.
-const SQUAD_ATTACK_MAX := 4
+## Squad Overdrive gauge length. The same for every mission.
+const SQUAD_ATTACK_MAX := 12
 
 var phase: Phase = Phase.COMMAND
 var available_mechs: Array[MechData] = []
@@ -26,6 +31,8 @@ var enemy_mechs: Array[MechState] = []
 var turn_number: int = 1
 var current_encounter: EncounterData
 var battle_report: String = ""
+## Per player mech for the mission scoreboard. Keys are mech ids.
+var mission_tally: Dictionary = {}
 var enemy_phase_pending := false
 var player_attack_gauge := 0
 var player_attack_max := SQUAD_ATTACK_MAX
@@ -36,6 +43,8 @@ const FADE_SECONDS := 0.45
 const FADE_SCENE := preload("res://scenes/ui/screen_fade.tscn")
 ## True once the player activates Overdrive in a battle. That fight spends the gauge.
 var battle_offense := false
+## Grants and card boosts picked after a fight. Cleared when a mission starts.
+var mission_upgrades := MissionUpgrades.new()
 var battle_zoom_scale := 2.4
 var overworld_cell_size := 48.0
 var zoom_focus_cells: Array[Vector2i] = []
@@ -62,6 +71,7 @@ func boot() -> void:
 	available_mechs = StartingRoster.player_roster()
 	player_mechs = []
 	enemy_mechs = StartingRoster.create_enemies()
+	clear_mission_tally()
 	go_to_command()
 
 
@@ -94,6 +104,8 @@ func open_scene(scene_path: String) -> void:
 		phase = Phase.BATTLE
 	elif scene_path.begins_with("res://scenes/story/"):
 		phase = Phase.STORY
+	elif scene_path == BRIEFING_SCENE:
+		phase = Phase.BRIEFING
 	_change_scene(scene_path)
 
 
@@ -108,11 +120,28 @@ func quit_stage() -> void:
 	battle_offense = false
 	reset_attack_gauges()
 	zoom_focus_cells.clear()
+	clear_mission_tally()
+	clear_mission_upgrades()
 	go_to_command()
 
 
 func start_mission() -> void:
-	play_story(STORY1_SCENE)
+	open_scene(BRIEFING_SCENE)
+
+
+## Mission 1 opens on the alley. Mission 2 opens on the bridge.
+func story_for_stage(path: String) -> String:
+	if path == STAGE_0_1:
+		return STORY2_SCENE
+	return STORY1_SCENE
+
+
+## The briefing picks this before the story. Later screens read stage_scene.
+## Each stage brings its own enemy spawns.
+func choose_stage(path: String) -> void:
+	stage_scene = path
+	StageMap.use(path)
+	enemy_mechs = StartingRoster.create_enemies()
 
 
 ## Mechs this stage's player seats require. Stage 1 has three.
@@ -126,8 +155,10 @@ func deploy(chosen: Array[MechData]) -> void:
 		return
 	player_mechs = StartingRoster.deploy_players(chosen)
 	phase = Phase.OVERWORLD
+	clear_mission_tally()
+	clear_mission_upgrades()
 	reset_attack_gauges()
-	player_attack_max = maxi(SQUAD_ATTACK_MAX, _squad_charge(chosen))
+	player_attack_max = SQUAD_ATTACK_MAX
 	_change_scene(OVERWORLD_SCENE)
 
 
@@ -178,19 +209,44 @@ func reset_attack_gauges() -> void:
 	player_banked_gauge = 0
 
 
-## Squad Overdrive only. Enemy movement does not charge a gauge.
-func note_move(team: String) -> void:
-	if team != "player":
+func clear_mission_tally() -> void:
+	mission_tally.clear()
+
+
+func clear_mission_upgrades() -> void:
+	if mission_upgrades == null:
+		mission_upgrades = MissionUpgrades.new()
+	mission_upgrades.clear()
+
+
+## Health actually lost. Guard and barrier that soak a hit stay off this record.
+func note_strike(attacker: MechState, defender: MechState, hp_lost: int, killed: bool) -> void:
+	if attacker == null or defender == null:
 		return
-	player_attack_gauge = mini(player_attack_max, player_attack_gauge + 1)
+	var lost := maxi(hp_lost, 0)
+	if attacker.team == "player" and defender.team == "enemy":
+		var attack := _tally_row(attacker.id)
+		attack["dealt"] = int(attack["dealt"]) + lost
+		if killed:
+			attack["destroyed"] = int(attack["destroyed"]) + 1
+	if defender.team == "player":
+		var defense := _tally_row(defender.id)
+		defense["taken"] = int(defense["taken"]) + lost
 
 
-func _squad_charge(chosen: Array[MechData]) -> int:
-	var total := 0
-	for data in chosen:
-		if data != null:
-			total += data.charge
-	return total
+func tally_for(unit_id: String) -> Dictionary:
+	var row: Dictionary = mission_tally.get(unit_id, {})
+	return {
+		"destroyed": int(row.get("destroyed", 0)),
+		"dealt": int(row.get("dealt", 0)),
+		"taken": int(row.get("taken", 0)),
+	}
+
+
+func _tally_row(unit_id: String) -> Dictionary:
+	if not mission_tally.has(unit_id):
+		mission_tally[unit_id] = {"destroyed": 0, "dealt": 0, "taken": 0}
+	return mission_tally[unit_id]
 
 
 ## Stepped quarter-step. 1–4 gains 1, 5–10 gains 2, 11–15 gains 3.
@@ -220,6 +276,14 @@ func card_block(card: CardData) -> int:
 	return amount
 
 
+## One charge off the squad gauge. Refuses when the gauge is short.
+func spend_charge() -> bool:
+	if player_attack_gauge < 1:
+		return false
+	player_attack_gauge -= 1
+	return true
+
+
 func charge_from_pitch() -> bool:
 	if player_attack_gauge >= player_attack_max:
 		return false
@@ -245,11 +309,7 @@ func charge_from_spark() -> Dictionary:
 
 ## Gauge values finish_battle will write. Overdrive spends the bar, then banked Spark fills what is left.
 func preview_battle_return() -> Dictionary:
-	var total := 0
-	for unit in player_mechs:
-		if unit != null and unit.alive and unit.data != null:
-			total += unit.data.charge
-	var max_after := maxi(SQUAD_ATTACK_MAX, total)
+	var max_after := SQUAD_ATTACK_MAX
 	var charge := mini(player_attack_gauge, max_after)
 	var banked := player_banked_gauge
 	var grant := 0
@@ -263,23 +323,6 @@ func preview_battle_return() -> Dictionary:
 		"banked": banked,
 		"grant": grant,
 		"offense": battle_offense,
-	}
-
-
-## Length follows the living squad. Progress clamps, and a clamp that fills the bar reports filled.
-func refit_squad_gauge() -> Dictionary:
-	var previous_max := player_attack_max
-	var was_full := player_attack_max > 0 and player_attack_gauge >= player_attack_max
-	var total := 0
-	for unit in player_mechs:
-		if unit != null and unit.alive and unit.data != null:
-			total += unit.data.charge
-	player_attack_max = maxi(SQUAD_ATTACK_MAX, total)
-	if player_attack_gauge > player_attack_max:
-		player_attack_gauge = player_attack_max
-	return {
-		"shrunk": player_attack_max != previous_max,
-		"filled": attack_ready("player") and not was_full,
 	}
 
 

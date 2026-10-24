@@ -44,6 +44,10 @@ static func plan_enemy_move(
 	return {"path": path}
 
 
+static func _is_boss(unit: MechState) -> bool:
+	return unit != null and unit.data != null and unit.data.id.contains("boss")
+
+
 ## Bosses and a sole survivor close in. A grunt needs a partner who can stand
 ## beside the same player before this round ends.
 static func _steps_in(
@@ -51,7 +55,7 @@ static func _steps_in(
 	everyone: Array[MechState],
 	map_size: Vector2i
 ) -> bool:
-	if unit.id.begins_with("boss") or _living_enemies(everyone) <= 1:
+	if _is_boss(unit) or _living_enemies(everyone) <= 1:
 		return true
 	var target := _nearest_player_from(unit.overworld_position, everyone)
 	if target == null:

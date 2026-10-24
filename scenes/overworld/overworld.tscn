@@ -13,6 +13,8 @@
 [ext_resource type="PackedScene" uid="uid://byj1wl4xpte36" path="res://scenes/ui/overdrive_meter.tscn" id="14_meter"]
 [ext_resource type="PackedScene" path="res://scenes/ui/info_note.tscn" id="15_note"]
 [ext_resource type="PackedScene" uid="uid://w2vke8x0fk42" path="res://scenes/ui/sci_flashing_button.tscn" id="16_flash"]
+[ext_resource type="PackedScene" path="res://scenes/battle/mission_record.tscn" id="17_record"]
+[ext_resource type="PackedScene" path="res://scenes/ui/place_mechs.tscn" id="18_place"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_enemy_chip"]
 bg_color = Color(0.08, 0.09, 0.11, 1)
@@ -177,17 +179,6 @@ layout_mode = 2
 size_flags_horizontal = 1
 alignment = 2
 
-[node name="ChargeGain" type="Label" parent="Chrome/HeaderRow/Gauges/SquadGaugeRow/GaugeStack" unique_id=879366115]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-theme_override_colors/font_color = Color(0.55, 0.82, 1, 1)
-theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.08, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 28
-text = "+1 charge"
-horizontal_alignment = 2
-
 [node name="NextGaugeLabel" type="Label" parent="Chrome/HeaderRow/Gauges/SquadGaugeRow" unique_id=853369310]
 unique_name_in_owner = true
 visible = false
@@ -260,6 +251,16 @@ size_flags_horizontal = 4
 size_flags_vertical = 4
 theme_override_constants/separation = 8
 alignment = 1
+
+[node name="PlaceMechs" parent="." instance=ExtResource("18_place")]
+unique_name_in_owner = true
+visible = false
+z_index = 21
+layout_mode = 0
+offset_left = 280.0
+offset_top = 540.0
+offset_right = 1000.0
+offset_bottom = 712.0
 
 [node name="Actions" type="HBoxContainer" parent="." unique_id=1074993116]
 z_index = 20
@@ -394,6 +395,12 @@ grow_vertical = 1
 
 [node name="DeckOverlay" parent="." unique_id=1464151462 instance=ExtResource("7_deck")]
 unique_name_in_owner = true
+
+[node name="MissionRecord" parent="." instance=ExtResource("17_record")]
+unique_name_in_owner = true
+visible = false
+z_index = 60
+layout_mode = 1
 
 [node name="ModeBanner" parent="." unique_id=934759388 instance=ExtResource("3_banner")]
 unique_name_in_owner = true

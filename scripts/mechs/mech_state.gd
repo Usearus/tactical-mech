@@ -48,6 +48,14 @@ var attack_range: int:
 	get:
 		return data.attack_range if data != null else 1
 
+## Nearest cell this mech can open a fight from. Matches attack_range when the reach is exact.
+var attack_range_min: int:
+	get:
+		var reach := maxi(attack_range, 1)
+		if data == null or data.attack_range_min <= 0:
+			return reach
+		return clampi(data.attack_range_min, 1, reach)
+
 var speed: int:
 	get:
 		return data.speed if data != null else 1
@@ -56,10 +64,6 @@ var turn_count: int:
 	get:
 		return data.turn_count if data != null else 3
 
-var charge: int:
-	get:
-		return data.charge if data != null else 1
-
 var color: Color:
 	get:
 		return data.color if data != null else Color.WHITE
@@ -67,6 +71,12 @@ var color: Color:
 var art_id: String:
 	get:
 		return data.art_id if data != null else ""
+
+
+func body_scale() -> float:
+	if data == null or data.sprite_scale <= 0.0:
+		return 1.0
+	return data.sprite_scale
 
 
 ## Guard is spent first. Whatever is left comes off the barrier.
@@ -92,6 +102,21 @@ func add_barrier(amount: int) -> void:
 func close_battle_guard() -> void:
 	guard = 0
 	intercepting = false
+
+
+## True when this distance is inside the overworld attack reach.
+func attacks_at(distance: int) -> bool:
+	var reach := maxi(attack_range, 1)
+	return distance >= attack_range_min and distance <= reach
+
+
+## "2" when the reach is exact. "1-2" when nearer cells count too.
+func attack_range_text() -> String:
+	var reach := maxi(attack_range, 1)
+	var near := attack_range_min
+	if near == reach:
+		return str(reach)
+	return "%d-%d" % [near, reach]
 
 
 func face_toward_x(from_x: float, to_x: float) -> void:

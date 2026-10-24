@@ -9,14 +9,13 @@ const POPUP_LAYER := 90
 @onready var scrim: ColorRect = %Scrim
 @onready var menu_panel: PanelContainer = %MenuPanel
 @onready var detail: PanelContainer = %MenuPage
-@onready var howto: PanelContainer = %HowTo
+@onready var howto: Control = %HowTo
+@onready var topics: VBoxContainer = %Topics
+@onready var directions: ScrollContainer = %Directions
 @onready var pages: Control = %Pages
-@onready var howto_back: Button = %HowToBack
-@onready var howto_next: Button = %HowToNext
+@onready var howto_close: Button = %HowToClose
 @onready var log_body: VBoxContainer = %LogBody
 @onready var legend: VBoxContainer = %Legend
-
-var _howto_index := 0
 
 
 func _ready() -> void:
@@ -29,9 +28,18 @@ func _ready() -> void:
 	%MissionLog.pressed.connect(_open_log)
 	%LegendButton.pressed.connect(_open_legend)
 	%QuitButton.pressed.connect(_quit)
-	howto_back.pressed.connect(func() -> void: _turn_howto(-1))
-	howto_next.pressed.connect(func() -> void: _turn_howto(1))
-	_fill_howto()
+	howto_close.pressed.connect(_close_help)
+	var group := ButtonGroup.new()
+	group.allow_unpress = false
+	for child in topics.get_children():
+		var topic := child as BaseButton
+		if topic == null:
+			continue
+		topic.button_group = group
+		topic.pressed.connect(_select_topic.bind(topic.name))
+	directions.resized.connect(_fit_directions)
+	_select_topic("Loadout")
+	_fit_directions.call_deferred()
 	_sync_legend()
 	get_tree().node_added.connect(_on_node_added)
 	_sync_scene.call_deferred()
@@ -75,6 +83,8 @@ func _sync_scene() -> void:
 
 
 func toggle() -> void:
+	if howto != null and howto.visible:
+		return
 	if is_open():
 		close()
 		return
@@ -94,38 +104,47 @@ func _open_legend() -> void:
 
 func open_help() -> void:
 	if howto != null and howto.visible:
-		close()
 		return
 	menu_panel.visible = false
 	detail.visible = false
-	_howto_index = 0
-	_fill_howto()
+	_select_topic("Loadout")
 	howto.visible = true
 	scrim.visible = true
 
 
-func _turn_howto(step: int) -> void:
-	var last := maxi(pages.get_child_count() - 1, 0)
-	_howto_index = clampi(_howto_index + step, 0, last)
-	_fill_howto()
+func _close_help() -> void:
+	if howto != null:
+		howto.visible = false
+	if scrim != null and not menu_panel.visible and not detail.visible:
+		scrim.visible = false
 
 
-func _fill_howto() -> void:
+func _select_topic(topic_name: String) -> void:
+	for child in topics.get_children():
+		var button := child as BaseButton
+		if button == null:
+			continue
+		button.set_pressed_no_signal(button.name == topic_name)
 	if pages == null:
 		return
-	var list := pages.get_children()
-	if list.is_empty():
+	for page in pages.get_children():
+		page.visible = page.name == topic_name
+	_fit_directions()
+
+
+func _fit_directions() -> void:
+	if directions == null or pages == null:
 		return
-	_howto_index = clampi(_howto_index, 0, list.size() - 1)
-	var total := list.size()
-	for index in total:
-		var page := list[index]
-		page.visible = index == _howto_index
-		var count := page.get_node_or_null("Header/Count") as Label
-		if count != null:
-			count.text = "%d/%d" % [index + 1, total]
-	howto_back.disabled = _howto_index <= 0
-	howto_next.disabled = _howto_index >= total - 1
+	var width := directions.size.x
+	var bar := directions.get_v_scroll_bar()
+	if bar != null:
+		width -= bar.get_combined_minimum_size().x
+	width = maxf(width, 0.0)
+	pages.custom_minimum_size.x = width
+	for page in pages.get_children():
+		var label := page as Control
+		if label != null:
+			label.custom_minimum_size.x = width
 
 
 func _show_page(showing_log: bool) -> void:
@@ -159,6 +178,8 @@ func _on_scrim_input(event: InputEvent) -> void:
 		pressed = event.pressed and event.button_index == MOUSE_BUTTON_LEFT
 	elif event is InputEventScreenTouch:
 		pressed = event.pressed
+	if howto != null and howto.visible:
+		return
 	if pressed:
 		close()
 

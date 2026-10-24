@@ -36,6 +36,7 @@ target_type = "enemy"
 [sub_resource type="Resource" id="c4"]
 script = ExtResource("2_card")
 id = "lancer_graze"
+cost_kind = "Free"
 display_name = "Graze"
 description = "A near miss on the target."
 card_type = "Attack"
@@ -45,23 +46,23 @@ target_type = "enemy"
 
 [sub_resource type="Resource" id="c5"]
 script = ExtResource("2_card")
-id = "lancer_parry"
-display_name = "Parry"
+id = "lancer_guard_stance"
+display_name = "Guard Stance"
 description = "Add guard to this mech."
 card_type = "Defense"
 defense_kind = "Guard"
-block = 4
+block = 5
 reach = 0
 target_type = "self"
 
 [sub_resource type="Resource" id="c6"]
 script = ExtResource("2_card")
-id = "lancer_guard"
-display_name = "Guard"
+id = "lancer_guard_stance_2"
+display_name = "Guard Stance"
 description = "Add guard to this mech."
 card_type = "Defense"
 defense_kind = "Guard"
-block = 3
+block = 5
 reach = 0
 target_type = "self"
 

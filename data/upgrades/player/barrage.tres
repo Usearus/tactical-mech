@@ -1,0 +1,90 @@
+[gd_resource type="Resource" script_class="UpgradeCatalog" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/upgrade_catalog.gd" id="1_cat"]
+[ext_resource type="Script" path="res://scripts/cards/upgrade_offer.gd" id="2_offer"]
+[ext_resource type="Script" path="res://scripts/cards/card_data.gd" id="3_card"]
+
+[sub_resource type="Resource" id="bombard"]
+script = ExtResource("3_card")
+id = "barrage_bombard"
+display_name = "Bombard"
+description = "Fire exactly 3 away, then step 1."
+card_type = "Attack"
+damage = 8
+reach = 3
+exact_range = true
+movement = 1
+move_timing = "After"
+target_type = "enemy"
+
+[sub_resource type="Resource" id="sidestep"]
+script = ExtResource("3_card")
+id = "barrage_kickoff"
+display_name = "Kickoff"
+description = "Guard, then step 2 into a new firing line."
+card_type = "Defense"
+defense_kind = "Guard"
+block = 4
+reach = 0
+movement = 2
+target_type = "self"
+
+[sub_resource type="Resource" id="o1"]
+script = ExtResource("2_offer")
+id = "barrage_rocket_damage"
+kind = "Modify"
+rarity = 2
+mech_id = "barrage"
+card_family = "barrage_rocket"
+damage_add = 3
+blurb = "Upgraded: +3 damage."
+
+[sub_resource type="Resource" id="o2"]
+script = ExtResource("2_offer")
+id = "barrage_missile_free"
+kind = "Modify"
+rarity = 3
+mech_id = "barrage"
+card_family = "barrage_heavy_missile"
+make_free = true
+blurb = "Upgraded: costs no action."
+
+[sub_resource type="Resource" id="o3"]
+script = ExtResource("2_offer")
+id = "barrage_slide_damage"
+kind = "Modify"
+rarity = 1
+mech_id = "barrage"
+card_family = "barrage_slide_fire"
+damage_add = 2
+blurb = "Upgraded: +2 damage."
+
+[sub_resource type="Resource" id="o4"]
+script = ExtResource("2_offer")
+id = "barrage_boost_move"
+kind = "Modify"
+rarity = 1
+mech_id = "barrage"
+card_family = "barrage_quick_boost"
+movement_add = 1
+blurb = "Upgraded: +1 movement."
+
+[sub_resource type="Resource" id="o5"]
+script = ExtResource("2_offer")
+id = "barrage_grant_bombard"
+kind = "Grant"
+rarity = 3
+mech_id = "barrage"
+card = SubResource("bombard")
+
+[sub_resource type="Resource" id="o6"]
+script = ExtResource("2_offer")
+id = "barrage_grant_sidestep"
+kind = "Grant"
+rarity = 1
+mech_id = "barrage"
+card = SubResource("sidestep")
+
+[resource]
+script = ExtResource("1_cat")
+offers = Array[ExtResource("2_offer")]([SubResource("o1"), SubResource("o2"), SubResource("o3"), SubResource("o4"), SubResource("o5"), SubResource("o6")])

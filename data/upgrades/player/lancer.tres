@@ -1,0 +1,100 @@
+[gd_resource type="Resource" script_class="UpgradeCatalog" load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/upgrade_catalog.gd" id="1_cat"]
+[ext_resource type="Script" path="res://scripts/cards/upgrade_offer.gd" id="2_offer"]
+[ext_resource type="Script" path="res://scripts/cards/card_data.gd" id="3_card"]
+
+[sub_resource type="Resource" id="breach"]
+script = ExtResource("3_card")
+id = "lancer_breach"
+display_name = "Breach"
+description = "Step 2, then fire at mid range."
+card_type = "Attack"
+damage = 6
+reach = 2
+movement = 2
+move_timing = "Before"
+target_type = "enemy"
+
+[sub_resource type="Resource" id="plant"]
+script = ExtResource("3_card")
+id = "lancer_dig_in"
+display_name = "Dig In"
+description = "Guard, catch the next hit, then step 1."
+card_type = "Defense"
+defense_kind = "Guard"
+block = 6
+reach = 0
+movement = 1
+target_type = "self"
+intercept = true
+
+[sub_resource type="Resource" id="o1"]
+script = ExtResource("2_offer")
+id = "lancer_slug_damage"
+kind = "Modify"
+rarity = 1
+mech_id = "lancer"
+card_family = "lancer_slug"
+damage_add = 2
+blurb = "Upgraded: +2 damage."
+
+[sub_resource type="Resource" id="o2"]
+script = ExtResource("2_offer")
+id = "lancer_critical_damage"
+kind = "Modify"
+rarity = 2
+mech_id = "lancer"
+card_family = "lancer_critical_hit"
+damage_add = 3
+blurb = "Upgraded: +3 damage."
+
+[sub_resource type="Resource" id="o3"]
+script = ExtResource("2_offer")
+id = "lancer_range_free"
+kind = "Modify"
+rarity = 2
+mech_id = "lancer"
+card_family = "lancer_extended_range"
+make_free = true
+blurb = "Upgraded: costs no action."
+
+[sub_resource type="Resource" id="o4"]
+script = ExtResource("2_offer")
+id = "lancer_guard_move"
+kind = "Modify"
+rarity = 1
+mech_id = "lancer"
+card_family = "lancer_guard_stance"
+movement_add = 1
+blurb = "Upgraded: +1 movement."
+
+[sub_resource type="Resource" id="o5"]
+script = ExtResource("2_offer")
+id = "lancer_graze_damage"
+kind = "Modify"
+rarity = 1
+mech_id = "lancer"
+card_family = "lancer_graze"
+damage_add = 2
+blurb = "Upgraded: +2 damage."
+
+[sub_resource type="Resource" id="o6"]
+script = ExtResource("2_offer")
+id = "lancer_grant_breach"
+kind = "Grant"
+rarity = 3
+mech_id = "lancer"
+card = SubResource("breach")
+
+[sub_resource type="Resource" id="o7"]
+script = ExtResource("2_offer")
+id = "lancer_grant_plant"
+kind = "Grant"
+rarity = 1
+mech_id = "lancer"
+card = SubResource("plant")
+
+[resource]
+script = ExtResource("1_cat")
+offers = Array[ExtResource("2_offer")]([SubResource("o1"), SubResource("o2"), SubResource("o3"), SubResource("o4"), SubResource("o5"), SubResource("o6"), SubResource("o7")])

@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://uovvhmguclue" path="res://scripts/battle/battle_results.gd" id="1_results"]
 [ext_resource type="PackedScene" uid="uid://crdbjniijj00m" path="res://scenes/battle/results_row_player.tscn" id="2_player"]
 [ext_resource type="Texture2D" uid="uid://dtcn3mffw0nti" path="res://art/characters/player/purple/pilot.png" id="3_us68v"]
-[ext_resource type="Texture2D" uid="uid://dbb5sxvm8vcxk" path="res://art/mechs/enemy/boss_blue_rocket_launcher/idle.png" id="4_us68v"]
+[ext_resource type="Texture2D" uid="uid://dbb5sxvm8vcxk" path="res://art/mechs/enemy/archive/boss_blue_rocket_launcher/boss_blue_rocket_launcher.idle.png" id="4_us68v"]
 [ext_resource type="PackedScene" uid="uid://drlpehs8acpqk" path="res://scenes/battle/results_row_enemy.tscn" id="5_enemy"]
 [ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="6_bng3g"]
 [ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="6_btn"]

@@ -1,0 +1,96 @@
+[gd_scene format=3 uid="uid://ffgwtvttenp4"]
+
+[ext_resource type="Script" uid="uid://cor0lagi0agdc" path="res://scripts/ui/upgrade_pick.gd" id="1_pick"]
+[ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="2_theme"]
+[ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="3_btn"]
+
+[node name="UpgradePick" type="Control" unique_id=1773279755]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+theme = ExtResource("2_theme")
+script = ExtResource("1_pick")
+
+[node name="Dim" type="ColorRect" parent="." unique_id=319808712]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0.043137256, 0.078431375, 0.15686275, 0.8784314)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1041446094]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 16
+
+[node name="Body" type="VBoxContainer" parent="Margin" unique_id=67324199]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Title" type="Label" parent="Margin/Body" unique_id=517425978]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_font_sizes/font_size = 42
+text = "Choose a mission buff"
+horizontal_alignment = 1
+
+[node name="PinClearance" type="Control" parent="Margin/Body" unique_id=284383671]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Options" type="HBoxContainer" parent="Margin/Body" unique_id=2006757275]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 28
+alignment = 1
+
+[node name="Container" type="Container" parent="Margin/Body" unique_id=143440623]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+
+[node name="Buttons" type="HBoxContainer" parent="Margin/Body" unique_id=2035967913]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="RefreshButton" parent="Margin/Body/Buttons" unique_id=756066090 instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Refresh (2)"
+
+[node name="SkipButton" parent="Margin/Body/Buttons" unique_id=1985414341 instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Skip"
+
+[node name="ContinueButton" parent="Margin/Body/Buttons" unique_id=136010515 instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+disabled = true
+text = "Continue"

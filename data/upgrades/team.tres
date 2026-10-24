@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="UpgradeCatalog" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/upgrade_catalog.gd" id="1_cat"]
+[ext_resource type="Script" path="res://scripts/cards/upgrade_offer.gd" id="2_offer"]
+
+[sub_resource type="Resource" id="o2"]
+script = ExtResource("2_offer")
+id = "team_barrier_5"
+kind = "Immediate"
+rarity = 2
+display_name = "Barrier Wall"
+barrier = 5
+blurb = "Each mech that fought gains 5 barrier."
+
+[sub_resource type="Resource" id="o3"]
+script = ExtResource("2_offer")
+id = "team_barrier_8"
+kind = "Immediate"
+rarity = 3
+display_name = "Barrier Dome"
+barrier = 8
+blurb = "Each mech that fought gains 8 barrier."
+
+[resource]
+script = ExtResource("1_cat")
+offers = Array[ExtResource("2_offer")]([SubResource("o2"), SubResource("o3")])

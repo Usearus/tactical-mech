@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MechDeck" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/mech_deck.gd" id="1_deck"]
+[ext_resource type="Script" path="res://scripts/cards/card_data.gd" id="2_card"]
+
+[sub_resource type="Resource" id="c1"]
+script = ExtResource("2_card")
+id = "red_quad_aegis"
+display_name = "Aegis"
+description = "Give every ally 3 barrier. This mech does not attack."
+card_type = "Support"
+barrier = 3
+target_type = "team"
+
+[resource]
+script = ExtResource("1_deck")
+mech_id = "red_quad"
+cards = Array[ExtResource("2_card")]([SubResource("c1")])

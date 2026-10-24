@@ -1,0 +1,165 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/mission_record.gd" id="1_record"]
+[ext_resource type="PackedScene" path="res://scenes/ui/panel_primary.tscn" id="2_panel"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_primary_button.tscn" id="3_back"]
+[ext_resource type="PackedScene" path="res://scenes/ui/mission_record_row.tscn" id="4_row"]
+
+[node name="MissionRecord" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_record")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02, 0.03, 0.05, 0.78)
+
+[node name="Center" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -520.0
+offset_top = -250.0
+offset_right = 520.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Window" parent="Center" instance=ExtResource("2_panel")]
+layout_mode = 2
+scale = Vector2(1, 1)
+
+[node name="Margin" type="MarginContainer" parent="Center/Window"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 22
+
+[node name="Column" type="VBoxContainer" parent="Center/Window/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Center/Window/Margin/Column"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.94, 1, 1)
+theme_override_font_sizes/font_size = 48
+text = "Battle Data"
+horizontal_alignment = 1
+
+[node name="HeaderInset" type="MarginContainer" parent="Center/Window/Margin/Column"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_right = 12
+
+[node name="Header" type="HBoxContainer" parent="Center/Window/Margin/Column/HeaderInset"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Photo" type="Control" parent="Center/Window/Margin/Column/HeaderInset/Header"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Pilot" type="Label" parent="Center/Window/Margin/Column/HeaderInset/Header"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.7, 0.74, 0.8, 1)
+theme_override_font_sizes/font_size = 26
+text = "Pilot"
+vertical_alignment = 1
+
+[node name="Destroyed" type="Label" parent="Center/Window/Margin/Column/HeaderInset/Header"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.74, 0.8, 1)
+theme_override_font_sizes/font_size = 26
+text = "Destroyed"
+horizontal_alignment = 1
+
+[node name="Dealt" type="Label" parent="Center/Window/Margin/Column/HeaderInset/Header"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.74, 0.8, 1)
+theme_override_font_sizes/font_size = 26
+text = "Damage Dealt"
+horizontal_alignment = 1
+
+[node name="Taken" type="Label" parent="Center/Window/Margin/Column/HeaderInset/Header"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.74, 0.8, 1)
+theme_override_font_sizes/font_size = 26
+text = "Damage Taken"
+horizontal_alignment = 1
+
+[node name="Mvp" type="Label" parent="Center/Window/Margin/Column/HeaderInset/Header"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.74, 0.8, 1)
+theme_override_font_sizes/font_size = 26
+text = "MVP"
+horizontal_alignment = 1
+
+[node name="Rows" type="VBoxContainer" parent="Center/Window/Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Sample" parent="Center/Window/Margin/Column/Rows" instance=ExtResource("4_row")]
+layout_mode = 2
+
+[node name="Destroyed" parent="Center/Window/Margin/Column/Rows/Sample/Line"]
+theme_override_colors/font_color = Color(0.98, 0.84, 0.32, 1)
+text = "2"
+
+[node name="Dealt" parent="Center/Window/Margin/Column/Rows/Sample/Line"]
+theme_override_colors/font_color = Color(0.98, 0.84, 0.32, 1)
+text = "18"
+
+[node name="Taken" parent="Center/Window/Margin/Column/Rows/Sample/Line"]
+theme_override_colors/font_color = Color(0.98, 0.84, 0.32, 1)
+text = "4"
+
+[node name="Mvp" parent="Center/Window/Margin/Column/Rows/Sample/Line"]
+text = "MVP"
+
+[node name="SampleB" parent="Center/Window/Margin/Column/Rows" instance=ExtResource("4_row")]
+layout_mode = 2
+
+[node name="Name" parent="Center/Window/Margin/Column/Rows/SampleB/Line"]
+text = "Raven"
+
+[node name="Destroyed" parent="Center/Window/Margin/Column/Rows/SampleB/Line"]
+text = "1"
+
+[node name="Dealt" parent="Center/Window/Margin/Column/Rows/SampleB/Line"]
+text = "11"
+
+[node name="Taken" parent="Center/Window/Margin/Column/Rows/SampleB/Line"]
+text = "7"
+
+[node name="BackButton" parent="Center" instance=ExtResource("3_back")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 64)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 40
+text = "Back to title"

@@ -13,6 +13,17 @@ static func for_mech(mech: MechData) -> MechDeck:
 	return load(path) as MechDeck
 
 
+## Barrier this enemy grants its whole team instead of striking.
+static func ward_card(mech: MechData) -> CardData:
+	var deck := for_mech(mech)
+	if deck == null:
+		return null
+	for card in deck.cards:
+		if card != null and card.barrier > 0 and card.damage <= 0 and card.target_type == "team":
+			return card
+	return null
+
+
 ## The strike an enemy uses when its turn comes up. Player hands are dealt separately.
 static func strike_card(mech: MechData) -> CardData:
 	var deck := for_mech(mech)

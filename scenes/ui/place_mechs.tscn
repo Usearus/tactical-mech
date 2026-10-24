@@ -1,0 +1,64 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/place_mechs.gd" id="1_place"]
+[ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="2_theme"]
+[ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="3_btn"]
+[ext_resource type="PackedScene" uid="uid://w2vke8x0fk42" path="res://scenes/ui/sci_flashing_button.tscn" id="4_flash"]
+
+[node name="PlaceMechs" type="PanelContainer"]
+z_index = 21
+theme = ExtResource("2_theme")
+theme_type_variation = &"SecondaryPanel"
+script = ExtResource("1_place")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="Column" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Margin/Column"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 32
+text = "Place mechs"
+horizontal_alignment = 1
+
+[node name="Strip" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Mechs" type="HBoxContainer" parent="Margin/Column/Strip"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Actions" type="VBoxContainer" parent="Margin/Column/Strip"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="AutoPlace" parent="Margin/Column/Strip/Actions" instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 56)
+custom_maximum_size = Vector2(300, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Auto place"
+
+[node name="StartMission" parent="Margin/Column/Strip/Actions" instance=ExtResource("4_flash")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 56)
+layout_mode = 2
+disabled = true
+theme_override_font_sizes/font_size = 28
+text = "Start mission"

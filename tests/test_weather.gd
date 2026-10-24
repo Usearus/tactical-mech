@@ -7,7 +7,7 @@ func suite_name() -> String:
 
 
 func test_stage_keeps_rain_and_lightning() -> void:
-	var stage := (load("res://scenes/stage/stage1b.tscn") as PackedScene).instantiate()
+	var stage := (load("res://scenes/stage/stage-0-0.tscn") as PackedScene).instantiate()
 	var names: Array[String] = []
 	for child in WeatherFit.layers(stage):
 		names.append(child.name)
@@ -19,7 +19,7 @@ func test_stage_keeps_rain_and_lightning() -> void:
 
 
 func test_fit_covers_the_board_and_leaves_the_stage() -> void:
-	var stage := (load("res://scenes/stage/stage1b.tscn") as PackedScene).instantiate()
+	var stage := (load("res://scenes/stage/stage-0-0.tscn") as PackedScene).instantiate()
 	var rain := stage.get_node("Weather/Rain") as GPUParticles2D
 	var source_box: Vector3 = (rain.process_material as ParticleProcessMaterial).emission_box_extents
 	var source_amount := rain.amount

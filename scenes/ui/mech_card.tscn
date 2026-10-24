@@ -129,17 +129,20 @@ layout_mode = 2
 size_flags_horizontal = 0
 theme_override_constants/separation = 3
 
-[node name="Detail" type="Label" parent="Clip/Inset/Column/Body/Copy" unique_id=548704933]
+[node name="Detail" type="RichTextLabel" parent="Clip/Inset/Column/Body/Copy" unique_id=548704933]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.78, 0.8, 0.84, 1)
-theme_override_fonts/font = SubResource("FontVariation_title")
-theme_override_font_sizes/font_size = 24
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.78, 0.8, 0.84, 1)
+theme_override_fonts/normal_font = SubResource("FontVariation_title")
+theme_override_font_sizes/normal_font_size = 24
+bbcode_enabled = true
 text = "Instruction"
+fit_content = false
+scroll_active = false
 autowrap_mode = 3
-clip_text = true
 
 [node name="Footer" type="MarginContainer" parent="Clip/Inset/Column" unique_id=828014818]
 unique_name_in_owner = true
@@ -170,22 +173,22 @@ layout_mode = 2
 visible = false
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 8
 alignment = 1
 
 [node name="Plus" type="Label" parent="Clip/GaugeTag" unique_id=775426685]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 0.78, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 8
-theme_override_font_sizes/font_size = 28
+theme_override_constants/outline_size = 12
+theme_override_font_sizes/font_size = 72
 text = "+1"
 vertical_alignment = 1
 
 [node name="Icon" type="TextureRect" parent="Clip/GaugeTag" unique_id=1602669442]
 texture_filter = 1
 material = SubResource("ShaderMaterial_bolt")
-custom_minimum_size = Vector2(28, 28)
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
