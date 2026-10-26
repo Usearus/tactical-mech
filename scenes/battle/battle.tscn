@@ -16,14 +16,15 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_guard.tscn" id="8_guard"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_hit_points.tscn" id="8_hp"]
 [ext_resource type="PackedScene" uid="uid://b7n3handprom" path="res://scenes/ui/hand_prompt.tscn" id="9_prompt"]
-[ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="10_btn"]
-[ext_resource type="PackedScene" path="res://scenes/ui/sci_primary_button_square.tscn" id="11_sq"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button_square.tscn" id="10_btn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button_square.tscn" id="11_sq"]
 [ext_resource type="PackedScene" uid="uid://byj1wl4xpte36" path="res://scenes/ui/overdrive_meter.tscn" id="12_meter"]
 [ext_resource type="PackedScene" uid="uid://w2vke8x0fk42" path="res://scenes/ui/sci_flashing_button.tscn" id="13_flash"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pile_card_back.tscn" id="14_back"]
 [ext_resource type="Texture2D" uid="uid://dqepltaljtfey" path="res://art/icons/stats/clock.svg" id="15_clock"]
 [ext_resource type="PackedScene" uid="uid://ffgwtvttenp4" path="res://scenes/ui/upgrade_pick.tscn" id="17_upgrade"]
 [ext_resource type="PackedScene" path="res://scenes/ui/empty_card_slot.tscn" id="18_slot"]
+[ext_resource type="PackedScene" path="res://scenes/ui/card_effect_box.tscn" id="19_effect"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_p86no"]
 animations = [{
@@ -127,7 +128,7 @@ unique_name_in_owner = true
 z_index = 6
 
 [node name="SceneryShade" type="Control" parent="MarginContainer/Full Layout/Board Row/Grid + Hand/GridPanel/GridHost/Center/Field" unique_id=898471101]
-z_index = 8
+z_index = 2
 anchors_preset = 0
 mouse_filter = 2
 
@@ -165,11 +166,13 @@ theme_override_constants/margin_right = 0
 
 [node name="MenuRow" type="HBoxContainer" parent="MarginContainer/Full Layout/Board Row/SideBar/MenuMargin" unique_id=122789961]
 layout_mode = 2
+size_flags_horizontal = 8
 size_flags_vertical = 0
 theme_override_constants/separation = 8
 
 [node name="Title" type="Label" parent="MarginContainer/Full Layout/Board Row/SideBar/MenuMargin/MenuRow" unique_id=437555577]
 unique_name_in_owner = true
+visible = false
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -482,7 +485,7 @@ custom_maximum_size = Vector2(-1, -1)
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
-theme_type_variation = &"PrimaryButtonSquare"
+theme_type_variation = &"SecondaryButtonSquare"
 
 [node name="Content" type="VBoxContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/SkipButton" unique_id=1842201960]
 layout_mode = 1
@@ -498,10 +501,12 @@ alignment = 1
 [node name="Caption" type="Label" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/SkipButton/Content" unique_id=1842201961]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 28
-text = "End round"
+theme_override_constants/line_spacing = -2
+theme_override_font_sizes/font_size = 22
+text = "End round 1/2"
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="Cost" type="HBoxContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/SkipButton/Content" unique_id=1842201962]
 layout_mode = 2
@@ -526,59 +531,6 @@ theme_override_font_sizes/font_size = 22
 text = "1"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="Resolution" type="Control" parent="." unique_id=1842201934]
-unique_name_in_owner = true
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Dim" type="ColorRect" parent="Resolution" unique_id=1842201935]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.02, 0.03, 0.05, 0.78)
-
-[node name="Center" type="VBoxContainer" parent="Resolution" unique_id=1842201936]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -280.0
-offset_top = -110.0
-offset_right = 280.0
-offset_bottom = 110.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 28
-alignment = 1
-
-[node name="ResolutionTitle" type="Label" parent="Resolution/Center" unique_id=1842201937]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 8
-theme_override_font_sizes/font_size = 72
-text = "Game over"
-horizontal_alignment = 1
-
-[node name="BackToTitleButton" parent="Resolution/Center" unique_id=1842201938 instance=ExtResource("10_btn")]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 64)
-layout_mode = 2
-theme_override_font_sizes/font_size = 48
-text = "Back to title"
 
 [node name="DiscardLayer" type="CanvasLayer" parent="." unique_id=1668354708]
 layer = 60
@@ -757,19 +709,22 @@ mouse_filter = 2
 unique_name_in_owner = true
 layout_mode = 0
 
+[node name="CardEffectBox" parent="." unique_id=762395184 instance=ExtResource("19_effect")]
+unique_name_in_owner = true
+layout_mode = 0
+
 [node name="BattleResults" parent="." unique_id=1016430445 instance=ExtResource("3_results")]
 unique_name_in_owner = true
 visible = false
 z_index = 60
 layout_mode = 1
 
-[node name="UpgradeLayer" type="CanvasLayer" parent="."]
+[node name="UpgradeLayer" type="CanvasLayer" parent="." unique_id=2127062876]
 layer = 90
 
 [node name="UpgradePick" parent="UpgradeLayer" unique_id=621985543 instance=ExtResource("17_upgrade")]
 unique_name_in_owner = true
 visible = false
-layout_mode = 1
 
 [node name="HandPromptLayer" type="CanvasLayer" parent="." unique_id=1928374651]
 layer = 80

@@ -50,7 +50,7 @@ signal pulled
 signal undo_dragged
 
 const PULL_DISTANCE := 72.0
-const HOVER_LIFT := -56.0
+const HOVER_LIFT := -36.0
 const ENEMY_DIM_ALPHA := 0.4
 const ENEMY_DIM_TIME := 0.28
 ## How far a lifted card must be dragged down before the step is undone.
@@ -73,6 +73,9 @@ var _grab_scale := Vector2.ONE
 var _grab_rotation := 0.0
 var _drag_delta := Vector2.ZERO
 var _lifted := false
+var _peeking := false
+var _seat_shift := 0.0
+var _badge_shown := true
 var _gliding := false
 var _glide_token := 0
 var _motion: Tween
@@ -98,6 +101,7 @@ var _badge_slot: Control
 var _badge_art := ""
 var _badge_rim := Color.WHITE
 
+@onready var _active_glow: CardActiveGlow = %ActiveGlow
 @onready var _gauge_tag: Control = $Clip/GaugeTag
 @onready var _face: Control = $Clip/Inset
 @onready var _wave_host: Control = $Clip/OverdriveWave
@@ -241,13 +245,13 @@ func _mount_owner_badge() -> void:
 			current.remove_child(_owner_badge)
 		slot.add_child(_owner_badge)
 	_owner_badge.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_owner_badge.position = Vector2.ZERO
+	_owner_badge.position = Vector2(0.0, _seat_shift)
 	_owner_badge.rotation = 0.0
 	_owner_badge.scale = Vector2(HandOwnerBadge.PIN_SCALE, HandOwnerBadge.PIN_SCALE)
 	_owner_badge.z_as_relative = true
-	_owner_badge.z_index = HandOwnerBadge.DRAW_Z
+	_sync_badge_z()
 	_owner_badge.show_head(_badge_art, _badge_rim)
-	_owner_badge.modulate = _badge_tone()
+	_owner_badge.modulate = _badge_color()
 
 
 ## Free the mark before this card leaves its seat. Never do this from a tree notification.
@@ -274,10 +278,17 @@ func _badge_tone() -> Color:
 	return Color(0.62, 0.62, 0.62) if _enemy_dimmed else Color.WHITE
 
 
+func _badge_color() -> Color:
+	var tone := _badge_tone()
+	if not _badge_shown:
+		tone.a = 0.0
+	return tone
+
+
 func _apply_badge_tone(immediate: bool) -> void:
 	if _owner_badge == null or not is_instance_valid(_owner_badge):
 		return
-	var tone := _badge_tone()
+	var tone := _badge_color()
 	if immediate or _dim_tween == null or not _dim_tween.is_valid():
 		_owner_badge.modulate = tone
 		return
@@ -483,6 +494,16 @@ func set_gauge_pitch_visible(show_tag: bool) -> void:
 		_show_card_face(false)
 
 
+## Lift-off for the discard +1. The tag while it is on the card, otherwise the card itself.
+func gauge_pitch_origin() -> Vector2:
+	if _gauge_tag != null and _gauge_tag.visible:
+		var plus := _gauge_tag.get_node_or_null("Plus") as Control
+		var icon := _gauge_tag.get_node_or_null("Icon") as Control
+		if plus != null and icon != null and plus.size.x > 1.0 and icon.size.x > 1.0:
+			return plus.get_global_rect().merge(icon.get_global_rect()).get_center()
+	return get_global_transform() * (size * 0.5)
+
+
 ## Title, rules, cost, and stats leave while the discard +1 is the thing to read.
 func _show_card_face(show_face: bool) -> void:
 	if _face != null:
@@ -499,8 +520,14 @@ func release_for_discard() -> void:
 	_pull_enabled = false
 	_dragging = false
 	_pulling = true
+	_peeking = false
+	_seat_shift = 0.0
+	_set_seat_clip(false)
 	_cancel_glide()
 	_discard_preview = false
+	if _gauge_tag != null:
+		_gauge_tag.visible = false
+	_show_card_face(true)
 	_kill_preview_motion()
 	_drop_owner_badge()
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -549,6 +576,7 @@ func _deal_ordered(delay: float, order: int, count: int) -> void:
 func begin_glide(duration: float, delay: float = 0.0) -> void:
 	_cancel_glide()
 	_gliding = true
+	_set_seat_clip(false)
 	var token := _glide_token
 	z_as_relative = false
 	z_index = 40
@@ -581,6 +609,8 @@ func _end_glide() -> void:
 
 func set_chosen(chosen: bool) -> void:
 	modulate = Color(1.08, 1.0, 0.72) if chosen else Color.WHITE
+	if _active_glow != null:
+		_active_glow.set_lit(chosen)
 
 
 ## A play the gauge or the board refused. Snap home and flash, so the card does not stay where the drag left it.
@@ -588,6 +618,10 @@ func refuse() -> void:
 	_dragging = false
 	_pulling = false
 	_lifted = false
+	_peeking = false
+	_seat_shift = 0.0
+	_badge_shown = true
+	_set_seat_clip(false)
 	rotation = 0.0
 	z_index = 0
 	_set_slot_z(0)
@@ -597,18 +631,43 @@ func refuse() -> void:
 	flash.tween_property(self, "modulate", Color.WHITE, 0.2)
 
 
-func settle(lifted: bool) -> void:
+## A chosen card lifts. The others drop until the title is all that remains in the seat.
+func settle(lifted: bool, peek := false) -> void:
 	if _dragging or _pulling or _gliding:
 		return
-	var home := Vector2(0, HOVER_LIFT) if lifted else Vector2.ZERO
-	var target_scale := Vector2(1.04, 1.04) if lifted else Vector2.ONE
-	if lifted == _lifted and position.distance_to(home) < 2.0 and scale.distance_to(target_scale) < 0.02:
+	var home_y := 0.0
+	var target_scale := Vector2.ONE
+	if lifted:
+		home_y = HOVER_LIFT
+		target_scale = Vector2(1.04, 1.04)
+	elif peek:
+		home_y = maxf(0.0, size.y - _name_peek())
+	var home := Vector2(0.0, home_y)
+	# The lead card keeps the mech badge. While any card is active, that badge drops and fades with the rest.
+	var tucked := peek or lifted
+	var shift := maxf(0.0, size.y - _name_peek()) if tucked else 0.0
+	var badge_was_down := _seat_shift > 1.0 or not _badge_shown
+	_badge_shown = not tucked
+	if (
+		lifted == _lifted
+		and peek == _peeking
+		and position.distance_to(home) < 2.0
+		and scale.distance_to(target_scale) < 0.02
+	):
+		_seat_shift = shift
+		_set_seat_clip(peek)
+		_pin_owner_badge()
 		z_index = HandOwnerBadge.DRAW_Z + 1 if lifted else 0
 		_set_slot_z(1 if lifted else 0)
 		return
 	_lifted = lifted
+	_peeking = peek
+	_seat_shift = shift
+	_set_seat_clip(peek)
+	if tucked or badge_was_down:
+		_sync_badge_z(true)
 	z_index = HandOwnerBadge.DRAW_Z + 1 if lifted else 0
-	_tween_to(home, target_scale, 0.0, not lifted)
+	_tween_to(home, target_scale, 0.0, not lifted and not peek)
 	_set_slot_z(8 if lifted else 0)
 
 
@@ -634,6 +693,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _begin_drag(global_pos: Vector2) -> void:
+	_set_seat_clip(false)
 	_cancel_glide()
 	z_as_relative = true
 	_kill_preview_motion()
@@ -724,6 +784,10 @@ func _finish_undo_drag(from_tap := false) -> void:
 		return
 	_undo_drag = false
 	_pulling = true
+	_peeking = false
+	_seat_shift = 0.0
+	_badge_shown = true
+	_set_seat_clip(false)
 	_tween_to(Vector2(_start_position.x, 0.0), Vector2.ONE, 0.0, false, 0.12)
 	if _motion != null:
 		await _motion.finished
@@ -780,12 +844,62 @@ func _tween_to(
 	_motion.tween_property(self, "position", home, duration).set_delay(delay)
 	_motion.tween_property(self, "scale", target_scale, duration).set_delay(delay)
 	_motion.tween_property(self, "rotation", target_rotation, duration).set_delay(delay)
+	if _owner_badge != null and is_instance_valid(_owner_badge) and _owner_badge.visible:
+		_motion.tween_property(_owner_badge, "position:y", _seat_shift, duration).set_delay(delay)
+		_motion.tween_property(_owner_badge, "modulate", _badge_color(), duration).set_delay(delay)
+		if _badge_shown and _seat_shift <= 1.0:
+			_motion.finished.connect(_rest_badge_z, CONNECT_ONE_SHOT)
 
 
 func _set_slot_z(value: int) -> void:
-	var slot := get_parent()
+	var slot := _seat()
 	if slot is CanvasItem:
 		slot.z_index = value
+
+
+func _seat() -> Node:
+	var host := get_parent()
+	if host != null and host.name == "CardHost":
+		return host.get_parent()
+	return host
+
+
+func _set_seat_clip(on: bool) -> void:
+	var host := get_parent() as Control
+	if host != null and host.name == "CardHost":
+		host.clip_contents = on
+
+
+func _pin_owner_badge() -> void:
+	if _owner_badge == null or not is_instance_valid(_owner_badge) or not _owner_badge.visible:
+		return
+	_owner_badge.position.y = _seat_shift
+	_owner_badge.modulate = _badge_color()
+	_sync_badge_z()
+
+
+func _sync_badge_z(in_front := false) -> void:
+	if _owner_badge == null or not is_instance_valid(_owner_badge):
+		return
+	var above := in_front or _seat_shift > 1.0 or not _badge_shown
+	_owner_badge.z_index = HandOwnerBadge.DRAW_Z + 2 if above else HandOwnerBadge.DRAW_Z
+
+
+func _rest_badge_z() -> void:
+	if not _badge_shown or _seat_shift > 1.0:
+		return
+	_sync_badge_z()
+
+
+## How much of the card stays in the seat: the frame above the title, and the title.
+func _name_peek() -> float:
+	var header: Control = null
+	if title_label != null:
+		header = title_label.get_parent() as Control
+	if header == null or header.size.y < 2.0 or size.y < 2.0:
+		return 56.0
+	var band := header.get_global_rect().end.y - get_global_rect().position.y + 8.0
+	return clampf(band, 40.0, size.y * 0.5)
 
 
 func _on_resized() -> void:

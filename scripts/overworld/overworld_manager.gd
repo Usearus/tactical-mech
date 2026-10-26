@@ -14,10 +14,15 @@ const HUD_MARGIN := Vector2(12, 8)
 const HUD_GAP := 12.0
 const MAP_ZOOM_MIN := 1.0
 ## Where the opening shot lands. The wheel and pinch can go closer than this.
-const MAP_ZOOM_INTRO := 2.0
+const MAP_ZOOM_INTRO := 1.7
 const MAP_ZOOM_MAX := 4.0
 const MAP_ZOOM_STEP := 1.1
 const MAP_PAN_THRESHOLD := 8.0
+## Preview zoom is this fraction of a tight fit, so the field stays clear of the windows.
+const PREVIEW_FIT_SLACK := 0.86
+## The framed battlefield sits this far right of screen center.
+const PREVIEW_PAN_RIGHT := 84.0
+const PREVIEW_EDGE_GAP := 28.0
 const BATTLE_WINDOW_LINE := Color(1.0, 0.94, 0.72, 0.96)
 const BATTLE_WINDOW_FILL := Color(1.0, 0.9, 0.45, 0.16)
 const BARRIER_SCENE: PackedScene = preload("res://scenes/props/barrier.tscn")
@@ -30,6 +35,7 @@ const COMMENCE_TEXT := "COMMENCE"
 const ATTACK_TEXT := "ATTACK"
 const ACTION_BUTTON_SIZE := Vector2(180, 96)
 const PORTRAIT_SCENE := preload("res://scenes/ui/confirm_portrait.tscn")
+const TACTIC_BUTTON_SCENE := preload("res://scenes/ui/sci_primary_button.tscn")
 const PLACE_CHIP := preload("res://scenes/ui/place_mech_chip.tscn")
 const SPAWN_FILL := Color(0.55, 0.82, 1.0, 0.42)
 const COMMS_PORTRAIT := preload("res://art/characters/misc/comms.png")
@@ -68,6 +74,20 @@ var _intro_holds_center := true
 var _intro_tweening := false
 var _map_pan := Vector2.ZERO
 var _reveal_tween: Tween
+var _preview_camera := false
+var _preview_saved_zoom := 1.0
+var _preview_saved_pan := Vector2.ZERO
+var _preview_pose_zoom := -1.0
+var _preview_pose_pan := Vector2.ZERO
+var _preview_cam_tween: Tween
+var _preview_layout_tries := 0
+var _attack_frame_tween: Tween
+var _attack_frame_token := 0
+var _attack_frame_tries := 0
+## Holds a pan that sits the fight above Commence, past the usual map-edge clamp.
+var _attack_framing := false
+var _preview_return_held := false
+var _preview_returning := false
 var _saved_map_zoom := 1.0
 var _saved_map_pan := Vector2.ZERO
 var _map_dragging := false
@@ -99,6 +119,14 @@ var _preview_glows: Array[AnimatedSprite2D] = []
 var _preview_key := ""
 var _move_token: Control
 var _confirming := false
+var _field_preview := false
+var _preview_tactic: BattleTactic
+var _tactic_syncing := false
+var _tactic_buttons: Dictionary = {}
+var _tactic_panel: PanelContainer
+var _tactic_list: VBoxContainer
+var _fight_style_label: Label
+var _prize_label: Label
 var _confirm_target: MechState
 var _commence_pressed := false
 var _cancel_button: Button
@@ -160,8 +188,6 @@ var _intro_finished := false
 @onready var mode_banner: ModeBanner = %ModeBanner
 @onready var dialogue_bar: DialogueBar = %DialogueBar
 @onready var place_panel: PlaceMechs = %PlaceMechs
-
-
 func _prompt_enemy_choice() -> bool:
 	if not _targeting or _confirming or _opening or _animating or _map_locked or _turn_busy:
 		return false
@@ -180,7 +206,8 @@ func _can_attack() -> bool:
 		and not _turn_busy
 		and not _opening
 		and not _placing
-		and not _enemies_in_range(actor).is_empty()
+		and not _confirming
+		and not _field_preview
 	)
 
 
@@ -213,6 +240,7 @@ func _ready() -> void:
 		place_panel.drag_started.connect(_on_place_drag_started)
 	resized.connect(func() -> void:
 		_pin_hud.call_deferred()
+		_pin_tactic_panel.call_deferred()
 		_pin_confirm_panel.call_deferred()
 		_pin_place_panel.call_deferred()
 		_pin_target_note.call_deferred()
@@ -600,7 +628,12 @@ func _build_confirm_strip() -> void:
 	_gauges = _header_row.get_node("Gauges") as Control
 	_menu_corner = get_node("Chrome/MenuCorner") as Control
 	_confirm_panel = get_node("%ConfirmPanel") as PanelContainer
-	_confirm_strip = _confirm_panel.get_node("ConfirmStrip") as HBoxContainer
+	_tactic_panel = get_node("%TacticPanel") as PanelContainer
+	_tactic_list = get_node("%TacticList") as VBoxContainer
+	_fight_style_label = get_node("%FightStyleLabel") as Label
+	_prize_label = get_node("%PrizeLabel") as Label
+	_confirm_strip = _confirm_panel.get_node("ConfirmColumn/ConfirmStrip") as HBoxContainer
+	_build_tactic_buttons()
 	_confirm_buttons = _confirm_strip.get_node("ConfirmButtons") as VBoxContainer
 	_confirm_players = _confirm_strip.get_node("Players") as HBoxContainer
 	_confirm_enemies = _confirm_strip.get_node("Enemies") as HBoxContainer
@@ -611,6 +644,7 @@ func _build_confirm_strip() -> void:
 
 
 ## Timeline, gauge, and menu sit on top of the full-screen stage.
+## The menu is the top-right corner. The gauge sits just left of it. The timeline fills from the left.
 func _pin_hud() -> void:
 	if _menu_corner == null or size.x < 2.0:
 		return
@@ -637,18 +671,92 @@ func _place_from_right(node: Control, right: float, top: float) -> void:
 	node.position = Vector2(right - box.x, top)
 
 
+func _build_tactic_buttons() -> void:
+	if _tactic_list == null:
+		return
+	for child in _tactic_list.get_children():
+		child.free()
+	_tactic_buttons.clear()
+	var group := ButtonGroup.new()
+	for tactic in BattleTactic.enabled_list():
+		var button := TACTIC_BUTTON_SCENE.instantiate() as Button
+		button.text = tactic.display_name
+		button.toggle_mode = true
+		button.button_group = group
+		button.layout_mode = 2
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.custom_minimum_size = Vector2(220, 56)
+		button.add_theme_font_size_override("font_size", 28)
+		button.toggled.connect(_on_tactic_toggled.bind(tactic.id))
+		_tactic_list.add_child(button)
+		_tactic_buttons[tactic.id] = button
+
+
+func _on_tactic_toggled(pressed: bool, tactic_id: String) -> void:
+	if _tactic_syncing or not pressed or not _field_preview:
+		return
+	var tactic := BattleTactic.by_id(tactic_id)
+	if tactic == null or not tactic.enabled:
+		return
+	_preview_tactic = tactic
+	_confirm_key = ""
+	_refresh()
+	_begin_preview_camera()
+
+
+func _sync_tactic_buttons() -> void:
+	if _tactic_buttons.is_empty():
+		return
+	_tactic_syncing = true
+	var current := "" if _preview_tactic == null else _preview_tactic.id
+	for tactic_id in _tactic_buttons.keys():
+		var button := _tactic_buttons[tactic_id] as Button
+		if button == null:
+			continue
+		button.button_pressed = tactic_id == current
+	_tactic_syncing = false
+
+
+func _preview_has_enemy() -> bool:
+	var actor := _current_actor()
+	if actor == null or _preview_tactic == null:
+		return false
+	for cell in _preview_tactic.world_cells(actor.overworld_position):
+		var unit := _unit_at(cell)
+		if unit != null and unit.alive and unit.team == "enemy":
+			return true
+	return false
+
+
+func _open_field_preview(actor: MechState) -> void:
+	if actor == null or _enemies_in_range(actor).is_empty():
+		return
+	_field_preview = true
+	_confirming = true
+	_confirm_target = null
+	_preview_tactic = BattleTactic.standard()
+	_selected = actor
+	_confirm_key = ""
+	_hide_status_tip()
+	_refresh()
+	_begin_preview_camera()
+
+
 func _apply_confirm_bar() -> void:
-	var confirming := _confirming and _confirm_target != null
+	var confirming := _confirming and (_confirm_target != null or _field_preview)
 	var actor := _current_actor()
 	var choosing := _targeting and actor != null and actor.team == "player"
 	end_turn_button.visible = not confirming and not choosing and not _placing
 	if _cancel_button != null:
 		_cancel_button.visible = (confirming or choosing) and actor != null and actor.team == "player"
 	_seat_commence_button(confirming)
+	if _tactic_panel != null:
+		_tactic_panel.visible = _field_preview
 	if _confirm_panel != null and _confirm_panel.visible != confirming:
 		_confirm_panel.visible = confirming
 	if not confirming:
-		attack_button.visible = false
+		attack_button.visible = _can_attack()
+		attack_button.disabled = _enemies_in_range(actor).is_empty()
 		if attack_button.text != ATTACK_TEXT:
 			attack_button.text = ATTACK_TEXT
 		_confirm_key = ""
@@ -657,19 +765,28 @@ func _apply_confirm_bar() -> void:
 		return
 	attack_button.text = COMMENCE_TEXT
 	attack_button.visible = true
+	attack_button.disabled = _field_preview and not _preview_has_enemy()
+	_sync_tactic_buttons()
 	_pin_actions()
+	_pin_tactic_panel()
 	_pin_confirm_panel()
 	_fill_confirm_bar()
+	_pin_tactic_panel.call_deferred()
 	_pin_confirm_panel.call_deferred()
 	_sync_attack_pulse()
 
 
 func _fill_confirm_bar() -> void:
 	var actor := _current_actor()
-	if actor == null or _confirm_target == null:
+	if actor == null:
 		return
-	var step := _confirm_target.overworld_position - actor.overworld_position
-	var encounter := EncounterData.create(actor, step, GameManager.all_mechs())
+	var encounter: EncounterData
+	if _field_preview and _preview_tactic != null:
+		encounter = EncounterData.create_from_tactic(actor, _preview_tactic, GameManager.all_mechs())
+	elif _confirm_target != null:
+		encounter = _encounter_against(actor, _confirm_target)
+	else:
+		return
 	var players: Array[MechState] = []
 	var enemies: Array[MechState] = []
 	for unit in encounter.participants:
@@ -678,9 +795,12 @@ func _fill_confirm_bar() -> void:
 		else:
 			enemies.append(unit)
 	var player_lead := actor if actor.team == "player" else _confirm_target
-	var enemy_lead := _confirm_target if actor.team == "player" else actor
+	var enemy_lead := _confirm_target if _confirm_target != null and actor.team == "player" else actor
+	if _field_preview and not enemies.is_empty():
+		enemy_lead = enemies[0]
 	_order_side(players, player_lead)
 	_order_side(enemies, enemy_lead)
+	_set_fight_header(players.size(), enemies.size())
 	var key := _side_ids(players) + "|" + _side_ids(enemies)
 	if key == _confirm_key:
 		return
@@ -752,16 +872,39 @@ func _confirm_buttons_ordered(in_panel: bool) -> bool:
 	)
 
 
+func _set_fight_header(players: int, enemies: int) -> void:
+	if _fight_style_label == null or _prize_label == null:
+		return
+	match DraftOdds.fight_band(players, enemies):
+		"advantaged":
+			_fight_style_label.text = "Advantaged Fight"
+			_prize_label.text = "(0.5x Reward Rarity)"
+		"disadvantaged":
+			_fight_style_label.text = "Disadvantaged Fight"
+			_prize_label.text = "(1.5x Reward Rarity)"
+		_:
+			_fight_style_label.text = "Even Fight"
+			_prize_label.text = "(1.0x Reward Rarity)"
+
+
+func _pin_tactic_panel() -> void:
+	if _tactic_panel == null or not _tactic_panel.visible or size.y < 2.0:
+		return
+	var box := _tactic_panel.get_combined_minimum_size()
+	_tactic_panel.size = box
+	var top := HUD_MARGIN.y
+	if _gauges != null:
+		top = maxf(top, _gauges.position.y + _gauges.size.y + HUD_GAP)
+	var y := top + maxf(size.y - 8.0 - top - box.y, 0.0) * 0.5
+	_tactic_panel.position = Vector2(size.x - 12.0 - box.x, y)
+
+
 func _pin_confirm_panel() -> void:
 	if _confirm_panel == null or size.y < 2.0:
 		return
 	var box := _confirm_panel.get_combined_minimum_size()
 	_confirm_panel.size = box
-	var right_limit := size.x - 12.0
-	if action_bar != null:
-		right_limit = minf(right_limit, action_bar.position.x - 12.0)
-	var span := maxf(right_limit - 12.0, box.x)
-	var x := 12.0 + maxf(span - box.x, 0.0) * 0.5
+	var x := (size.x - box.x) * 0.5
 	_confirm_panel.position = Vector2(x, size.y - 8.0 - box.y)
 
 
@@ -800,7 +943,7 @@ func _make_confirm_portrait(unit: MechState) -> Panel:
 
 
 func _sync_attack_pulse() -> void:
-	if attack_button.visible:
+	if attack_button.visible and not attack_button.disabled:
 		attack_button.start_pulse()
 	else:
 		attack_button.stop_pulse()
@@ -851,20 +994,28 @@ func _attack_ring(distance: int) -> Array[Vector2i]:
 	return steps
 
 
-func _clear_confirm() -> void:
+func _clear_confirm(animate_camera: bool = false) -> void:
 	_confirming = false
+	_field_preview = false
 	_confirm_target = null
 	_confirm_key = ""
+	if attack_button != null:
+		attack_button.disabled = _enemies_in_range(_current_actor()).is_empty()
 	_stop_engage_pulse()
+	_cancel_enemy_field_frame()
+	_end_preview_camera(false, animate_camera)
 
 
 func _confirm_roster() -> Array[MechState]:
 	var roster: Array[MechState] = []
 	var actor := _current_actor()
+	if _field_preview and actor != null and _preview_tactic != null:
+		var preview := EncounterData.create_from_tactic(actor, _preview_tactic, GameManager.all_mechs())
+		roster.assign(preview.participants)
+		return roster
 	if actor == null or _confirm_target == null:
 		return roster
-	var step := _confirm_target.overworld_position - actor.overworld_position
-	var encounter := EncounterData.create(actor, step, GameManager.all_mechs())
+	var encounter := _encounter_against(actor, _confirm_target)
 	roster.assign(encounter.participants)
 	return roster
 
@@ -957,9 +1108,11 @@ func _fit_grid() -> void:
 	elif not _map_placed:
 		_map_pan = (grid_size * _map_zoom - grid_host.size) * 0.5
 		_map_placed = true
-	elif not _intro_tweening and not _map_locked:
+	elif not _intro_tweening and not _map_locked and not _attack_framing:
 		_map_zoom = clampf(_map_zoom, _map_zoom_floor(), MAP_ZOOM_MAX)
 	_apply_map_view()
+	if _preview_camera:
+		call_deferred("_apply_preview_camera")
 
 
 func _apply_map_view() -> void:
@@ -968,7 +1121,12 @@ func _apply_map_view() -> void:
 	var slack := visual - grid_host.size
 	if _intro_holds_center:
 		_map_pan = Vector2.ZERO
-	elif not _intro_tweening:
+	elif _preview_camera:
+		if slack.x > 1.0:
+			_map_pan.x = clampf(_map_pan.x, -slack.x * 0.5, slack.x * 0.5)
+		if slack.y > 1.0:
+			_map_pan.y = clampf(_map_pan.y, -slack.y * 0.5, slack.y * 0.5)
+	elif not _attack_framing and not _intro_tweening and not _map_locked:
 		_map_pan.x = slack.x * 0.5 if slack.x <= 1.0 else clampf(_map_pan.x, -slack.x * 0.5, slack.x * 0.5)
 		_map_pan.y = slack.y * 0.5 if slack.y <= 1.0 else clampf(_map_pan.y, -slack.y * 0.5, slack.y * 0.5)
 	grid.position = (grid_host.size - visual) * 0.5 + _map_pan
@@ -1009,8 +1167,16 @@ func _battle_window_cells() -> Array[Vector2i]:
 		return none
 	if _map_locked and not GameManager.zoom_focus_cells.is_empty():
 		return GameManager.zoom_focus_cells
+	if _field_preview and _preview_tactic != null:
+		var preview_actor := _current_actor()
+		if preview_actor != null:
+			return _preview_tactic.world_cells(preview_actor.overworld_position)
 	if _confirming and _confirm_target != null:
 		var actor := _current_actor()
+		if actor != null and actor.team == "enemy":
+			var tactic := OverworldAi.tactic_for(actor.overworld_position, _confirm_target.overworld_position)
+			if tactic != null:
+				return tactic.world_cells(actor.overworld_position)
 		if actor != null:
 			return BattleDeployment.overworld_cells(
 				actor.overworld_position,
@@ -1193,8 +1359,14 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and not (event as InputEventMouseButton).pressed and _place_drag_id != "":
 		_block_cell_press_frame = Engine.get_process_frames()
 		_finish_place_drag.call_deferred()
-	if (_opening and not _placing) or _campaign_over or _map_locked or _animating or grid_host == null:
+	if (_opening and not _placing) or _campaign_over or _animating or grid_host == null:
 		return
+	if _map_locked and not is_instance_valid(_battle_layer):
+		return
+	if is_instance_valid(_battle_layer) and event is InputEventMouseButton:
+		var mouse := event as InputEventMouseButton
+		if mouse.button_index == MOUSE_BUTTON_LEFT:
+			return
 	if event is InputEventMouseButton:
 		_on_map_mouse_button(event)
 	elif event is InputEventMouseMotion and _map_dragging:
@@ -1276,6 +1448,7 @@ func _on_map_touch(event: InputEvent) -> void:
 func _zoom_map_by(local_pos: Vector2, factor: float) -> void:
 	_release_intro_camera()
 	_stop_reveal()
+	_cancel_enemy_field_frame()
 	var old := _map_zoom
 	var next := clampf(old * factor, _map_zoom_floor(), MAP_ZOOM_MAX)
 	if is_equal_approx(old, next):
@@ -1297,12 +1470,15 @@ func _map_can_pan() -> bool:
 func _pan_map(delta: Vector2) -> void:
 	_release_intro_camera()
 	_stop_reveal()
+	_cancel_enemy_field_frame()
 	_map_pan += delta
 	_apply_map_view()
 
 
 func _reveal_unit(unit: MechState) -> void:
 	if unit == null or (_opening and not _placing) or _map_locked or _intro_tweening or grid == null or grid_host == null:
+		return
+	if _field_preview or _preview_camera:
 		return
 	var button := _button_for_unit(unit)
 	if button == null:
@@ -1331,6 +1507,9 @@ func _reveal_unit(unit: MechState) -> void:
 	_reveal_tween = create_tween()
 	_reveal_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_reveal_tween.tween_method(_set_map_pan, _map_pan, dest, 0.32)
+	var glide := _reveal_tween
+	while is_inside_tree() and glide != null and is_instance_valid(glide) and glide.is_running():
+		await get_tree().process_frame
 
 
 func _view_shift(cell_pos: Vector2, cell_size: Vector2, view_size: Vector2, pad: float) -> Vector2:
@@ -1416,6 +1595,8 @@ func _on_timeline_input(event: InputEvent, unit: MechState) -> void:
 	if not mouse.pressed or mouse.button_index != MOUSE_BUTTON_LEFT:
 		return
 	if _placing and unit.overworld_position == StartingRoster.UNPLACED:
+		return
+	if _animating or _turn_busy:
 		return
 	if _status_click_blocked() or _blocks_status_tip(unit):
 		_hide_status_tip()
@@ -1571,7 +1752,11 @@ func _refresh() -> void:
 	var prefix := (report + "\n") if report != "" else ""
 	var phase_note := "Waiting."
 	if actor != null:
-		if _confirming:
+		if _field_preview and not _preview_has_enemy():
+			phase_note = "No enemy in this field."
+		elif _field_preview:
+			phase_note = "Choose a tactic, then Commence."
+		elif _confirming:
 			phase_note = "Review both sides, then Commence."
 		elif _targeting:
 			phase_note = "Select an enemy to attack."
@@ -1789,6 +1974,8 @@ func _on_cell_pressed(coords: Vector2i) -> void:
 	var actor := _current_actor()
 	var unit := _unit_at(coords)
 	if _confirming:
+		if _field_preview:
+			return
 		if _stands_on_attack_tile(actor, unit) and unit != _confirm_target:
 			_hide_status_tip()
 			_arm_attack(actor, unit)
@@ -1862,7 +2049,7 @@ func _on_cancel_pressed() -> void:
 	if not _confirming and not _targeting:
 		return
 	_targeting = false
-	_clear_confirm()
+	_clear_confirm(true)
 	_selected = actor
 	_refresh()
 
@@ -1871,6 +2058,15 @@ func _on_attack_pressed() -> void:
 	if _placing or _opening or _campaign_over:
 		return
 	var actor := _current_actor()
+	if _field_preview:
+		if not _preview_has_enemy():
+			_note_status("No enemy in this field.")
+			return
+		var tactic := _preview_tactic
+		_end_preview_camera(true)
+		_clear_confirm()
+		_try_tactic_attack(actor, tactic)
+		return
 	if _confirming:
 		if actor != null and actor.team == "enemy":
 			_commence_pressed = true
@@ -1881,19 +2077,9 @@ func _on_attack_pressed() -> void:
 		return
 	if _targeting:
 		return
-	if not _can_attack():
+	if not _can_attack() or _enemies_in_range(actor).is_empty():
 		return
-	var enemies := _enemies_in_range(actor)
-	if enemies.is_empty():
-		return
-	var chosen := _chosen_attack_target(enemies)
-	if chosen == null:
-		_targeting = true
-		_selected = actor
-		_hide_status_tip()
-		_refresh()
-		return
-	_arm_attack(actor, chosen)
+	_open_field_preview(actor)
 
 
 func _chosen_attack_target(enemies: Array[MechState]) -> MechState:
@@ -1917,13 +2103,34 @@ func _stands_on_attack_tile(actor: MechState, unit: MechState) -> bool:
 	return _attack_reach_cells(actor).has(unit.overworld_position)
 
 
-func _arm_attack(actor: MechState, target: MechState) -> void:
+func _arm_attack(actor: MechState, _target: MechState) -> void:
 	_targeting = false
-	_confirming = true
-	_confirm_target = target
-	_selected = actor
-	_hide_status_tip()
+	_open_field_preview(actor)
+
+
+func _try_tactic_attack(actor: MechState, tactic: BattleTactic) -> void:
+	if actor == null or tactic == null or actor.team != "player":
+		_drop_preview_return()
+		_refresh()
+		return
+	_targeting = false
+	_animating = true
+	var encounter := EncounterData.create_from_tactic(actor, tactic, GameManager.all_mechs())
+	var foe: MechState = null
+	var nearest := 999999
+	for unit in encounter.participants:
+		if unit == null or not unit.alive or unit.team != "enemy":
+			continue
+		var distance := absi(unit.overworld_position.x - actor.overworld_position.x)
+		distance += absi(unit.overworld_position.y - actor.overworld_position.y)
+		if distance < nearest:
+			nearest = distance
+			foe = unit
+	if foe != null:
+		actor.face_toward_x(actor.overworld_position.x, foe.overworld_position.x)
+	_status_override = "%s attacks." % actor.display_name
 	_refresh()
+	await _zoom_into(encounter)
 
 
 func _try_attack(unit: MechState) -> void:
@@ -2027,6 +2234,349 @@ func _settle_intro_view() -> void:
 ## Middle of the left half. The opening zoom lands here.
 func _intro_focus() -> Vector2:
 	return Vector2(grid.size.x * 0.25, grid.size.y * 0.5)
+
+
+## An enemy attack shows the whole fight. Move only when that rectangle is clipped or under the windows.
+func _begin_enemy_field_frame() -> void:
+	_cancel_enemy_field_frame()
+	_attack_frame_token += 1
+	var token := _attack_frame_token
+	_stop_reveal()
+	_attack_frame_tries = 0
+	call_deferred("_apply_enemy_field_frame", token)
+
+
+func _cancel_enemy_field_frame() -> void:
+	_attack_frame_token += 1
+	_attack_framing = false
+	if _attack_frame_tween != null and _attack_frame_tween.is_valid():
+		_attack_frame_tween.kill()
+	_attack_frame_tween = null
+
+
+func _apply_enemy_field_frame(token: int) -> void:
+	if token != _attack_frame_token or not _confirming or _field_preview or _map_locked or not is_inside_tree():
+		return
+	var actor := _current_actor()
+	if actor == null or actor.team != "enemy":
+		return
+	var panel_ready := (
+		_confirm_panel == null
+		or not _confirm_panel.visible
+		or _host_span(_confirm_panel).size.y >= 1.0
+	)
+	if not panel_ready and _attack_frame_tries < 2:
+		_retry_enemy_field_frame(token)
+		return
+	var pose := _enemy_field_pose()
+	if pose.is_empty():
+		if _attack_frame_tries < 2:
+			_retry_enemy_field_frame(token)
+			return
+		_reveal_unit(actor)
+		return
+	var zoom := float(pose["zoom"])
+	var pan := pose["pan"] as Vector2
+	if is_equal_approx(_map_zoom, zoom) and _map_pan.distance_to(pan) < 0.5:
+		return
+	if not _preview_return_held:
+		_saved_map_zoom = _map_zoom
+		_saved_map_pan = _map_pan
+		_preview_return_held = true
+	_attack_framing = true
+	if _attack_frame_tween != null and _attack_frame_tween.is_valid():
+		_attack_frame_tween.kill()
+	_attack_frame_tween = create_tween()
+	_attack_frame_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_attack_frame_tween.tween_method(
+		_set_preview_pose.bind(_map_zoom, zoom, _map_pan, pan),
+		0.0,
+		1.0,
+		0.35
+	)
+
+
+func _retry_enemy_field_frame(token: int) -> void:
+	if _attack_frame_tries >= 2:
+		return
+	_attack_frame_tries += 1
+	call_deferred("_apply_enemy_field_frame", token)
+
+
+## Zoom out only as far as the fight needs, then pan the minimum that puts it in the clear band.
+func _enemy_field_pose() -> Dictionary:
+	var window := _field_window_rect()
+	var clear := _preview_clear_rect()
+	if window.size.x < 1.0 or window.size.y < 1.0 or clear.size.x < 1.0 or clear.size.y < 1.0:
+		return {}
+	if _battlefield_fully_visible(window):
+		return {"zoom": _map_zoom, "pan": _map_pan}
+	var fit := minf(clear.size.x / window.size.x, clear.size.y / window.size.y)
+	var zoom := clampf(minf(_map_zoom, fit), 0.05, MAP_ZOOM_MAX)
+	return {"zoom": zoom, "pan": _pan_keeping_window(window, clear, zoom)}
+
+
+func _battlefield_fully_visible(window: Rect2) -> bool:
+	var shown := _window_on_host(window, _map_zoom, _map_pan)
+	var view := Rect2(Vector2.ZERO, grid_host.size)
+	if (
+		shown.position.x < view.position.x - 0.5
+		or shown.position.y < view.position.y - 0.5
+		or shown.end.x > view.end.x + 0.5
+		or shown.end.y > view.end.y + 0.5
+	):
+		return false
+	for panel in [_timeline_panel, _gauges, _confirm_panel]:
+		if _panel_covers(panel, shown):
+			return false
+	return true
+
+
+func _panel_covers(panel: Control, shown: Rect2) -> bool:
+	var span := _host_span(panel)
+	if span.size.x < 1.0 or span.size.y < 1.0:
+		return false
+	var overlap := span.intersection(shown)
+	return overlap.size.x > 1.0 and overlap.size.y > 1.0
+
+
+func _pan_keeping_window(window: Rect2, clear: Rect2, zoom: float) -> Vector2:
+	var center := window.get_center()
+	var anchor := _grid_point_on_host(center, _map_zoom, _map_pan)
+	var visual := grid.size * zoom
+	var pan := anchor - (grid_host.size - visual) * 0.5 - center * zoom
+	var shown := _window_on_host(window, zoom, pan)
+	pan += _shift_rect_inside(shown, clear)
+	var fitted := _window_on_host(window, zoom, pan)
+	if _rect_inside(fitted, clear, 1.0):
+		return pan
+	return _clamp_map_pan(pan, zoom)
+
+
+func _rect_inside(inner: Rect2, outer: Rect2, slop: float) -> bool:
+	return (
+		inner.position.x >= outer.position.x - slop
+		and inner.position.y >= outer.position.y - slop
+		and inner.end.x <= outer.end.x + slop
+		and inner.end.y <= outer.end.y + slop
+	)
+
+
+func _shift_rect_inside(shown: Rect2, clear: Rect2) -> Vector2:
+	var shift := Vector2.ZERO
+	if shown.size.x >= clear.size.x - 0.5:
+		shift.x = clear.get_center().x - shown.get_center().x
+	elif shown.position.x < clear.position.x:
+		shift.x = clear.position.x - shown.position.x
+	elif shown.end.x > clear.end.x:
+		shift.x = clear.end.x - shown.end.x
+	if shown.size.y >= clear.size.y - 0.5:
+		shift.y = clear.get_center().y - shown.get_center().y
+	elif shown.position.y < clear.position.y:
+		shift.y = clear.position.y - shown.position.y
+	elif shown.end.y > clear.end.y:
+		shift.y = clear.end.y - shown.end.y
+	return shift
+
+
+func _clamp_map_pan(pan: Vector2, zoom: float) -> Vector2:
+	var slack := grid.size * zoom - grid_host.size
+	if slack.x > 1.0:
+		pan.x = clampf(pan.x, -slack.x * 0.5, slack.x * 0.5)
+	else:
+		pan.x = slack.x * 0.5
+	if slack.y > 1.0:
+		pan.y = clampf(pan.y, -slack.y * 0.5, slack.y * 0.5)
+	else:
+		pan.y = slack.y * 0.5
+	return pan
+
+
+func _grid_point_on_host(point: Vector2, zoom: float, pan: Vector2) -> Vector2:
+	var visual := grid.size * zoom
+	var origin := (grid_host.size - visual) * 0.5 + pan
+	return origin + point * zoom
+
+
+func _window_on_host(window: Rect2, zoom: float, pan: Vector2) -> Rect2:
+	return Rect2(_grid_point_on_host(window.position, zoom, pan), window.size * zoom)
+
+
+## Pull the camera back so the whole tactic field sits under the timeline and above Commence, nudged right.
+func _begin_preview_camera() -> void:
+	if not _field_preview or grid == null or grid_host == null:
+		return
+	if not _preview_camera:
+		if not _preview_returning:
+			_preview_saved_zoom = _map_zoom
+			_preview_saved_pan = _map_pan
+		_preview_camera = true
+		_preview_pose_zoom = -1.0
+	_preview_returning = false
+	if _preview_cam_tween != null and _preview_cam_tween.is_valid():
+		_preview_cam_tween.kill()
+	_stop_reveal()
+	call_deferred("_apply_preview_camera")
+
+
+func _apply_preview_camera() -> void:
+	if not _preview_camera or not _field_preview or not is_inside_tree():
+		return
+	_stop_reveal()
+	var pose := _preview_camera_pose()
+	if pose.is_empty():
+		if _preview_layout_tries < 2:
+			_preview_layout_tries += 1
+			call_deferred("_apply_preview_camera")
+		return
+	_preview_layout_tries = 0
+	var zoom := float(pose["zoom"])
+	var pan := pose["pan"] as Vector2
+	if is_equal_approx(_preview_pose_zoom, zoom) and _preview_pose_pan.distance_to(pan) < 0.5:
+		return
+	_preview_pose_zoom = zoom
+	_preview_pose_pan = pan
+	if _preview_cam_tween != null and _preview_cam_tween.is_valid():
+		_preview_cam_tween.kill()
+	_preview_cam_tween = create_tween()
+	_preview_cam_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_preview_cam_tween.tween_method(
+		_set_preview_pose.bind(_map_zoom, zoom, _map_pan, pan),
+		0.0,
+		1.0,
+		0.35
+	)
+
+
+func _set_preview_pose(amount: float, from_zoom: float, to_zoom: float, from_pan: Vector2, to_pan: Vector2) -> void:
+	_map_zoom = lerpf(from_zoom, to_zoom, amount)
+	_map_pan = from_pan.lerp(to_pan, amount)
+	_apply_map_view()
+
+
+func _end_preview_camera(keep_pose: bool = false, animate: bool = false) -> void:
+	if not _preview_camera and not _preview_returning:
+		return
+	if _preview_cam_tween != null and _preview_cam_tween.is_valid():
+		_preview_cam_tween.kill()
+	_preview_cam_tween = null
+	_preview_camera = false
+	_preview_returning = false
+	_preview_pose_zoom = -1.0
+	_preview_layout_tries = 0
+	if keep_pose:
+		_saved_map_zoom = _preview_saved_zoom
+		_saved_map_pan = _preview_saved_pan
+		_preview_return_held = true
+		return
+	var zoom := _preview_saved_zoom
+	var pan := _preview_saved_pan
+	if (
+		not animate
+		or grid == null
+		or grid_host == null
+		or not is_inside_tree()
+		or (is_equal_approx(_map_zoom, zoom) and _map_pan.distance_to(pan) < 0.5)
+	):
+		_map_zoom = zoom
+		_map_pan = pan
+		if grid != null and grid_host != null:
+			_apply_map_view()
+		return
+	_preview_returning = true
+	_preview_cam_tween = create_tween()
+	_preview_cam_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_preview_cam_tween.tween_method(
+		_set_preview_pose.bind(_map_zoom, zoom, _map_pan, pan),
+		0.0,
+		1.0,
+		0.35
+	)
+	_preview_cam_tween.finished.connect(func() -> void:
+		_preview_returning = false
+	)
+
+
+func _drop_preview_return() -> void:
+	if not _preview_return_held:
+		return
+	_preview_return_held = false
+	_map_zoom = _saved_map_zoom
+	_map_pan = _saved_map_pan
+	if grid != null and grid_host != null:
+		_apply_map_view()
+
+
+func _preview_camera_pose() -> Dictionary:
+	var window := _field_window_rect()
+	var clear := _preview_clear_rect()
+	if window.size.x < 1.0 or window.size.y < 1.0 or clear.size.x < 1.0 or clear.size.y < 1.0:
+		return {}
+	var zoom := minf(clear.size.x / window.size.x, clear.size.y / window.size.y) * PREVIEW_FIT_SLACK
+	# Pull back to that fit. A view that is already wider stays there.
+	zoom = minf(zoom, _map_zoom)
+	zoom = clampf(zoom, _map_zoom_floor(), MAP_ZOOM_MAX)
+	var window_screen := window.size * zoom
+	var half := window_screen * 0.5
+	var center := Vector2(grid_host.size.x * 0.5 + PREVIEW_PAN_RIGHT, clear.get_center().y)
+	center.x = clampf(center.x, clear.position.x + half.x, clear.end.x - half.x)
+	center.y = clampf(center.y, clear.position.y + half.y, clear.end.y - half.y)
+	var visual := grid.size * zoom
+	var pan := center - (grid_host.size - visual) * 0.5 - window.get_center() * zoom
+	var slack := visual - grid_host.size
+	if slack.x > 1.0:
+		pan.x = clampf(pan.x, -slack.x * 0.5, slack.x * 0.5)
+	if slack.y > 1.0:
+		pan.y = clampf(pan.y, -slack.y * 0.5, slack.y * 0.5)
+	return {"zoom": zoom, "pan": pan}
+
+
+func _field_window_rect() -> Rect2:
+	var rect := Rect2()
+	var started := false
+	for coords in _battle_window_cells():
+		var button := _buttons.get(coords) as Control
+		if button == null or button.size.x < 1.0 or button.size.y < 1.0:
+			continue
+		var piece := Rect2(button.position, button.size)
+		rect = piece if not started else rect.merge(piece)
+		started = true
+	return rect if started else Rect2()
+
+
+## Screen band that stays clear of the timeline, Commence, and the tactic list.
+func _preview_clear_rect() -> Rect2:
+	var top := PREVIEW_EDGE_GAP
+	var timeline := _host_span(_timeline_panel)
+	var gauges := _host_span(_gauges)
+	if timeline.size.y > 1.0:
+		top = maxf(top, timeline.end.y + PREVIEW_EDGE_GAP)
+	if gauges.size.y > 1.0:
+		top = maxf(top, gauges.end.y + PREVIEW_EDGE_GAP)
+	var bottom := grid_host.size.y - PREVIEW_EDGE_GAP
+	var commence := _host_span(_confirm_panel)
+	if commence.size.y > 1.0 and commence.position.y > top + 80.0:
+		bottom = minf(bottom, commence.position.y - PREVIEW_EDGE_GAP)
+	else:
+		bottom = minf(bottom, grid_host.size.y - 220.0)
+	var left := PREVIEW_EDGE_GAP
+	var right := grid_host.size.x - PREVIEW_EDGE_GAP
+	var tactic := _host_span(_tactic_panel)
+	if tactic.size.x > 1.0 and tactic.position.x > left + 80.0:
+		right = minf(right, tactic.position.x - PREVIEW_EDGE_GAP)
+	return Rect2(left, top, maxf(right - left, 1.0), maxf(bottom - top, 1.0))
+
+
+func _host_span(control: Control) -> Rect2:
+	if control == null or not is_instance_valid(control) or not control.visible or grid_host == null:
+		return Rect2()
+	var to_host := grid_host.get_global_transform().affine_inverse()
+	var global_rect := control.get_global_rect()
+	if global_rect.size.y < 1.0 or global_rect.size.x < 1.0:
+		return Rect2()
+	var origin: Vector2 = to_host * global_rect.position
+	var far: Vector2 = to_host * global_rect.end
+	return Rect2(origin, far - origin).abs()
 
 
 func _pan_on_point(point: Vector2, zoom: float) -> Vector2:
@@ -2290,9 +2840,19 @@ func _begin_actor_turn() -> void:
 	_selected = actor
 	_targeting = false
 	_clear_confirm()
+	# Bring this mech on screen and let the camera settle before they walk.
+	# An enemy who can already strike frames the whole fight instead.
+	_animating = true
+	_refresh()
+	if actor.team != "enemy" or OverworldAi.prey(actor, GameManager.all_mechs()) == null:
+		await _reveal_unit(actor)
+	if not is_inside_tree() or actor != _current_actor():
+		_animating = false
+		return
 	if actor.team == "enemy":
 		await _run_one_enemy_turn(actor)
 		return
+	_animating = false
 	_remember_steps(actor)
 	_refresh()
 
@@ -2301,7 +2861,7 @@ func _run_one_enemy_turn(enemy: MechState) -> void:
 	_turn_busy = true
 	_animating = true
 	_selected = enemy
-	if _adjacent_player(enemy) != null:
+	if OverworldAi.prey(enemy, GameManager.all_mechs()) != null:
 		if await _offer_enemy_attack(enemy):
 			_turn_busy = false
 			return
@@ -2325,7 +2885,7 @@ func _run_one_enemy_turn(enemy: MechState) -> void:
 	await _animate_move(enemy, path)
 	if not is_inside_tree():
 		return
-	if _adjacent_player(enemy) != null:
+	if OverworldAi.prey(enemy, GameManager.all_mechs()) != null:
 		if await _offer_enemy_attack(enemy):
 			_turn_busy = false
 			return
@@ -2346,7 +2906,7 @@ func _run_one_enemy_turn(enemy: MechState) -> void:
 
 
 func _offer_enemy_attack(enemy: MechState) -> bool:
-	var prey := _adjacent_player(enemy)
+	var prey := OverworldAi.prey(enemy, GameManager.all_mechs())
 	if prey == null:
 		return false
 	_animating = false
@@ -2356,6 +2916,7 @@ func _offer_enemy_attack(enemy: MechState) -> bool:
 	_status_override = ""
 	_commence_pressed = false
 	_refresh()
+	_begin_enemy_field_frame()
 	while not _commence_pressed:
 		if not is_inside_tree():
 			return false
@@ -2371,14 +2932,25 @@ func _offer_enemy_attack(enemy: MechState) -> bool:
 
 
 func _start_enemy_attack(enemy: MechState) -> void:
-	var prey := _adjacent_player(enemy)
+	var prey := OverworldAi.prey(enemy, GameManager.all_mechs())
 	if prey == null:
 		return
 	enemy.face_toward_x(enemy.overworld_position.x, prey.overworld_position.x)
 	_status_override = "%s attacks %s." % [enemy.display_name, prey.display_name]
 	_refresh()
-	var step := prey.overworld_position - enemy.overworld_position
-	await _zoom_into(EncounterData.create(enemy, step, GameManager.all_mechs()))
+	await _zoom_into(_encounter_against(enemy, prey))
+
+
+## Player confirms keep the standard field. An enemy shot uses a tactic that
+## still contains the mech they are shooting, including a target two cells out.
+func _encounter_against(actor: MechState, prey: MechState) -> EncounterData:
+	if actor != null and prey != null and actor.team == "enemy":
+		var tactic := OverworldAi.tactic_for(actor.overworld_position, prey.overworld_position)
+		return EncounterData.create_from_tactic(actor, tactic, GameManager.all_mechs())
+	var step := Vector2i.RIGHT
+	if actor != null and prey != null:
+		step = prey.overworld_position - actor.overworld_position
+	return EncounterData.create(actor, step, GameManager.all_mechs())
 
 
 func _animate_move(unit: MechState, path: Array[Vector2i]) -> void:
@@ -2478,35 +3050,31 @@ func _show_campaign_resolution() -> bool:
 
 
 func _zoom_into(encounter: EncounterData) -> void:
-	var cells := BattleDeployment.overworld_cells(
-		encounter.attacker.overworld_position,
-		encounter.encounter_location,
-		GameManager.overworld_size()
-	)
+	var cells := BattleDeployment.stage_cells(encounter)
 	GameManager.zoom_focus_cells = cells.duplicate()
 	_map_locked = true
 	_refresh()
 	await get_tree().process_frame
 	if not is_inside_tree():
 		return
-	_saved_map_zoom = _map_zoom
-	_saved_map_pan = _map_pan
-	var focus := _focus_point(cells)
-	_zoom_pivot_local = grid.get_global_transform().affine_inverse() * focus
-	var start_scale := grid.scale.x
+	if _preview_return_held:
+		_preview_return_held = false
+	else:
+		_saved_map_zoom = _map_zoom
+		_saved_map_pan = _map_pan
 	var cell_size := 48.0
 	if not cells.is_empty() and _buttons.has(cells[0]):
 		cell_size = maxf((_buttons[cells[0]] as Control).size.x, 1.0)
-	var board := BattleDeployment.window_size(
-		encounter.attacker.overworld_position,
-		encounter.encounter_location
-	)
+	var board := BattleDeployment.grid_size(encounter)
 	var fit_x := grid_host.size.x / (cell_size * float(board.x))
 	var fit_y := grid_host.size.y / (cell_size * float(board.y))
 	var target := clampf(minf(fit_x, fit_y), 1.5, 5.0)
 	GameManager.overworld_cell_size = cell_size
 	GameManager.battle_zoom_scale = target
 	_spawn_battle(encounter)
+	var focus := _focus_point(cells)
+	_zoom_pivot_local = grid.get_global_transform().affine_inverse() * focus
+	var start_scale := grid.scale.x
 	var host_center := grid_host.get_global_rect().get_center()
 	var tween := _begin_scene_blend()
 	tween.tween_method(
@@ -2521,6 +3089,7 @@ func _zoom_into(encounter: EncounterData) -> void:
 	await tween.finished
 	if not is_inside_tree():
 		return
+	_animating = false
 	_cover_overworld_grid()
 
 
@@ -2648,14 +3217,6 @@ func _focus_point(cells: Array[Vector2i]) -> Vector2:
 	return sum / float(count)
 
 
-func _adjacent_player(unit: MechState) -> MechState:
-	for step in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]:
-		var other := _unit_at(unit.overworld_position + step)
-		if other != null and other.alive and other.team == "player":
-			return other
-	return null
-
-
 func _make_token(unit: MechState) -> Button:
 	var token := CELL_SCENE.instantiate() as Button
 	token.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -2738,6 +3299,7 @@ func _ensure_sprite(button: Button) -> AnimatedSprite2D:
 
 func _show_unit_sprite(button: Button, unit: MechState, focus: bool) -> bool:
 	var sprite := _ensure_sprite(button)
+	sprite.z_as_relative = true
 	sprite.z_index = 4
 	var frames := MechSprites.frames_for(unit.art_id)
 	if frames == null:
@@ -2773,21 +3335,7 @@ func _on_cell_resized(button: Button) -> void:
 
 
 func _place_unit_sprite(button: Button, sprite: AnimatedSprite2D) -> void:
-	if sprite.sprite_frames == null or button.size.x < 1.0:
-		return
-	var tex := sprite.sprite_frames.get_frame_texture("idle", 0)
-	if tex == null:
-		return
-	var frame := tex.get_size()
-	var longest := maxf(frame.x, frame.y)
-	if longest <= 0.0:
-		return
-	var fit := minf(button.size.x, button.size.y) * 0.9 * 1.5 / longest
-	var body := float(sprite.get_meta("body_scale", 1.0))
-	var lift := frame.y * fit * 0.1 + 6.0
-	var drop := frame.y * fit * (1.0 - body) * 0.5
-	sprite.position = Vector2(button.size.x * 0.5, button.size.y * 0.5 - lift + drop)
-	sprite.scale = Vector2(fit, fit) * body
+	MechSprites.seat_body(sprite, button.size, float(sprite.get_meta("body_scale", 1.0)))
 
 
 func _sync_barrier(sprite: AnimatedSprite2D, unit: MechState) -> void:
@@ -2836,11 +3384,10 @@ func _owned_button_style(button: Button) -> StyleBoxFlat:
 
 func _owned_panel_style(panel: Panel, meta_name: String) -> StyleBoxFlat:
 	var style: StyleBoxFlat = panel.get_meta(meta_name) as StyleBoxFlat if panel.has_meta(meta_name) else null
-	if style != null:
-		return style
-	style = (panel.get_theme_stylebox("panel") as StyleBoxFlat).duplicate() as StyleBoxFlat
+	if style == null:
+		style = (panel.get_theme_stylebox("panel") as StyleBoxFlat).duplicate() as StyleBoxFlat
+		panel.set_meta(meta_name, style)
 	panel.add_theme_stylebox_override("panel", style)
-	panel.set_meta(meta_name, style)
 	return style
 
 

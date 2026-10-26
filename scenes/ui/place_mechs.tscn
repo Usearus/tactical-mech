@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/ui/place_mechs.gd" id="1_place"]
 [ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="2_theme"]
-[ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="3_btn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button.tscn" id="3_btn"]
 [ext_resource type="PackedScene" uid="uid://w2vke8x0fk42" path="res://scenes/ui/sci_flashing_button.tscn" id="4_flash"]
 
 [node name="PlaceMechs" type="PanelContainer"]

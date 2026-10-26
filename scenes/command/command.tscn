@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://bxxnnm23koq7y" path="res://art/backgrounds/title_screen_background.jpg" id="2_bg"]
 [ext_resource type="Texture2D" uid="uid://daumv0v074k4h" path="res://art/characters/player/purple/pilot_full_body.png" id="3_pilot"]
 [ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="4_btn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button.tscn" id="4_sec"]
 
 [node name="Command" type="Control" unique_id=1385585051]
 layout_mode = 3
@@ -89,7 +90,7 @@ size_flags_horizontal = 8
 theme_override_font_sizes/font_size = 48
 text = "START DEMO"
 
-[node name="TestButton" parent="." instance=ExtResource("4_btn")]
+[node name="TestButton" parent="." instance=ExtResource("4_sec")]
 unique_name_in_owner = true
 z_index = 3
 custom_minimum_size = Vector2(160, 56)

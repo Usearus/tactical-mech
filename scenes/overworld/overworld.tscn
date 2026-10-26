@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://86plmkkgetby" path="res://scenes/overworld/stats_window_overworld.tscn" id="8_8is1o"]
 [ext_resource type="PackedScene" path="res://scenes/ui/timeline_arrow.tscn" id="12_arrow"]
 [ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="13_btn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button.tscn" id="13_sec"]
 [ext_resource type="PackedScene" uid="uid://byj1wl4xpte36" path="res://scenes/ui/overdrive_meter.tscn" id="14_meter"]
 [ext_resource type="PackedScene" path="res://scenes/ui/info_note.tscn" id="15_note"]
 [ext_resource type="PackedScene" uid="uid://w2vke8x0fk42" path="res://scenes/ui/sci_flashing_button.tscn" id="16_flash"]
@@ -213,21 +214,49 @@ offset_bottom = 712.0
 theme = ExtResource("3_6hgi4")
 theme_type_variation = &"SecondaryPanel"
 
-[node name="ConfirmStrip" type="HBoxContainer" parent="ConfirmPanel" unique_id=1147173423]
+[node name="ConfirmColumn" type="VBoxContainer" parent="ConfirmPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="FightHeader" type="HBoxContainer" parent="ConfirmPanel/ConfirmColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="FightStyleLabel" type="Label" parent="ConfirmPanel/ConfirmColumn/FightHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 40
+text = "Even Fight"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PrizeLabel" type="Label" parent="ConfirmPanel/ConfirmColumn/FightHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 26
+text = "(1.0x Reward Rarity)"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ConfirmStrip" type="HBoxContainer" parent="ConfirmPanel/ConfirmColumn" unique_id=1147173423]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="Players" type="HBoxContainer" parent="ConfirmPanel/ConfirmStrip" unique_id=568766515]
+[node name="Players" type="HBoxContainer" parent="ConfirmPanel/ConfirmColumn/ConfirmStrip" unique_id=568766515]
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 6
 alignment = 1
 
-[node name="PlayerChip" parent="ConfirmPanel/ConfirmStrip/Players" unique_id=821345026 instance=ExtResource("5_portrait")]
+[node name="PlayerChip" parent="ConfirmPanel/ConfirmColumn/ConfirmStrip/Players" unique_id=821345026 instance=ExtResource("5_portrait")]
 layout_mode = 2
 
-[node name="Versus" type="Label" parent="ConfirmPanel/ConfirmStrip" unique_id=1194956573]
+[node name="Versus" type="Label" parent="ConfirmPanel/ConfirmColumn/ConfirmStrip" unique_id=1194956573]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 40
@@ -235,22 +264,56 @@ text = "vs"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Enemies" type="HBoxContainer" parent="ConfirmPanel/ConfirmStrip" unique_id=1233500468]
+[node name="Enemies" type="HBoxContainer" parent="ConfirmPanel/ConfirmColumn/ConfirmStrip" unique_id=1233500468]
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 6
 alignment = 1
 
-[node name="EnemyChip" parent="ConfirmPanel/ConfirmStrip/Enemies" unique_id=1567641165 instance=ExtResource("5_portrait")]
+[node name="EnemyChip" parent="ConfirmPanel/ConfirmColumn/ConfirmStrip/Enemies" unique_id=1567641165 instance=ExtResource("5_portrait")]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_enemy_chip")
 
-[node name="ConfirmButtons" type="VBoxContainer" parent="ConfirmPanel/ConfirmStrip"]
+[node name="ConfirmButtons" type="VBoxContainer" parent="ConfirmPanel/ConfirmColumn/ConfirmStrip"]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 theme_override_constants/separation = 8
 alignment = 1
+
+[node name="TacticPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+z_index = 20
+layout_mode = 0
+offset_left = 1088.0
+offset_top = 188.0
+offset_right = 1268.0
+offset_bottom = 532.0
+theme = ExtResource("3_6hgi4")
+theme_type_variation = &"SecondaryPanel"
+
+[node name="TacticColumn" type="VBoxContainer" parent="TacticPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TacticTitle" type="Label" parent="TacticPanel/TacticColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 32
+text = "Tactics"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TacticList" type="VBoxContainer" parent="TacticPanel/TacticColumn"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(168, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
 
 [node name="PlaceMechs" parent="." instance=ExtResource("18_place")]
 unique_name_in_owner = true
@@ -310,7 +373,7 @@ size_flags_vertical = 4
 theme_override_font_sizes/font_size = 32
 text = "ATTACK"
 
-[node name="CancelButton" parent="Actions" unique_id=1658297369 instance=ExtResource("13_btn")]
+[node name="CancelButton" parent="Actions" unique_id=1658297369 instance=ExtResource("13_sec")]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(180, 96)

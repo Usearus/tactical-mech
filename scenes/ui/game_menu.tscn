@@ -9,11 +9,11 @@
 [ext_resource type="Texture2D" path="res://art/icons/stats/range.svg" id="7_range"]
 [ext_resource type="Texture2D" path="res://art/icons/stats/move.svg" id="8_move"]
 [ext_resource type="Texture2D" path="res://art/icons/stats/dodge.svg" id="9_dodge"]
-[ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="10_btn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button.tscn" id="10_btn"]
 [ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="11_theme"]
 [ext_resource type="PackedScene" path="res://scenes/ui/rule_topic.tscn" id="12_topic"]
 [ext_resource type="PackedScene" path="res://scenes/ui/rule_section_title.tscn" id="15_title"]
-[ext_resource type="PackedScene" path="res://scenes/ui/sci_primary_button_square.tscn" id="13_sq"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button_square.tscn" id="13_sq"]
 [ext_resource type="Script" path="res://scripts/ui/gold_text.gd" id="14_gold"]
 
 [sub_resource type="RichTextEffect" id="RichTextEffect_gold"]

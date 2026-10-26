@@ -83,14 +83,14 @@ func _show_unit(unit: MechState) -> void:
 	pose.texture = _pose_for(unit.art_id)
 
 
-## Raven and Bastion play their attack strip. A still pose is used for everyone else.
+## Raven, Bastion, and Barrage play their attack strip. A still pose is used for everyone else.
 static func uses_attack_strip(unit: MechState) -> bool:
 	if unit == null:
 		return false
 	var mech_id := ""
 	if unit.data != null:
 		mech_id = unit.data.id
-	return unit.art_id == "purple" or mech_id == "raven" or unit.art_id == "blue" or mech_id == "bastion"
+	return unit.art_id == "purple" or mech_id == "raven" or unit.art_id == "blue" or mech_id == "bastion" or unit.art_id == "orange" or mech_id == "barrage"
 
 
 func _show_attack_strip(unit: MechState) -> bool:

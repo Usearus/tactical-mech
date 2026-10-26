@@ -1,0 +1,51 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/gauge_pitch.gd" id="1_pitch"]
+[ext_resource type="Shader" uid="uid://b474y1xvdk7dn" path="res://shaders/icon_white.gdshader" id="2_white"]
+[ext_resource type="Texture2D" uid="uid://c005sck28lhl3" path="res://icodot-svg/ui/weather-nature/icon-lightning-ui.svg" id="3_bolt"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bolt"]
+shader = ExtResource("2_white")
+shader_parameter/ink = Color(1, 0.92, 0.55, 1)
+
+[node name="GaugePitch" type="Control"]
+z_index = 140
+z_as_relative = false
+top_level = true
+custom_minimum_size = Vector2(180, 80)
+layout_mode = 0
+offset_right = 180.0
+offset_bottom = 80.0
+mouse_filter = 2
+script = ExtResource("1_pitch")
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Plus" type="Label" parent="Row"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.78, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 12
+theme_override_font_sizes/font_size = 72
+text = "+1"
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Row"]
+texture_filter = 1
+material = SubResource("ShaderMaterial_bolt")
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("3_bolt")
+expand_mode = 1
+stretch_mode = 5

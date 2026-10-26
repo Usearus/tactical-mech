@@ -207,6 +207,9 @@ func test_bastion_holds_the_line() -> void:
 	var raven_unit := MechState.new()
 	raven_unit.data = load("res://data/mechs/player/raven.tres") as MechData
 	assert_true(FinisherBanner.uses_attack_strip(raven_unit), "raven finisher plays the attack")
+	var barrage_unit := MechState.new()
+	barrage_unit.data = load("res://data/mechs/player/barrage.tres") as MechData
+	assert_true(FinisherBanner.uses_attack_strip(barrage_unit), "barrage finisher plays the attack")
 	var comet_unit := MechState.new()
 	comet_unit.data = load("res://data/mechs/player/comet.tres") as MechData
 	assert_false(FinisherBanner.uses_attack_strip(comet_unit), "comet keeps the still pose")

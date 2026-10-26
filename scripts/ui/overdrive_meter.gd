@@ -75,6 +75,14 @@ func flash_empty() -> void:
 		_segments[index].flash_white(rest, _restore_segment.bind(index))
 
 
+## Global point a discard +1 should fly into.
+func charge_point() -> Vector2:
+	var host: Control = self
+	if _segments_box != null and _segments_box.size.x > 1.0:
+		host = _segments_box
+	return host.get_global_rect().get_center()
+
+
 func _restore_segment(index: int) -> void:
 	if index < 0 or index >= _segments.size():
 		return

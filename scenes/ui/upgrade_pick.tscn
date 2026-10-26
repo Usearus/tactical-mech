@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://cor0lagi0agdc" path="res://scripts/ui/upgrade_pick.gd" id="1_pick"]
 [ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="2_theme"]
 [ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="3_btn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button.tscn" id="3_sec"]
 
 [node name="UpgradePick" type="Control" unique_id=1773279755]
 layout_mode = 3
@@ -73,14 +74,14 @@ mouse_filter = 2
 theme_override_constants/separation = 24
 alignment = 1
 
-[node name="RefreshButton" parent="Margin/Body/Buttons" unique_id=756066090 instance=ExtResource("3_btn")]
+[node name="RefreshButton" parent="Margin/Body/Buttons" unique_id=756066090 instance=ExtResource("3_sec")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "Refresh (2)"
 
-[node name="SkipButton" parent="Margin/Body/Buttons" unique_id=1985414341 instance=ExtResource("3_btn")]
+[node name="SkipButton" parent="Margin/Body/Buttons" unique_id=1985414341 instance=ExtResource("3_sec")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(180, 56)
 layout_mode = 2

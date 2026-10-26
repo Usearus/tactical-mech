@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://c2fvjjatnm6rj"]
 
 [ext_resource type="Script" uid="uid://c1snhtv4m0rjv" path="res://scripts/ui/menu_corner.gd" id="1_corner"]
-[ext_resource type="PackedScene" path="res://scenes/ui/sci_primary_button_square.tscn" id="2_sq"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button_square.tscn" id="2_sq"]
 
 [node name="MenuCorner" type="HBoxContainer" unique_id=1302927831]
 custom_minimum_size = Vector2(124, 56)

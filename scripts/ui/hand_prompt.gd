@@ -19,7 +19,15 @@ func _ready() -> void:
 
 
 func open() -> void:
+	var layer := get_parent()
+	if layer is CanvasLayer:
+		layer.visible = true
+	set_anchors_preset(Control.PRESET_FULL_RECT)
+	var view_size := get_viewport_rect().size
+	position = Vector2.ZERO
+	size = view_size
 	visible = true
+	move_to_front()
 
 
 func close() -> void:

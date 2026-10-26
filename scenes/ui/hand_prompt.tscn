@@ -2,8 +2,9 @@
 
 [ext_resource type="Script" uid="uid://d4k8handprmpt" path="res://scripts/ui/hand_prompt.gd" id="1_prompt"]
 [ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="2_btn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button.tscn" id="2_sec"]
 [ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="2_bwjr1"]
-[ext_resource type="PackedScene" path="res://scenes/ui/sci_primary_button_square.tscn" id="3_sq"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button_square.tscn" id="3_sq"]
 
 [node name="HandPrompt" type="Control" unique_id=1231300637]
 layout_mode = 3
@@ -54,7 +55,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/font_size = 32
 text = "Warning: 
-You are about to about to end this round without using any cards. Would you like to draw a new hand on the next round?"
+You are about to end this round without using any cards. Would you like to draw a new hand on the next round?"
 autowrap_mode = 3
 
 [node name="Actions" type="HBoxContainer" parent="Center/Window/Margin/Column" unique_id=956507091]
@@ -69,7 +70,7 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 32
 text = "Yes, new hand"
 
-[node name="EndTurnButton" parent="Center/Window/Margin/Column/Actions" unique_id=500671645 instance=ExtResource("2_btn")]
+[node name="EndTurnButton" parent="Center/Window/Margin/Column/Actions" unique_id=500671645 instance=ExtResource("2_sec")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2

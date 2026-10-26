@@ -10,6 +10,7 @@
 [ext_resource type="Shader" uid="uid://b474y1xvdk7dn" path="res://shaders/icon_white.gdshader" id="6_white"]
 [ext_resource type="Shader" uid="uid://btvypaak44s61" path="res://shaders/card_frame_tint.gdshader" id="7_frame"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_action.tscn" id="8_action"]
+[ext_resource type="PackedScene" path="res://scenes/ui/card_active_glow.tscn" id="10_glow"]
 [ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="9_sheet"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_clip"]
@@ -63,6 +64,9 @@ size_flags_vertical = 4
 theme = ExtResource("1_wvd4f")
 theme_type_variation = &"CardBase"
 script = ExtResource("1_card")
+
+[node name="ActiveGlow" parent="." instance=ExtResource("10_glow")]
+unique_name_in_owner = true
 
 [node name="Clip" type="PanelContainer" parent="." unique_id=2037959445]
 clip_contents = true

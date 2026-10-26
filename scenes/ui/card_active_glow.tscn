@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/card_active_glow.gd" id="1_glow"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_glow"]
+bg_color = Color(0.2, 0.55, 1, 0)
+shadow_color = Color(0.28, 0.68, 1, 0.95)
+shadow_size = 28
+shadow_offset = Vector2(0, 18)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="ActiveGlow" type="Panel"]
+visible = false
+show_behind_parent = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_glow")
+script = ExtResource("1_glow")

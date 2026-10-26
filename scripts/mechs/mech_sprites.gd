@@ -5,6 +5,9 @@ const FRAME_SIZE := 64
 const IDLE_FPS := 6.0
 const ATTACK_FPS := 8.0
 const BOOST_FPS := 10.0
+## Share of the cell that sprite_scale 1 fills, measured on the visible pixels.
+const CELL_FILL := 0.9
+const FEET_LIFT := 6.0
 
 static var _cache: Dictionary = {}
 static var _pilots: Dictionary = {}
@@ -151,6 +154,36 @@ static func content_rect(texture: Texture2D) -> Rect2:
 		rect = Rect2(min_x, min_y, max_x - min_x + 1, max_y - min_y + 1)
 	_content_rects[key] = rect
 	return rect
+
+
+## Draws the visible body on a cell. sprite_scale 1 is the same height on every sheet.
+## Feet stay on one ground line, and a smaller sprite_scale shrinks toward those feet.
+static func seat_body(sprite: AnimatedSprite2D, cell_size: Vector2, body_scale: float, fill: float = CELL_FILL) -> void:
+	if sprite == null or sprite.sprite_frames == null or cell_size.x < 1.0 or cell_size.y < 1.0:
+		return
+	if not sprite.sprite_frames.has_animation("idle"):
+		return
+	var tex := sprite.sprite_frames.get_frame_texture("idle", 0)
+	if tex == null:
+		return
+	var frame := tex.get_size()
+	var content := content_rect(tex)
+	var longest := maxf(content.size.x, content.size.y)
+	if longest < 1.0:
+		longest = maxf(frame.x, frame.y)
+	if longest <= 0.0:
+		return
+	var body := body_scale if body_scale > 0.0 else 1.0
+	var cell := minf(cell_size.x, cell_size.y)
+	var drawn := cell * fill * body / longest
+	var content_center_x := content.position.x + content.size.x * 0.5
+	var content_bottom := content.position.y + content.size.y
+	var ground := cell_size.y * 0.5 + cell * fill * 0.4 - FEET_LIFT
+	sprite.scale = Vector2(drawn, drawn)
+	sprite.position = Vector2(
+		cell_size.x * 0.5 - (content_center_x - frame.x * 0.5) * drawn,
+		ground - (content_bottom - frame.y * 0.5) * drawn
+	)
 
 
 static func portrait_plays(frames: SpriteFrames) -> bool:

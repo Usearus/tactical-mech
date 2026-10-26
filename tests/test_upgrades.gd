@@ -128,6 +128,21 @@ func test_a_dead_mech_can_only_be_revived() -> void:
 	assert_true(saw_revive)
 
 
+func test_a_wiped_fight_offers_no_reward() -> void:
+	var solo := UpgradeRoller.legal_choices([_mech("bastion", false)], MissionUpgrades.new())
+	var pair := UpgradeRoller.legal_choices(
+		[_mech("bastion", false), _mech("comet", false)],
+		MissionUpgrades.new()
+	)
+	assert_eq(solo.size(), 0)
+	assert_eq(pair.size(), 0)
+	var survivor := UpgradeRoller.legal_choices(
+		[_mech("bastion", false), _mech("comet", true)],
+		MissionUpgrades.new()
+	)
+	assert_true(_has_kind(survivor, "Revive"))
+
+
 func test_group_effects_need_two_survivors() -> void:
 	var alone := UpgradeRoller.legal_choices([_mech("bastion"), _mech("comet", false)], MissionUpgrades.new())
 	var together := UpgradeRoller.legal_choices([_mech("bastion"), _mech("comet")], MissionUpgrades.new())
@@ -335,16 +350,21 @@ func test_rarity_follows_the_fight() -> void:
 	assert_eq(even.weight_3, 10)
 	assert_eq(odds.for_fight(3, 3).weight_3, 10)
 	assert_eq(odds.weight_1, 60)
-	var small := odds.for_fight(1, 1)
-	assert_true(small.weight_2 < odds.weight_2)
-	assert_true(small.weight_3 < odds.weight_3)
-	assert_true(small.weight_1 > odds.weight_1)
+	var duel := odds.for_fight(1, 1)
+	assert_eq(duel.weight_1, 60)
+	assert_eq(duel.weight_2, 30)
+	assert_eq(duel.weight_3, 10)
 	var favored := odds.for_fight(3, 1)
 	assert_true(favored.weight_3 < odds.weight_3)
 	var behind := odds.for_fight(2, 3)
 	assert_true(behind.weight_2 > odds.weight_2)
 	assert_true(behind.weight_3 > odds.weight_3)
 	assert_true(behind.weight_1 < odds.weight_1)
+	assert_eq(DraftOdds.fight_band(2, 2), "even")
+	assert_eq(DraftOdds.fight_band(3, 3), "even")
+	assert_eq(DraftOdds.fight_band(1, 1), "even")
+	assert_eq(DraftOdds.fight_band(3, 1), "advantaged")
+	assert_eq(DraftOdds.fight_band(2, 3), "disadvantaged")
 
 
 func test_a_common_roll_is_not_promoted_to_a_rarer_kind() -> void:

@@ -8,7 +8,7 @@ extends RefCounted
 const DEFAULT_SCENE := "res://scenes/stage/stage-0-0.tscn"
 ## Above mechs and their barrier. Overworld cells are z 1, sprites add 4, barrier adds 1.
 ## A stage layer that covers those mechs (In Front Of Characters) is z 8.
-## Rain is 9 and the Above layer is 10. Battle shade and HP badges are z 8. HUD starts at 15.
+## Rain is 9 and the Above layer is 10. HP badges are z 8. The battle's scenery veil sits under fighter sprites. HUD starts at 15.
 const SHADOW_Z := 7
 ## Rain, lightning, and later effects live under this child. Battle copies each one.
 const WEATHER_NODE := "Weather"
@@ -55,15 +55,37 @@ static func use(path: String) -> void:
 	bounds = mech_bounds(layer.get_used_rect())
 
 
-## Tile layers in draw order. Ground, then Shadow, then Props.
+## Tile layers in draw order, including a layer nested under another, such as Props under Ground.
 static func visual_layers() -> Array[TileMapLayer]:
 	var found: Array[TileMapLayer] = []
 	if root == null or not is_instance_valid(root):
 		return found
-	for child in root.get_children():
-		if child is TileMapLayer:
-			found.append(child)
+	_collect_tile_layers(root, found)
 	return found
+
+
+static func _collect_tile_layers(node: Node, into: Array[TileMapLayer]) -> void:
+	for child in node.get_children():
+		if child is TileMapLayer and (child as CanvasItem).visible:
+			into.append(child)
+		_collect_tile_layers(child, into)
+
+
+## The z a layer uses on the stage. A nested layer adds its parent's z when that z is relative.
+static func layer_draw_z(tile_layer: CanvasItem) -> int:
+	if tile_layer == null:
+		return 0
+	if not tile_layer.z_as_relative:
+		return tile_layer.z_index
+	var z := tile_layer.z_index
+	var parent := tile_layer.get_parent()
+	while parent is CanvasItem and parent != root:
+		var item := parent as CanvasItem
+		if not item.z_as_relative:
+			return item.z_index + z
+		z += item.z_index
+		parent = item.get_parent()
+	return z
 
 
 static func ensure() -> void:

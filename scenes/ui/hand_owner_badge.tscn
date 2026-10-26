@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" uid="uid://bh6k6jgd4s3of" path="res://scripts/ui/hand_owner_badge.gd" id="1_badge"]
-[ext_resource type="Shader" uid="uid://c4k7m2n8p5q6r" path="res://shaders/bubble_badge.gdshader" id="2_pin"]
+[ext_resource type="Shader" uid="uid://bpgrwixde3c8m" path="res://shaders/bubble_badge.gdshader" id="2_pin"]
 [ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="3_sheet"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_pin"]

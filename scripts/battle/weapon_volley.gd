@@ -9,9 +9,9 @@ const ROCKET_SCENE := preload("res://scenes/battle/rocket.tscn")
 
 ## Muzzles are frame pixels from the sprite center, facing right.
 ## Purple flash starts on frame 2 of the 8 fps strip. Orange's painted
-## rocket is gone by frame 4, so the real one leaves then.
+## rocket is gone by frame 4, so the real one leaves the tube mouth then.
 const _PURPLE_MUZZLES: Array[Vector2] = [Vector2(22, -6), Vector2(26, 1)]
-const _ORANGE_MUZZLES: Array[Vector2] = [Vector2(10, -25)]
+const _ORANGE_MUZZLES: Array[Vector2] = [Vector2(4, -30)]
 
 
 static func has_profile(art_id: String) -> bool:
@@ -20,6 +20,15 @@ static func has_profile(art_id: String) -> bool:
 
 static func muzzle_delay(art_id: String) -> float:
 	return float(_profile(art_id).get("delay", 0.0))
+
+
+## Signed bend that lifts the midpoint above the straight shot. Screen-up is negative Y.
+static func upward_bend(origin: Vector2, target: Vector2, amount: float) -> float:
+	var span := target - origin
+	var side := Vector2(-span.y, span.x)
+	if side.y > 0.0:
+		return -absf(amount)
+	return absf(amount)
 
 
 ## flip_h mirrors the drawing without changing the node transform, so the
@@ -121,8 +130,8 @@ static func play(
 			var aim := straight_aim(from, center, missed, overshoot) if straight else aim_point(from, center, spread, missed, rng, overshoot)
 			var bend := 0.0
 			if arc_size > 0.0:
-				var arc_sign := -1.0 if rng.randf() < 0.5 else 1.0
-				bend = arc_sign * rng.randf_range(arc_size * 0.65, arc_size)
+				var lift := rng.randf_range(arc_size * 0.65, arc_size)
+				bend = upward_bend(from, aim, lift)
 			var seconds := maxf(flight + rng.randf_range(-jitter, jitter), 0.08)
 			var delay := shot_i * gap
 			var shot := scene.instantiate() as BattleShot

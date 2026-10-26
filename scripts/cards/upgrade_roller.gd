@@ -71,6 +71,10 @@ static func legal_choices(units: Array, memory: MissionUpgrades) -> Array[Upgrad
 			for offer in team.offers:
 				if offer != null and offer.kind == "Immediate":
 					_add_immediate(found, offer, living)
+	# Revive is for a mech who fell while someone else from this fight is still standing.
+	# If everyone brought in is gone, there is no reward row.
+	if living.is_empty():
+		return found
 	var revive := _revive_template()
 	if revive != null:
 		for unit in dead:
@@ -334,11 +338,11 @@ static func _roll_kind(kinds: Array[String], rng: RandomNumberGenerator) -> Stri
 		total += int(KIND_WEIGHT.get(kind, 4))
 	if total <= 0:
 		return kinds[0]
-	var roll := rng.randi_range(1, total)
+	var ticket := rng.randi_range(1, total)
 	var cursor := 0
 	for kind in kinds:
 		cursor += int(KIND_WEIGHT.get(kind, 4))
-		if roll <= cursor:
+		if ticket <= cursor:
 			return kind
 	return kinds[kinds.size() - 1]
 

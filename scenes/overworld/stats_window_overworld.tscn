@@ -7,7 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_action.tscn" id="4_bw0hj"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_attack.tscn" id="5_wpvfr"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_evade.tscn" id="6_1euws"]
-[ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="7_teo3p"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button.tscn" id="7_teo3p"]
 
 [node name="StatsWindow" type="PanelContainer" unique_id=107101956]
 z_index = 25

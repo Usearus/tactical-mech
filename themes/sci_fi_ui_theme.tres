@@ -177,6 +177,92 @@ texture_margin_top = 10.0
 texture_margin_right = 10.0
 texture_margin_bottom = 10.0
 
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sec_disabled"]
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 22.0
+texture_margin_top = 22.0
+texture_margin_right = 22.0
+texture_margin_bottom = 22.0
+region_rect = Rect2(626, 86, 88, 58)
+modulate_color = Color(0.4, 0.45, 0.55, 0.75)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sec_hover"]
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 22.0
+texture_margin_top = 22.0
+texture_margin_right = 22.0
+texture_margin_bottom = 22.0
+region_rect = Rect2(626, 86, 88, 58)
+modulate_color = Color(1.25, 1.4, 1.45, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sec_pressed"]
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 22.0
+texture_margin_top = 22.0
+texture_margin_right = 22.0
+texture_margin_bottom = 22.0
+region_rect = Rect2(626, 86, 88, 58)
+modulate_color = Color(0.8, 1.45, 1.55, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sec_normal"]
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 22.0
+texture_margin_top = 22.0
+texture_margin_right = 22.0
+texture_margin_bottom = 22.0
+region_rect = Rect2(626, 86, 88, 58)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sec_sq_disabled"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(626, 147, 64, 64)
+modulate_color = Color(0.4, 0.45, 0.55, 0.75)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sec_sq_hover"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(626, 147, 64, 64)
+modulate_color = Color(1.25, 1.4, 1.45, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sec_sq_pressed"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(626, 147, 64, 64)
+modulate_color = Color(0.8, 1.45, 1.55, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sec_sq_normal"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(626, 147, 64, 64)
+
 [resource]
 CardBase/base_type = &"PanelContainer"
 CardBase/styles/panel = SubResource("StyleBoxTexture_p86no")
@@ -278,6 +364,22 @@ PrimaryButtonSquare/styles/hover = SubResource("StyleBoxTexture_sq_hover")
 PrimaryButtonSquare/styles/hover_pressed = SubResource("StyleBoxTexture_sq_pressed")
 PrimaryButtonSquare/styles/normal = SubResource("StyleBoxTexture_sq_normal")
 PrimaryButtonSquare/styles/pressed = SubResource("StyleBoxTexture_sq_pressed")
+SecondaryButton/base_type = &"Button"
+SecondaryButton/constants/align_to_largest_stylebox = 1
+SecondaryButton/styles/disabled = SubResource("StyleBoxTexture_sec_disabled")
+SecondaryButton/styles/focus = SubResource("StyleBoxTexture_sec_hover")
+SecondaryButton/styles/hover = SubResource("StyleBoxTexture_sec_hover")
+SecondaryButton/styles/hover_pressed = SubResource("StyleBoxTexture_sec_pressed")
+SecondaryButton/styles/normal = SubResource("StyleBoxTexture_sec_normal")
+SecondaryButton/styles/pressed = SubResource("StyleBoxTexture_sec_pressed")
+SecondaryButtonSquare/base_type = &"Button"
+SecondaryButtonSquare/constants/align_to_largest_stylebox = 1
+SecondaryButtonSquare/styles/disabled = SubResource("StyleBoxTexture_sec_sq_disabled")
+SecondaryButtonSquare/styles/focus = SubResource("StyleBoxTexture_sec_sq_hover")
+SecondaryButtonSquare/styles/hover = SubResource("StyleBoxTexture_sec_sq_hover")
+SecondaryButtonSquare/styles/hover_pressed = SubResource("StyleBoxTexture_sec_sq_pressed")
+SecondaryButtonSquare/styles/normal = SubResource("StyleBoxTexture_sec_sq_normal")
+SecondaryButtonSquare/styles/pressed = SubResource("StyleBoxTexture_sec_sq_pressed")
 PrimaryPanel/base_type = &"PanelContainer"
 PrimaryPanel/styles/panel = SubResource("StyleBoxTexture_primary")
 SciCheckbox/base_type = &"CheckBox"
