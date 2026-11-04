@@ -9,6 +9,7 @@ const OPTION_SCENE := preload("res://scenes/ui/upgrade_option.tscn")
 @onready var _options: HBoxContainer = %Options
 @onready var _refresh: Button = %RefreshButton
 @onready var _skip: Button = %SkipButton
+@onready var _skip_amount: Label = %SkipAmount
 @onready var _continue: Button = %ContinueButton
 
 var _units: Array = []
@@ -16,6 +17,8 @@ var _memory: MissionUpgrades
 var _choices: Array = []
 var _selected := -1
 var _closed := false
+## Pull ids already dealt on this offer. A refresh will not show them again.
+var _seen: Dictionary = {}
 
 
 func _ready() -> void:
@@ -23,6 +26,8 @@ func _ready() -> void:
 		_refresh.pressed.connect(_on_refresh)
 	if _skip != null:
 		_skip.pressed.connect(_on_skip)
+	if _skip_amount != null:
+		_skip_amount.text = "+%d" % GameManager.SKIP_CHARGE
 	if _continue != null:
 		_continue.pressed.connect(_on_continue)
 	visible = false
@@ -32,8 +37,12 @@ func present(units: Array, memory: MissionUpgrades) -> void:
 	_units = units
 	_memory = memory
 	_closed = false
+	_seen = {}
+	var layer := get_parent()
+	if layer is CanvasLayer:
+		layer.visible = true
 	visible = true
-	_show_row(UpgradeRoller.roll(units, memory))
+	_show_row(_deal())
 
 
 func _show_row(choices: Array) -> void:
@@ -74,16 +83,34 @@ func _sync_buttons() -> void:
 		_continue.disabled = _selected < 0 or _closed
 	if _refresh != null:
 		var left := _refreshes_left()
-		_refresh.disabled = left <= 0 or _closed
+		_refresh.disabled = left <= 0 or _closed or not _has_unseen()
 		_refresh.text = "Refresh (%d)" % left
 	if _skip != null:
 		_skip.disabled = _closed
 
 
 func _on_refresh() -> void:
-	if _closed or _memory == null or not _memory.spend_refresh():
+	if _closed or _memory == null or not _has_unseen() or not _memory.spend_refresh():
 		return
-	_show_row(UpgradeRoller.roll(_units, _memory))
+	_show_row(_deal())
+
+
+func _deal() -> Array:
+	var row := UpgradeRoller.roll(_units, _memory, null, null, _seen)
+	for choice in row:
+		var item := choice as UpgradeChoice
+		if item == null:
+			continue
+		var pull := UpgradeRoller.pull_id(item)
+		if pull != "":
+			_seen[pull] = true
+	return row
+
+
+func _has_unseen() -> bool:
+	if _memory == null:
+		return false
+	return UpgradeRoller.has_unseen(UpgradeRoller.legal_choices(_units, _memory), _seen)
 
 
 func _refreshes_left() -> int:

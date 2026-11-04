@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://braoo5qgd7dmm"]
+
+[ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="1_theme"]
+[ext_resource type="Shader" uid="uid://b474y1xvdk7dn" path="res://shaders/icon_white.gdshader" id="2_ink"]
+[ext_resource type="Texture2D" uid="uid://c005sck28lhl3" path="res://icodot-svg/ui/weather-nature/icon-lightning-ui.svg" id="3_bolt"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bolt"]
+shader = ExtResource("2_ink")
+shader_parameter/ink = Color(1, 0.92, 0.55, 1)
+
+[node name="BarPanel" type="PanelContainer" unique_id=1253102078]
+custom_minimum_size = Vector2(145, 56)
+offset_right = 320.0
+offset_bottom = 56.0
+mouse_filter = 2
+theme = ExtResource("1_theme")
+theme_type_variation = &"BarPanel"
+
+[node name="Row" type="HBoxContainer" parent="." unique_id=1253102080]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Caption" type="Label" parent="Row" unique_id=1253102079]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(0.93, 0.96, 0.98, 1)
+theme_override_font_sizes/font_size = 28
+text = "Overdrive slot"
+
+[node name="Reward" type="HBoxContainer" parent="Row" unique_id=1253102081]
+visible = false
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Icon" type="TextureRect" parent="Row/Reward" unique_id=1253102082]
+texture_filter = 1
+material = SubResource("ShaderMaterial_bolt")
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("3_bolt")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Amount" type="Label" parent="Row/Reward" unique_id=1253102083]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.55, 1)
+theme_override_font_sizes/font_size = 22
+text = "1"
+vertical_alignment = 1

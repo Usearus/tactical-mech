@@ -1,7 +1,7 @@
 class_name DeckOverlay
 extends CanvasLayer
 
-const CARD_SCENE := preload("res://scenes/ui/mech_card.tscn")
+const LISTED_CARD := preload("res://scenes/ui/listed_card.tscn")
 const CARD_SIZE := Vector2(176, 268)
 
 @onready var _overlay: Control = $Overlay
@@ -53,18 +53,17 @@ func _fill(unit: MechState, cards: Array[CardData]) -> void:
 	)
 	var stroke := MechCard.stroke_for(unit.data)
 	for card in cards:
-		var view := CARD_SCENE.instantiate() as MechCard
-		view.custom_minimum_size = CARD_SIZE
-		view.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		view.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		_list.add_child(view)
-		view.present(card, stroke, GameManager.card_damage(card), GameManager.card_block(card))
-		if card.is_special:
-			view.play_shine()
-			var badge := view.special_badge()
+		var slot := LISTED_CARD.instantiate() as ListedCard
+		slot.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		slot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		_list.add_child(slot)
+		slot.show_card(card, stroke, GameManager.card_damage(card), GameManager.card_block(card), UpgradeDeck.listing_tag(card, unit.data))
+		if card.is_special and slot.card_view != null:
+			slot.card_view.play_shine()
+			var badge := slot.card_view.special_badge()
 			if badge != null and _info_note != null:
 				_info_note.attach(badge, MechCard.SPECIAL_NOTE)
-		_silence_mouse(view)
+		_silence_mouse(slot)
 
 
 func _clear() -> void:

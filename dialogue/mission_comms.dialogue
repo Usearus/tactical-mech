@@ -1,0 +1,16 @@
+# Opening comms on the overworld. Each cue ends before the next mission.
+~ mission_1
+
+Comms: Well that was fast. Citadel approaches. Their mechs are already on the streets.
+Comms: Move beside one and the fight starts right there.
+Comms: Fight as a squad, you'll be at a disadvantage if you attack alone.
+Comms: Clear every hostile and this mission is done. Then we can head back to base.
+=> END
+
+~ mission_2
+
+Comms: Rain's on the bridge. Red corp holds the far bank.
+Comms: Their grunts, flyers, and the boss shoot from two cells out. The quad never fires. When it acts, every red mech gains barrier.
+Comms: Spread the squad. A line of them will rake anyone who bunches up.
+Comms: Clear the bridge and we pull back to base.
+=> END

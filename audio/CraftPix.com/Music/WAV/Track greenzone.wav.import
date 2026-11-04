@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://b6qrol1okh4ot"
+path="res://.godot/imported/Track greenzone.wav-facb4613dc5c9efb9f8456b6cd261575.sample"
+
+[deps]
+
+source_file="res://audio/CraftPix.com/Music/WAV/Track greenzone.wav"
+dest_files=["res://.godot/imported/Track greenzone.wav-facb4613dc5c9efb9f8456b6cd261575.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" uid="uid://b3te7dqvrcci" path="res://scripts/ui/game_menu.gd" id="1_menu"]
 [ext_resource type="Texture2D" path="res://art/icons/stats/heart.svg" id="2_heart"]
@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" path="res://art/icons/stats/range.svg" id="7_range"]
 [ext_resource type="Texture2D" path="res://art/icons/stats/move.svg" id="8_move"]
 [ext_resource type="Texture2D" path="res://art/icons/stats/dodge.svg" id="9_dodge"]
+[ext_resource type="Texture2D" path="res://art/icons/stats/evade.svg" id="16_evade"]
 [ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button.tscn" id="10_btn"]
 [ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="11_theme"]
 [ext_resource type="PackedScene" path="res://scenes/ui/rule_topic.tscn" id="12_topic"]
@@ -116,6 +117,38 @@ theme_override_font_sizes/font_size = 28
 text = "Every mech in your squad is destroyed."
 autowrap_mode = 3
 
+[node name="Bonuses" type="VBoxContainer" parent="Root/MenuPage/Margin/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Root/MenuPage/Margin/Column/Bonuses"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 40
+text = "Bonuses"
+
+[node name="BonusEmpty" type="Label" parent="Root/MenuPage/Margin/Column/Bonuses"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "Bonuses you collect for this mission will show here."
+autowrap_mode = 3
+
+[node name="Scroll" type="ScrollContainer" parent="Root/MenuPage/Margin/Column/Bonuses"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="BonusList" type="VBoxContainer" parent="Root/MenuPage/Margin/Column/Bonuses/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
 [node name="Legend" type="VBoxContainer" parent="Root/MenuPage/Margin/Column"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -153,14 +186,17 @@ texture = ExtResource("2_heart")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Heart"]
+[node name="Phrase" type="RichTextLabel" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Heart"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 28
-text = "Hit points left before this mech is destroyed."
+mouse_filter = 2
+bbcode_enabled = true
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+scroll_active = false
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 28
+text = "[gold]Health:[/gold] Hit points left before this mech is destroyed."
 autowrap_mode = 3
-vertical_alignment = 1
 
 [node name="Defend" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
 layout_mode = 2
@@ -177,14 +213,17 @@ texture = ExtResource("3_defend")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Defend"]
+[node name="Phrase" type="RichTextLabel" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Defend"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 28
-text = "Guard that absorbs hits before hit points. Only active during a battle."
+mouse_filter = 2
+bbcode_enabled = true
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+scroll_active = false
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 28
+text = "[gold]Guard:[/gold] Absorbs hits before hit points. Only active during a battle."
 autowrap_mode = 3
-vertical_alignment = 1
 
 [node name="Crescent" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
 layout_mode = 2
@@ -201,14 +240,17 @@ texture = ExtResource("4_crescent")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Crescent"]
+[node name="Phrase" type="RichTextLabel" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Crescent"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 28
-text = "Barrier that absorbs hits after guard, before hit points. Remains after battle."
+mouse_filter = 2
+bbcode_enabled = true
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+scroll_active = false
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 28
+text = "[gold]Barrier:[/gold] Absorbs hits after guard, before hit points. Remains after battle."
 autowrap_mode = 3
-vertical_alignment = 1
 
 [node name="Clock" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
 layout_mode = 2
@@ -225,14 +267,17 @@ texture = ExtResource("5_clock")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Clock"]
+[node name="Phrase" type="RichTextLabel" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Clock"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 28
-text = "Cards left before this enemy takes a turn."
+mouse_filter = 2
+bbcode_enabled = true
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+scroll_active = false
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 28
+text = "[gold]Action:[/gold] Cards left before this enemy takes a turn."
 autowrap_mode = 3
-vertical_alignment = 1
 
 [node name="Attack" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
 layout_mode = 2
@@ -249,14 +294,17 @@ texture = ExtResource("6_attack")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Attack"]
+[node name="Phrase" type="RichTextLabel" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Attack"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 28
-text = "Damage this card deals."
+mouse_filter = 2
+bbcode_enabled = true
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+scroll_active = false
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 28
+text = "[gold]Attack:[/gold] Damage this card deals."
 autowrap_mode = 3
-vertical_alignment = 1
 
 [node name="Range" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
 layout_mode = 2
@@ -273,14 +321,17 @@ texture = ExtResource("7_range")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Range"]
+[node name="Phrase" type="RichTextLabel" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Range"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 28
-text = "How far this card can reach."
+mouse_filter = 2
+bbcode_enabled = true
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+scroll_active = false
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 28
+text = "[gold]Range:[/gold] How far this card can reach."
 autowrap_mode = 3
-vertical_alignment = 1
 
 [node name="Move" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
 layout_mode = 2
@@ -297,21 +348,51 @@ texture = ExtResource("8_move")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Move"]
+[node name="Phrase" type="RichTextLabel" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Move"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 28
-text = "Cells this card moves."
+mouse_filter = 2
+bbcode_enabled = true
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+scroll_active = false
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 28
+text = "[gold]Move:[/gold] Cells this card moves."
 autowrap_mode = 3
-vertical_alignment = 1
 
-[node name="Dodge" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
+[node name="Evade" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="Icon" type="TextureRect" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Dodge"]
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Evade"]
+texture_filter = 0
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("16_evade")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Phrase" type="RichTextLabel" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Evade"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+bbcode_enabled = true
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+scroll_active = false
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 28
+text = "[gold]Evade:[/gold] Negates one incoming attack."
+autowrap_mode = 3
+
+[node name="Intercept" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Intercept"]
 texture_filter = 0
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
@@ -321,14 +402,17 @@ texture = ExtResource("9_dodge")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Phrase" type="Label" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Dodge"]
+[node name="Phrase" type="RichTextLabel" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List/Intercept"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 28
-text = "This card negates one incoming attack."
+mouse_filter = 2
+bbcode_enabled = true
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
+scroll_active = false
+theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 28
+text = "[gold]Intercept:[/gold] Takes the hit of any ally that is 1 cell away."
 autowrap_mode = 3
-vertical_alignment = 1
 
 [node name="HowTo" type="Control" parent="Root"]
 unique_name_in_owner = true
@@ -481,7 +565,7 @@ scroll_active = false
 custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
 theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/normal_font_size = 36
-text = "Choose mechs before starting a mission. The squad [gold]Overdrive[/gold] gauge holds 12 charge. Once it is full, [gold]Overdrive[/gold] can be activated in battle.
+text = "Choose mechs before starting a mission. 
 
 [gold]HP[/gold] = Hit points at start of mission
 [gold]ATK[/gold] = Attack power from deck
@@ -526,7 +610,7 @@ scroll_active = false
 custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
 theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/normal_font_size = 36
-text = "Each mech brings its own deck. More mechs in the fight means more cards. Play a card, then choose its target. Attacks deal damage within their range. Move cards step that mech. You can [gold]discard[/gold] a card instead of playing it. A battle lasts two rounds, or ends sooner if one side is wiped out."
+text = "Each mech brings its own deck. More mechs in the fight means more cards. Play a card, then choose its target. Attacks deal damage within their range. Move cards step that mech. Drag a card to [gold]Discard[/gold] to get rid of it without playing it. Drag it to [gold]Insert to charge[/gold] to discard it and add 1 [gold]charge[/gold]. Open [gold]Discard[/gold] to see every card that left your hand, including ones you inserted. A battle lasts two rounds, or ends sooner if one side is wiped out."
 autowrap_mode = 3
 
 [node name="Defense" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
@@ -539,7 +623,7 @@ scroll_active = false
 custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
 theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/normal_font_size = 36
-text = "[gold]Guard[/gold] absorbs hits during the battle, then drops when you return to the map. [gold]Barrier[/gold] absorbs hits after [gold]Guard[/gold], and whatever is left stays on the map. A [gold]Dodge[/gold] card stays in hand and negates one incoming attack."
+text = "[gold]Guard[/gold] absorbs hits during the battle, then drops when you return to the map. [gold]Barrier[/gold] absorbs hits after [gold]Guard[/gold], and whatever is left stays on the map. An [gold]Evade[/gold] card stays in hand and negates one incoming attack. [gold]Intercept[/gold] takes the hit of any ally that is 1 cell away."
 autowrap_mode = 3
 
 [node name="Timers" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
@@ -552,7 +636,7 @@ scroll_active = false
 custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
 theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/normal_font_size = 36
-text = "Each enemy shows how many cards are left before it acts. Playing a card, or ending the round, counts every timer down. At zero, that enemy takes a turn, then its count starts over. [gold]Discarding[/gold] a card does not count the timers down."
+text = "Each enemy shows how many cards are left before it acts. Playing a card, or ending the round, counts every timer down. At zero, that enemy takes a turn, then its count starts over. [gold]Discarding[/gold] a card, or inserting one to charge, does not count the timers down."
 autowrap_mode = 3
 
 [node name="OverdriveBar" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
@@ -565,7 +649,7 @@ scroll_active = false
 custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
 theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/normal_font_size = 36
-text = "The [gold]Overdrive[/gold] gauge belongs to the whole squad and holds 12 charge. When the bar is full, [gold]Overdrive[/gold] can be activated. Charge you have not used carries into the next fight."
+text = "The [gold]Overdrive[/gold] gauge belongs to the whole squad and holds 10 charge. When the bar is full, [gold]Insert to charge[/gold] is replaced by [gold]Activate Overdrive[/gold]. You can still drag cards to [gold]Discard[/gold]. Charge you have not used carries into the next fight."
 autowrap_mode = 3
 
 [node name="GainingOverdrive" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
@@ -578,7 +662,7 @@ scroll_active = false
 custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
 theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/normal_font_size = 36
-text = "Discarding a card in battle adds 1 [gold]charge[/gold]. Throwing a hand away for a new one on round 1 adds 1 [gold]charge[/gold] per card. Cards still in hand when the battle ends add 1 [gold]charge[/gold] each."
+text = "Drag a card onto [gold]Insert to charge[/gold] to add 1 [gold]charge[/gold]. Dragging a card onto [gold]Discard[/gold] does not add charge. Throwing a hand away for a new one on round 1 adds 1 [gold]charge[/gold] per card. Cards still in hand when the battle ends add 1 [gold]charge[/gold] each."
 autowrap_mode = 3
 
 [node name="UsingOverdrive" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
@@ -591,7 +675,7 @@ scroll_active = false
 custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
 theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/normal_font_size = 36
-text = "When the gauge is full, press [gold]Activate Overdrive[/gold] in battle. For the rest of that fight, attacks hit harder, guards block more, and each mech's [gold]Overdrive[/gold] card can enter the hand. The gauge is spent when that fight ends."
+text = "When the gauge is full, [gold]Activate Overdrive[/gold] takes the place of [gold]Insert to charge[/gold]. Press it in battle. For the rest of that fight, attacks hit harder, guards block more, and each mech's [gold]Overdrive[/gold] card can enter the hand. The gauge is spent when that fight ends."
 autowrap_mode = 3
 
 [node name="MenuPanel" type="PanelContainer" parent="Root"]

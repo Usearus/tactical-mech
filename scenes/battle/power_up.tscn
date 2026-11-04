@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/power_up.gd" id="1_fx"]
+
+[node name="PowerUp" type="Node2D"]
+texture_filter = 1
+script = ExtResource("1_fx")
+
+[node name="Back" type="Sprite2D" parent="."]
+z_index = -1
+centered = true
+
+[node name="Front" type="Sprite2D" parent="."]
+z_index = 1
+centered = true

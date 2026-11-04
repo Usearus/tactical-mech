@@ -36,9 +36,9 @@ func _ready() -> void:
 func show_choice(choice: UpgradeChoice) -> void:
 	if choice == null or choice.preview == null or _card_host == null:
 		return
-	var group := choice.kind == "Immediate"
+	var squad := choice.kind == "Immediate" or choice.kind == "Edict"
 	if _card == null:
-		var scene: PackedScene = GROUP_CARD_SCENE if group else CARD_SCENE
+		var scene: PackedScene = GROUP_CARD_SCENE if squad else CARD_SCENE
 		_card = scene.instantiate() as MechCard
 		_card.custom_minimum_size = CARD_SIZE
 		_card.size = CARD_SIZE
@@ -48,7 +48,7 @@ func show_choice(choice: UpgradeChoice) -> void:
 		stroke = MechCard.stroke_for(choice.bound_mech.data)
 	_card.present(choice.preview, stroke)
 	_card.set_pull_enabled(false)
-	if group:
+	if choice.kind == "Immediate":
 		_card.show_instant_use()
 	for index in _stars.size():
 		_stars[index].visible = index < choice.rarity
@@ -121,9 +121,9 @@ func _set_rare_shadow(enabled: bool) -> void:
 
 func _kind_caption(kind: String) -> String:
 	if kind == "Modify":
-		return "Upgrade"
+		return UpgradeDeck.TAG_UPGRADE
 	if kind == "Grant":
-		return "New Card"
+		return UpgradeDeck.TAG_NEW
 	return ""
 
 
@@ -179,5 +179,6 @@ func _show_badges(mechs: Array[MechState]) -> int:
 
 func _on_hit(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		SoundBank.play("ui")
 		pressed.emit()
 		_hit.accept_event()

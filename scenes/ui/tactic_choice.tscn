@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/tactic_choice.gd" id="1_choice"]
+[ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="2_button"]
+[ext_resource type="PackedScene" path="res://scenes/ui/info_badge.tscn" id="3_tip"]
+
+[node name="TacticChoice" type="HBoxContainer"]
+theme_override_constants/separation = 8
+script = ExtResource("1_choice")
+
+[node name="Button" parent="." instance=ExtResource("2_button")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+
+[node name="Tip" parent="." instance=ExtResource("3_tip")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 4

@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bire0k3ea4f5v"
+path="res://.godot/imported/Magical Interface 8-1.wav-b33498f537d46020078127b9dec81083.sample"
+
+[deps]
+
+source_file="res://audio/Free Sounds Pack/Magical Interface 8-1.wav"
+dest_files=["res://.godot/imported/Magical Interface 8-1.wav-b33498f537d46020078127b9dec81083.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

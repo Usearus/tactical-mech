@@ -32,6 +32,7 @@ const ATTACK_ICON: Texture2D = preload("res://art/icons/stats/attack.svg")
 const RANGE_ICON: Texture2D = preload("res://art/icons/stats/range.svg")
 const MOVE_ICON: Texture2D = preload("res://art/icons/stats/move.svg")
 const DODGE_ICON: Texture2D = preload("res://art/icons/stats/dodge.svg")
+const EVADE_ICON: Texture2D = preload("res://art/icons/stats/evade.svg")
 const DEFEND_ICON: Texture2D = preload("res://art/icons/stats/defend.svg")
 const BARRIER_ICON: Texture2D = preload("res://art/icons/stats/crescent.svg")
 const CHARGE_ICON: Texture2D = preload("res://icodot-svg/ui/weather-nature/icon-lightning-ui.svg")
@@ -44,7 +45,7 @@ const COST_COLOR := Color(1, 0.92, 0.55)
 const CHIP_SCENE := preload("res://scenes/ui/stat_chip.tscn")
 const INFO_BADGE := preload("res://scenes/ui/info_badge.tscn")
 const OWNER_BADGE := preload("res://scenes/ui/hand_owner_badge.tscn")
-const SPECIAL_NOTE := "Special card: Can only be used when in overdrive mode."
+const SPECIAL_NOTE := "Special: Can only be used when in overdrive mode."
 
 signal pulled
 signal undo_dragged
@@ -324,7 +325,7 @@ static func tint_upgrade_copy(copy: String, card: CardData = null) -> String:
 
 static func _tint_movement(copy: String, amount: int) -> String:
 	var finder := RegEx.new()
-	if finder.compile("(?i)\\b(step|move|slip|fall back)\\s+\\d+(\\s+cells?)?") != OK:
+	if finder.compile("(?i)\\b(step|move|slip|fall back)(\\s+up\\s+to)?\\s+(\\d+)(\\s+cells?)?") != OK:
 		return copy
 	var found := finder.search_all(copy)
 	if found.is_empty():
@@ -334,9 +335,9 @@ static func _tint_movement(copy: String, amount: int) -> String:
 	var cursor := 0
 	for hit in found:
 		var noun := ""
-		if hit.get_string(2) != "":
+		if hit.get_string(4) != "":
 			noun = " cell" if amount == 1 else " cells"
-		var phrase := "%s %d%s" % [hit.get_string(1), amount, noun]
+		var phrase := "%s%s %d%s" % [hit.get_string(1), hit.get_string(2), amount, noun]
 		built += copy.substr(cursor, hit.get_start() - cursor)
 		built += "[color=#%s]%s[/color]" % [hex, phrase]
 		cursor = hit.get_end()
@@ -468,16 +469,21 @@ func _hide_enemy_dim() -> void:
 		host.visible = false
 
 
+func is_dragging() -> bool:
+	return _dragging
+
+
 func set_drop_handler(handler: Callable) -> void:
 	_drop_handler = handler
 
 
-func set_discard_preview(active: bool) -> void:
+func set_discard_preview(active: bool, hide_face: bool = false) -> void:
 	var preview := active and _dragging
 	var changed := preview != _discard_preview
 	_discard_preview = preview
 	# `active` is still true on the release frame, after dragging has already stopped.
-	_show_card_face(not active)
+	# Discard keeps the face. Insert clears it so the +1 is what you read.
+	_show_card_face(not (active and hide_face))
 	if not changed or not _dragging:
 		return
 	var target := Vector2(DISCARD_PREVIEW_SCALE, DISCARD_PREVIEW_SCALE) if preview else _drag_scale()
@@ -490,7 +496,6 @@ func set_gauge_pitch_visible(show_tag: bool) -> void:
 	_gauge_tag.visible = show_tag
 	if show_tag:
 		_raise_node(_gauge_tag)
-	if _discard_preview or show_tag:
 		_show_card_face(false)
 
 
@@ -609,8 +614,13 @@ func _end_glide() -> void:
 
 func set_chosen(chosen: bool) -> void:
 	modulate = Color(1.08, 1.0, 0.72) if chosen else Color.WHITE
+	set_active_pulse(chosen)
+
+
+## The pulse belongs to a resting chosen card. A drag puts it away.
+func set_active_pulse(on: bool) -> void:
 	if _active_glow != null:
-		_active_glow.set_lit(chosen)
+		_active_glow.set_lit(on and not _dragging)
 
 
 ## A play the gauge or the board refused. Snap home and flash, so the card does not stay where the drag left it.
@@ -707,6 +717,8 @@ func _begin_drag(global_pos: Vector2) -> void:
 	_drag_delta = Vector2.ZERO
 	z_index = HandOwnerBadge.DRAW_Z + 1
 	_set_slot_z(20)
+	if not _undo_drag:
+		_notify_drop(global_pos, false)
 
 
 func _follow_drag(global_pos: Vector2) -> void:
@@ -738,6 +750,7 @@ func _end_drag(global_pos: Vector2) -> void:
 	if not tap and _notify_drop(global_pos, true):
 		return
 	if tap:
+		_notify_drop(global_pos, false)
 		_finish_tap()
 		return
 	if delta.length() >= PULL_DISTANCE:
@@ -926,9 +939,12 @@ func _show_action_cost(card: CardData) -> void:
 		cost_row.visible = true
 	var overdrive := GameManager.battle_offense
 	var charge := card != null and card.pays_charge()
+	var waived := card != null and GameManager.opener_is_free() and (card.pays_action() or card.charge_due(false) > 0)
 	var owed := 1
 	if card == null:
 		owed = 1
+	elif waived:
+		owed = 0
 	elif charge:
 		owed = card.charge_due(overdrive)
 	elif card.pays_action():
@@ -936,7 +952,7 @@ func _show_action_cost(card: CardData) -> void:
 	else:
 		owed = 0
 	_action_cost.text = str(owed)
-	var tint := ENHANCED_COLOR if card != null and card.has_upgrade_mark("cost") else COST_COLOR
+	var tint := ENHANCED_COLOR if waived or (card != null and card.has_upgrade_mark("cost")) else COST_COLOR
 	_action_cost.add_theme_color_override("font_color", tint)
 	if _action_icon == null:
 		return
@@ -997,7 +1013,7 @@ func _show_icon_stats(card: CardData) -> void:
 			elif card.barrier > 0:
 				_add_stat(row, "bar", card.barrier)
 			elif card.is_dodge():
-				_add_stat(row, "dodge", 1)
+				_add_stat(row, "evade", 1)
 			elif card.block > 0:
 				_add_stat(row, "def", _stat_block, _stat_block > card.block)
 			if card.movement > 0:
@@ -1005,7 +1021,7 @@ func _show_icon_stats(card: CardData) -> void:
 		"Move":
 			_add_stat(row, "mov", card.movement, move_boosted)
 	if card.intercept and not card.is_dodge():
-		_add_stat(row, "dodge", 1)
+		_add_stat(row, "int", 1)
 	row.visible = row.get_child_count() > 0
 
 
@@ -1036,7 +1052,9 @@ func _bind_tips() -> void:
 	if cost_row != null:
 		var overdrive := GameManager.battle_offense
 		var phrase := "Cost: Card costs 1 action to use."
-		if _shown != null:
+		if _shown != null and GameManager.opener_is_free() and (_shown.pays_action() or _shown.charge_due(false) > 0):
+			phrase = "Cost: The first card this battle is free."
+		elif _shown != null:
 			phrase = _shown.cost_note(overdrive)
 		note.watch(cost_row, phrase)
 	var badge := special_badge()
@@ -1090,7 +1108,9 @@ func _stat_texture(kind: String) -> Texture2D:
 			return ATTACK_ICON
 		"rng":
 			return RANGE_ICON
-		"dodge":
+		"evade":
+			return EVADE_ICON
+		"int":
 			return DODGE_ICON
 		"def":
 			return DEFEND_ICON

@@ -35,22 +35,10 @@ const COMMENCE_TEXT := "COMMENCE"
 const ATTACK_TEXT := "ATTACK"
 const ACTION_BUTTON_SIZE := Vector2(180, 96)
 const PORTRAIT_SCENE := preload("res://scenes/ui/confirm_portrait.tscn")
-const TACTIC_BUTTON_SCENE := preload("res://scenes/ui/sci_primary_button.tscn")
+const TACTIC_CHOICE_SCENE := preload("res://scenes/ui/tactic_choice.tscn")
 const PLACE_CHIP := preload("res://scenes/ui/place_mech_chip.tscn")
 const SPAWN_FILL := Color(0.55, 0.82, 1.0, 0.42)
-const COMMS_PORTRAIT := preload("res://art/characters/misc/comms.png")
-const _MISSION_1_COMMS: PackedStringArray = [
-	"Well that was fast. Citadel approaches. Their mechs are already on the streets.",
-	"Move beside one and the fight starts right there.",
-	"Fight as a squad, you'll be at a disadvantage if you attack alone.",
-	"Clear every hostile and this mission is done. Then we can head back to base.",
-]
-const _MISSION_2_COMMS: PackedStringArray = [
-	"Rain's on the bridge. Red corp holds the far bank.",
-	"Their grunts, flyers, and the boss shoot from two cells out. The quad never fires. When it acts, every red mech gains barrier.",
-	"Spread the squad. A line of them will rake anyone who bunches up.",
-	"Clear the bridge and we pull back to base.",
-]
+const MISSION_COMMS: DialogueResource = preload("res://dialogue/mission_comms.dialogue")
 const APPROACH_BOX_SCENE := preload("res://scenes/ui/approach_box.tscn")
 const TURN_CHEVRON_SCENE := preload("res://scenes/ui/turn_chevron.tscn")
 const TURN_CHEVRON_BOB := 0.28
@@ -157,6 +145,8 @@ var _placing := false
 var _placement_confirmed := false
 var _place_drag_id := ""
 var _block_cell_press_frame := -1
+## Set when a pointer releases on End Turn, so a slide-off can be ignored. Keyboard stays allowed.
+var _end_turn_pointer_release := false
 var _spawn_lookup: Dictionary = {}
 var _placement := SquadPlacement.new()
 var _intro_tween: Tween
@@ -212,6 +202,8 @@ func _can_attack() -> bool:
 
 
 func _ready() -> void:
+	end_turn_button.button_down.connect(_on_end_turn_down)
+	end_turn_button.gui_input.connect(_on_end_turn_pointer)
 	end_turn_button.pressed.connect(_on_end_turn)
 	attack_button.pressed.connect(_on_attack_pressed)
 	back_to_title_button.pressed.connect(_on_back_to_title_pressed)
@@ -679,16 +671,18 @@ func _build_tactic_buttons() -> void:
 	_tactic_buttons.clear()
 	var group := ButtonGroup.new()
 	for tactic in BattleTactic.enabled_list():
-		var button := TACTIC_BUTTON_SCENE.instantiate() as Button
+		var row := TACTIC_CHOICE_SCENE.instantiate() as TacticChoice
+		if row == null:
+			continue
+		_tactic_list.add_child(row)
+		var button := row.button
+		if button == null:
+			continue
 		button.text = tactic.display_name
 		button.toggle_mode = true
 		button.button_group = group
-		button.layout_mode = 2
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.custom_minimum_size = Vector2(220, 56)
-		button.add_theme_font_size_override("font_size", 28)
 		button.toggled.connect(_on_tactic_toggled.bind(tactic.id))
-		_tactic_list.add_child(button)
+		row.show_bonus(_overdrive_note, tactic.bonus_note())
 		_tactic_buttons[tactic.id] = button
 
 
@@ -754,6 +748,8 @@ func _apply_confirm_bar() -> void:
 		_tactic_panel.visible = _field_preview
 	if _confirm_panel != null and _confirm_panel.visible != confirming:
 		_confirm_panel.visible = confirming
+	if _timeline_panel != null:
+		_timeline_panel.visible = not confirming
 	if not confirming:
 		attack_button.visible = _can_attack()
 		attack_button.disabled = _enemies_in_range(actor).is_empty()
@@ -881,7 +877,7 @@ func _set_fight_header(players: int, enemies: int) -> void:
 			_prize_label.text = "(0.5x Reward Rarity)"
 		"disadvantaged":
 			_fight_style_label.text = "Disadvantaged Fight"
-			_prize_label.text = "(1.5x Reward Rarity)"
+			_prize_label.text = "(2.0x Reward Rarity)"
 		_:
 			_fight_style_label.text = "Even Fight"
 			_prize_label.text = "(1.0x Reward Rarity)"
@@ -938,6 +934,9 @@ func _make_confirm_portrait(unit: MechState) -> Panel:
 			portrait.frame = 0
 		portrait.flip_h = false if pilot else unit.facing < 0
 	portrait.set_meta("pilot", pilot)
+	var hp_label := chip.get_node_or_null("HitPoints/Amount") as Label
+	if hp_label != null:
+		hp_label.text = str(unit.hp)
 	chip.resized.connect(_place_timeline_portrait.bind(chip))
 	return chip
 
@@ -961,6 +960,21 @@ func _enemies_in_range(unit: MechState) -> Array[MechState]:
 			if other != null and other.alive and other.team == "enemy":
 				found.append(other)
 	return found
+
+
+## Attack marks while a move is open. Empty cells this step cannot enter stay clear.
+## An enemy already in reach stays marked.
+func _attack_reach_on_move(unit: MechState, move_cells: Dictionary) -> Dictionary:
+	var cells := {}
+	for raw in _attack_reach_cells(unit):
+		var coords: Vector2i = raw
+		if move_cells.has(coords):
+			cells[coords] = true
+			continue
+		var standing := _unit_at(coords)
+		if standing != null and standing.alive and standing.team == "enemy":
+			cells[coords] = true
+	return cells
 
 
 ## Cells this mech can open a fight from. Allies are left plain. An enemy in reach is included.
@@ -1131,6 +1145,7 @@ func _apply_map_view() -> void:
 		_map_pan.y = slack.y * 0.5 if slack.y <= 1.0 else clampf(_map_pan.y, -slack.y * 0.5, slack.y * 0.5)
 	grid.position = (grid_host.size - visual) * 0.5 + _map_pan
 	_sync_approach_boxes()
+	_fit_cell_hit_points()
 	_place_status_tip()
 
 
@@ -1397,8 +1412,14 @@ func _on_map_mouse_button(event: InputEventMouseButton) -> void:
 		_gesture_panned = false
 		_map_drag_total = 0.0
 		var grabbing := event.button_index == MOUSE_BUTTON_LEFT and _grabbing_placed_player(event.global_position)
-		_map_dragging = not grabbing and _pointer_on_map(event.global_position) and (
-			event.button_index == MOUSE_BUTTON_MIDDLE or _map_can_pan()
+		var holding_end_turn := (
+			event.button_index == MOUSE_BUTTON_LEFT and _press_on_end_turn(event.global_position)
+		)
+		_map_dragging = (
+			not grabbing
+			and not holding_end_turn
+			and _pointer_on_map(event.global_position)
+			and (event.button_index == MOUSE_BUTTON_MIDDLE or _map_can_pan())
 		)
 	else:
 		var panned := _gesture_panned
@@ -1661,7 +1682,7 @@ func _refresh() -> void:
 			move_cells[cell] = true
 	var attack_cells := {}
 	if show_reach and _selected != null and _selected.team == "player":
-		attack_cells = _attack_reach_cells(_selected)
+		attack_cells = _attack_reach_on_move(_selected, move_cells)
 	var threat_cells := {}
 	if show_reach and _selected != null and _selected.team == "enemy":
 		threat_cells = OverworldAi.threat_zone(distances, _selected.attack_range, _selected.overworld_position)
@@ -1670,6 +1691,7 @@ func _refresh() -> void:
 		var unit := _unit_at(coords)
 		if unit == _moving_unit or (_place_drag_id != "" and unit != null and unit.id == _place_drag_id):
 			unit = null
+		_show_cell_hp(button, unit)
 		var focus := _map_locked and GameManager.zoom_focus_cells.has(coords)
 		var sprite := button.get_node_or_null("MechSprite") as AnimatedSprite2D
 		var border := Color(0, 0, 0, 0)
@@ -2065,10 +2087,13 @@ func _on_attack_pressed() -> void:
 		var tactic := _preview_tactic
 		_end_preview_camera(true)
 		_clear_confirm()
+		if actor != null and tactic != null and actor.team == "player":
+			SoundBank.play("draw")
 		_try_tactic_attack(actor, tactic)
 		return
 	if _confirming:
 		if actor != null and actor.team == "enemy":
+			SoundBank.play("draw")
 			_commence_pressed = true
 			return
 		var target := _confirm_target
@@ -2142,6 +2167,7 @@ func _try_attack(unit: MechState) -> void:
 	if not _in_attack_range(actor, unit):
 		_note_status("Get within range of %s before attacking." % unit.display_name)
 		return
+	SoundBank.play("draw")
 	_targeting = false
 	_animating = true
 	actor.face_toward_x(actor.overworld_position.x, unit.overworld_position.x)
@@ -2175,7 +2201,53 @@ func _move_player_to(coords: Vector2i) -> void:
 	_refresh()
 
 
+## _input can start a map pan before the button sees the press. Drop that pan.
+func _on_end_turn_down() -> void:
+	_map_dragging = false
+
+
+## A held End Turn can slide off. Remember the release so pressed can ignore it.
+func _on_end_turn_pointer(event: InputEvent) -> void:
+	if not _is_pointer_release(event):
+		return
+	_end_turn_pointer_release = true
+	_forget_end_turn_pointer.call_deferred()
+
+
+func _forget_end_turn_pointer() -> void:
+	_end_turn_pointer_release = false
+
+
+func _is_pointer_release(event: InputEvent) -> bool:
+	if event is InputEventMouseButton:
+		var mouse := event as InputEventMouseButton
+		return not mouse.pressed and mouse.button_index == MOUSE_BUTTON_LEFT
+	if event is InputEventScreenTouch:
+		return not (event as InputEventScreenTouch).pressed
+	return false
+
+
+func _pointer_still_on_end_turn() -> bool:
+	return (
+		end_turn_button != null
+		and end_turn_button.get_global_rect().has_point(end_turn_button.get_global_mouse_position())
+	)
+
+
+func _press_on_end_turn(point: Vector2) -> bool:
+	return (
+		end_turn_button != null
+		and end_turn_button.visible
+		and not end_turn_button.disabled
+		and end_turn_button.get_global_rect().has_point(point)
+	)
+
+
 func _on_end_turn() -> void:
+	var from_pointer := _end_turn_pointer_release
+	_end_turn_pointer_release = false
+	if from_pointer and not _pointer_still_on_end_turn():
+		return
 	if _placing or _opening or _campaign_over or _turn_busy or _animating:
 		return
 	var actor := _current_actor()
@@ -2800,30 +2872,20 @@ func _spawn_paint(coords: Vector2i, unit: MechState, shade: Color, border: Color
 
 
 func _play_mission_briefing() -> void:
+	if GameManager.stage_scene == GameManager.STAGE_0_1:
+		SoundBank.loop("rain")
+	else:
+		SoundBank.loop("wind")
 	if mode_banner != null:
 		await mode_banner.play("Mission start", true)
 	if not is_inside_tree():
 		return
-	if dialogue_bar != null:
-		await dialogue_bar.play(_briefing_lines())
-
-
-func _briefing_lines() -> Array[StoryLine]:
-	var spoken := _MISSION_1_COMMS
+	if dialogue_bar == null:
+		return
+	var cue := "mission_1"
 	if GameManager.stage_scene == GameManager.STAGE_0_1:
-		spoken = _MISSION_2_COMMS
-	var lines: Array[StoryLine] = []
-	for text in spoken:
-		lines.append(_brief("Comms", COMMS_PORTRAIT, text))
-	return lines
-
-
-func _brief(speaker: String, portrait: Texture2D, text: String) -> StoryLine:
-	var line := StoryLine.new()
-	line.speaker = speaker
-	line.text = text
-	line.portrait = portrait
-	return line
+		cue = "mission_2"
+	await dialogue_bar.play(MISSION_COMMS, cue)
 
 
 func _begin_actor_turn() -> void:
@@ -2956,6 +3018,7 @@ func _encounter_against(actor: MechState, prey: MechState) -> EncounterData:
 func _animate_move(unit: MechState, path: Array[Vector2i]) -> void:
 	if path.is_empty():
 		return
+	SoundBank.play("step")
 	await get_tree().process_frame
 	if not is_inside_tree():
 		return
@@ -3165,6 +3228,7 @@ func _place_zoomed_grid(amount: float, start_focus: Vector2, end_focus: Vector2,
 	grid.scale = Vector2(zoom, zoom)
 	grid.global_position = pivot - _zoom_pivot_local * zoom
 	_sync_approach_boxes()
+	_fit_cell_hit_points()
 
 
 func _slide_grid(amount: float, start_pos: Vector2, end_pos: Vector2, start_scale: float, end_scale: float) -> void:
@@ -3172,6 +3236,7 @@ func _slide_grid(amount: float, start_pos: Vector2, end_pos: Vector2, start_scal
 	grid.scale = Vector2(zoom, zoom)
 	grid.global_position = start_pos.lerp(end_pos, amount)
 	_sync_approach_boxes()
+	_fit_cell_hit_points()
 
 
 ## Apply the saved camera for one call, then the caller puts the zoomed pose back.
@@ -3237,6 +3302,7 @@ func _make_token(unit: MechState) -> Button:
 		token.text = ""
 		token.flat = true
 		_paint(token, Color(0, 0, 0, 0))
+	_show_cell_hp(token, unit)
 	return token
 
 
@@ -3433,6 +3499,46 @@ func _steps_from_here(actor: MechState) -> Dictionary:
 		actor,
 		GameManager.overworld_size()
 	)
+
+
+func _show_cell_hp(button: Button, unit: MechState) -> void:
+	var badge := button.get_node_or_null("HitPoints") as Control
+	if badge == null:
+		return
+	var shown := unit != null and unit.alive
+	badge.visible = shown
+	if shown:
+		var amount := badge.get_node_or_null("Amount") as Label
+		if amount != null:
+			amount.text = str(unit.hp)
+	_fit_cell_hp(badge)
+
+
+## The map is zoomed. Shrink the badge so it matches the Commence portrait on screen.
+func _fit_cell_hp(badge: Control) -> void:
+	if badge == null or not is_instance_valid(badge):
+		return
+	if not bool(badge.get_meta("hp_fit", false)):
+		badge.set_meta("hp_fit", true)
+		badge.resized.connect(_fit_cell_hp.bind(badge))
+	var zoom := grid.scale.x if grid != null else 1.0
+	var fit := 1.0 / maxf(zoom, 0.05)
+	if badge.size.y > 1.0:
+		badge.pivot_offset = Vector2(0.0, badge.size.y)
+	var next := Vector2(fit, fit)
+	if badge.scale.is_equal_approx(next):
+		return
+	badge.scale = next
+
+
+func _fit_cell_hit_points() -> void:
+	for coords in _buttons:
+		var button := _buttons[coords] as Button
+		if button == null:
+			continue
+		_fit_cell_hp(button.get_node_or_null("HitPoints") as Control)
+	if is_instance_valid(_move_token):
+		_fit_cell_hp(_move_token.get_node_or_null("HitPoints") as Control)
 
 
 func _paint_cell_mark(button: Button, unit: MechState) -> void:

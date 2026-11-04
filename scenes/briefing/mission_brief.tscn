@@ -106,6 +106,7 @@ expand_mode = 1
 stretch_mode = 6
 
 [node name="Crosshair" parent="Margin/Root/MapPanel/Inset/Clip" unique_id=69587904 instance=ExtResource("7_cross")]
+visible = false
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5

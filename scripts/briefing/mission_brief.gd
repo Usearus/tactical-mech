@@ -1,6 +1,6 @@
 extends Control
 
-## Pick a mission on the map. The reticule and map ease to that mission.
+## Pick a mission on the map. The view opens north of the missions, with no reticule until one is chosen.
 
 @onready var window: PanelContainer = %Window
 @onready var briefing_title: Label = %BriefingTitle
@@ -22,13 +22,19 @@ const ZOOM_MISSION_1 := 1.0
 const FOCUS_MISSION_2 := Vector2(0.363, 0.604)
 ## A little larger than the frame so the photo can slide southwest and still cover it.
 const ZOOM_MISSION_2 := 1.05
+## Top of the photo, over the upper river. No mission sits here.
+const FOCUS_OPENING := Vector2(0.5, 0.0)
+const ZOOM_OPENING := 1.0
 ## Share of the trip the reticule takes. The map pans the rest, until the photo hits the frame.
 const RETICULE_SHARE := 0.65
 const FOCUS_TIME := 0.5
 
 var _chosen_stage := GameManager.STAGE_0_0
-var _focus := FOCUS_MISSION_1
-var _zoom := ZOOM_MISSION_1
+var _focus := FOCUS_OPENING
+var _zoom := ZOOM_OPENING
+## Zero until a mission is chosen, so the opening pan sits on its focus instead of a hidden reticule.
+var _reticule_share := 0.0
+var _show_cursor := false
 
 var _leaving := false
 var _briefing_open := false
@@ -58,7 +64,8 @@ func _ready() -> void:
 	_hide_locked()
 	# Hidden until the tutorial mission is ready.
 	tutorial.visible = false
-	_move_map(FOCUS_MISSION_1, ZOOM_MISSION_1, false)
+	crosshair.visible = false
+	_move_map(FOCUS_OPENING, ZOOM_OPENING, false)
 
 
 func _hide_briefing() -> void:
@@ -175,10 +182,13 @@ func _leave() -> void:
 
 
 func _focus_mission(stage_path: String) -> void:
+	var reveal := not _show_cursor
+	_show_cursor = true
+	_reticule_share = RETICULE_SHARE
 	if stage_path == GameManager.STAGE_0_1:
-		_move_map(FOCUS_MISSION_2, ZOOM_MISSION_2, true)
+		_move_map(FOCUS_MISSION_2, ZOOM_MISSION_2, true, reveal)
 	else:
-		_move_map(FOCUS_MISSION_1, ZOOM_MISSION_1, true)
+		_move_map(FOCUS_MISSION_1, ZOOM_MISSION_1, true, reveal)
 
 
 func _prepare_map() -> void:
@@ -198,7 +208,7 @@ func _on_clip_resized() -> void:
 	_move_map(_focus, _zoom, false)
 
 
-func _move_map(focus: Vector2, zoom: float, animate: bool) -> void:
+func _move_map(focus: Vector2, zoom: float, animate: bool, reveal_cursor: bool = false) -> void:
 	var unchanged := focus.is_equal_approx(_focus) and is_equal_approx(zoom, _zoom)
 	var tweening := _focus_tween != null and _focus_tween.is_valid()
 	_focus = focus
@@ -212,10 +222,11 @@ func _move_map(focus: Vector2, zoom: float, animate: bool) -> void:
 		return
 	if unchanged:
 		return
+	# The first pick drops the reticule on the mission. The map travels to meet it.
 	var start := {
 		"pos": map.position,
 		"size": map.size,
-		"cross": crosshair.position,
+		"cross": end.cross if reveal_cursor else crosshair.position,
 	}
 	_kill(_focus_tween)
 	_focus_tween = create_tween()
@@ -230,7 +241,7 @@ func _frame(focus: Vector2, zoom: float) -> Dictionary:
 	var drawn := tex * cover
 	var rest := (view - drawn) * 0.5 + focus * drawn
 	var toward := rest - view * 0.5
-	var cross_center := view * 0.5 + toward * RETICULE_SHARE
+	var cross_center := view * 0.5 + toward * _reticule_share
 	var map_pos := cross_center - focus * drawn
 	map_pos.x = _clamp_pan(map_pos.x, view.x, drawn.x)
 	map_pos.y = _clamp_pan(map_pos.y, view.y, drawn.y)
@@ -252,6 +263,7 @@ func _apply_frame(frame: Dictionary) -> void:
 	map.position = frame.pos
 	map.size = frame.size
 	crosshair.position = frame.cross
+	crosshair.visible = _show_cursor
 
 
 func _blend_frame(t: float, start: Dictionary, end: Dictionary) -> void:

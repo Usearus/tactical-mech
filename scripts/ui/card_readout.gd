@@ -8,7 +8,8 @@ const ICONS := {
 	"atk": preload("res://art/icons/stats/attack.svg"),
 	"rng": preload("res://art/icons/stats/range.svg"),
 	"mov": preload("res://art/icons/stats/move.svg"),
-	"dodge": preload("res://art/icons/stats/dodge.svg"),
+	"evade": preload("res://art/icons/stats/evade.svg"),
+	"int": preload("res://art/icons/stats/dodge.svg"),
 	"def": preload("res://art/icons/stats/defend.svg"),
 	"bar": preload("res://art/icons/stats/crescent.svg"),
 	"chg": preload("res://icodot-svg/ui/weather-nature/icon-lightning-ui.svg"),
@@ -60,7 +61,7 @@ func _kind_line(card: CardData) -> String:
 	if card.moves_only():
 		kind = "Move"
 	elif card.is_dodge():
-		kind = "Dodge"
+		kind = "Evade"
 	elif card.barrier > 0 and card.card_type == "Defense":
 		kind = "Barrier"
 	elif card.is_guard():
@@ -115,7 +116,7 @@ func _stat_rows(card: CardData, damage: int, block: int) -> Array[Dictionary]:
 			elif card.barrier > 0:
 				rows.append({"kind": "bar", "amount": card.barrier, "enhanced": false})
 			elif card.is_dodge():
-				rows.append({"kind": "dodge", "amount": 1, "enhanced": false})
+				rows.append({"kind": "evade", "amount": 1, "enhanced": false})
 			elif card.block > 0:
 				rows.append({"kind": "def", "amount": block, "enhanced": block > card.block})
 			if card.movement > 0:
@@ -123,7 +124,7 @@ func _stat_rows(card: CardData, damage: int, block: int) -> Array[Dictionary]:
 		"Move":
 			rows.append({"kind": "mov", "amount": card.movement, "enhanced": false})
 	if card.intercept and not card.is_dodge():
-		rows.append({"kind": "dodge", "amount": 1, "enhanced": false})
+		rows.append({"kind": "int", "amount": 1, "enhanced": false})
 	return rows
 
 

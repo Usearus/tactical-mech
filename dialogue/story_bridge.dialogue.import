@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://bxgxg65b1vmut"
+path="res://.godot/imported/story_bridge.dialogue-fa272ae93fe64e9630f3c46c856fd3a3.tres"
+
+[deps]
+
+source_file="res://dialogue/story_bridge.dialogue"
+dest_files=["res://.godot/imported/story_bridge.dialogue-fa272ae93fe64e9630f3c46c856fd3a3.tres"]
+
+[params]
+
+defaults=true

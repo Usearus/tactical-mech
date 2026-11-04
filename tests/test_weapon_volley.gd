@@ -38,14 +38,14 @@ func test_rocket_arcs_rise_above_the_shot() -> void:
 	var span := target - origin
 	var side := Vector2(-span.y, span.x).normalized()
 	var mid := (origin + target) * 0.5 + side * bend
-	assert_lt(mid.y, (origin.y + target.y) * 0.5, "a rightward rocket arcs up")
+	assert_gt((origin.y + target.y) * 0.5, mid.y, "a rightward rocket arcs up")
 	var left_origin := Vector2(200, 80)
 	var left_target := Vector2(0, 70)
 	var left_bend: float = WeaponVolley.upward_bend(left_origin, left_target, 80.0)
 	var left_span := left_target - left_origin
 	var left_side := Vector2(-left_span.y, left_span.x).normalized()
 	var left_mid := (left_origin + left_target) * 0.5 + left_side * left_bend
-	assert_lt(left_mid.y, (left_origin.y + left_target.y) * 0.5, "a leftward rocket arcs up")
+	assert_gt((left_origin.y + left_target.y) * 0.5, left_mid.y, "a leftward rocket arcs up")
 
 
 func test_straight_shots_keep_each_barrel_height() -> void:

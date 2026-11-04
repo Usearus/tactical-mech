@@ -33,7 +33,6 @@ func _ready() -> void:
 		deck_button.pressed.connect(_on_deck_pressed)
 	if inspect_button != null and not inspect_button.pressed.is_connected(_on_inspect_pressed):
 		inspect_button.pressed.connect(_on_inspect_pressed)
-	show_message("Select a mech")
 
 
 func present_unit(unit: MechState, show_attack: bool) -> void:

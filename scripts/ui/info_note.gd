@@ -99,9 +99,11 @@ func _show(badge: Control) -> void:
 	if not is_instance_valid(badge):
 		dismiss()
 		return
-	var label := get_node_or_null("Row/Note") as Label
+	var label := get_node_or_null("Row/Note") as RichTextLabel
 	if label != null:
-		label.text = str(badge.get_meta("note", ""))
+		var plain := str(badge.get_meta("note", ""))
+		label.text = UiIcons.gold_lead(plain)
+		label.set_meta("plain_note", plain)
 	_apply_icon(badge)
 	visible = true
 	var wrap_limit := MAX_TEXT_WIDTH
@@ -128,6 +130,7 @@ func _apply_icon(badge: Control) -> void:
 		return
 	var texture: Texture2D = null
 	var tint := Color.WHITE
+	var ink: Material = null
 	if badge is TextureButton:
 		texture = (badge as TextureButton).texture_normal
 	else:
@@ -135,18 +138,27 @@ func _apply_icon(badge: Control) -> void:
 		if icon != null and icon.visible:
 			texture = icon.texture
 			tint = icon.modulate
+			if icon.material != null:
+				ink = icon.material.duplicate()
 	slot.visible = texture != null
 	slot.texture = texture
 	slot.modulate = tint
+	slot.material = ink
 
 
-func _fitted_size(label: Label, wrap_limit: float = MAX_TEXT_WIDTH) -> Vector2:
-	var text := "" if label == null else label.text
+func _fitted_size(label: RichTextLabel, wrap_limit: float = MAX_TEXT_WIDTH) -> Vector2:
+	var text := ""
+	if label != null:
+		text = str(label.get_meta("plain_note", ""))
 	var wrap_width := wrap_limit
 	var text_height := 0.0
 	if label != null and not text.is_empty():
-		var font := label.get_theme_font("font")
-		var font_size := label.get_theme_font_size("font_size")
+		var font := label.get_theme_font(&"normal_font")
+		if font == null:
+			font = ThemeDB.fallback_font
+		var font_size := label.get_theme_font_size(&"normal_font_size")
+		if font_size <= 0:
+			font_size = 28
 		var line_width := 0.0
 		for line in text.split("\n"):
 			line_width = maxf(line_width, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)

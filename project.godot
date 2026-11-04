@@ -21,6 +21,12 @@ GameManager="*res://scripts/game/game_manager.gd"
 GameMenu="*res://scenes/ui/game_menu.tscn"
 TapFeedback="*res://scenes/ui/tap_feedback.tscn"
 _mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
+SoundBank="*res://scripts/audio/sound_bank.gd"
+DialogueManager="*uid://c3rodes2l3gxb"
+
+[dialogue_manager]
+
+runtime/balloon_path="res://scenes/ui/dialogue_balloon.tscn"
 
 [display]
 
@@ -31,13 +37,17 @@ window/stretch/aspect="expand"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
+enabled=PackedStringArray("res://addons/dialogue_manager/plugin.cfg", "res://addons/godot_ai/plugin.cfg")
 
 [gui]
 
 theme/custom="res://themes/game_theme.tres"
 theme/custom_font="res://fonts/m5x7.ttf"
 theme/default_font_size=32
+
+[internationalization]
+
+locale/translations_pot_files=PackedStringArray("res://dialogue/mission_comms.dialogue", "res://dialogue/story_alley.dialogue", "res://dialogue/story_bridge.dialogue")
 
 [physics]
 

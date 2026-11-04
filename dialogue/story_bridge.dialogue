@@ -1,0 +1,7 @@
+# Bridge, before mission 2. [#art=id] marks who is speaking on the street.
+~ start
+
+Comet: The bridge is the only line across. Red corp owns the other end. [#art=white]
+Raven: They shoot farther than the citadel did. Don't give them a straight walk. [#art=purple]
+Comet: Rain hides the first step. After that, they see us. Spread out. [#art=white]
+=> END

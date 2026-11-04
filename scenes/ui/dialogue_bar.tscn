@@ -2,6 +2,9 @@
 
 [ext_resource type="Script" uid="uid://blhj6gri0e77a" path="res://scripts/ui/dialogue_bar.gd" id="1_bar"]
 [ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="2_53i6u"]
+[ext_resource type="Script" path="res://scripts/ui/dialogue_body.gd" id="3_label"]
+[ext_resource type="Script" uid="uid://bb52rsfwhkxbn" path="res://addons/dialogue_manager/nodes/responses_menu/dialogue_responses_menu.gd" id="4_menu"]
+[ext_resource type="Script" path="res://scripts/ui/ui_click.gd" id="5_click"]
 
 [node name="DialogueBar" type="Control" unique_id=330050175]
 layout_mode = 3
@@ -80,7 +83,7 @@ theme_override_font_sizes/font_size = 28
 text = "Speaker"
 uppercase = true
 
-[node name="Body" type="Label" parent="Dialogue" unique_id=1109985357]
+[node name="Body" type="RichTextLabel" parent="Dialogue" unique_id=1109985357]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -92,12 +95,18 @@ offset_right = -57.0
 offset_bottom = -18.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.96, 0.95, 0.98, 1)
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.96, 0.95, 0.98, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 8
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/normal_font_size = 40
+bbcode_enabled = true
 text = "Dialogue goes here."
-autowrap_mode = 3
+scroll_active = false
+shortcut_keys_enabled = false
+visible_characters_behavior = 1
+script = ExtResource("3_label")
+seconds_per_step = 0.022
 
 [node name="Prompt" type="Label" parent="Dialogue" unique_id=1330514066]
 unique_name_in_owner = true
@@ -118,3 +127,32 @@ theme_override_font_sizes/font_size = 28
 text = ">>"
 horizontal_alignment = 2
 vertical_alignment = 2
+
+[node name="Responses" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 236.0
+offset_top = -520.0
+offset_right = -97.0
+offset_bottom = -232.0
+grow_horizontal = 2
+grow_vertical = 0
+theme = ExtResource("2_53i6u")
+theme_override_constants/separation = 8
+alignment = 2
+script = ExtResource("4_menu")
+response_template = NodePath("ResponseTemplate")
+hide_failed_responses = true
+
+[node name="ResponseTemplate" type="Button" parent="Responses"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"SecondaryButton"
+script = ExtResource("5_click")
+text = "Response"

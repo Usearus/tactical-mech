@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://bxskeosp23bu"
+path="res://.godot/imported/story_alley.dialogue-83dc38b8cbfee3ad951031bf2949baa5.tres"
+
+[deps]
+
+source_file="res://dialogue/story_alley.dialogue"
+dest_files=["res://.godot/imported/story_alley.dialogue-83dc38b8cbfee3ad951031bf2949baa5.tres"]
+
+[params]
+
+defaults=true

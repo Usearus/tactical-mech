@@ -18,6 +18,13 @@ extends Resource
 ## Enemy only. How many player actions between this mech's actions.
 ## A free card, a charge card, and a discard do not count. After it acts, the count starts over.
 @export var turn_count: int = 3
+enum ClassType { ASSASSIN, BRUISER, MARKSMAN, PROTECTOR }
+enum TacticsStyle { OFFENSIVE, DEFENSIVE }
+
+## Assassin, Bruiser, Marksman, or Protector. Shown above the blurb on the select screen.
+@export var class_type: ClassType = ClassType.ASSASSIN
+## Offensive or Defensive. Shown above the blurb on the select screen.
+@export var tactics_style: TacticsStyle = TacticsStyle.OFFENSIVE
 ## Shown on the select screen. Grades are S, A, B, C, or D.
 @export_multiline var blurb: String = ""
 @export var hp_grade: String = ""
@@ -29,6 +36,14 @@ extends Resource
 @export var art_id: String = ""
 ## Drawn size against the other mechs. 1 is full size.
 @export_range(0.2, 2.0, 0.05) var sprite_scale: float = 1.0
+
+
+## Select screen line above the blurb: "Assassin, Offensive".
+func role_line() -> String:
+	return "%s, %s" % [
+		ClassType.keys()[class_type].capitalize(),
+		TacticsStyle.keys()[tactics_style].capitalize(),
+	]
 
 ## Hover text for each stat on the select screen. Keys match the StatGrid node prefixes. The same lines are in How to Play.
 const STAT_TIPS := {

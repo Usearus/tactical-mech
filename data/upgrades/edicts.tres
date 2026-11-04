@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="UpgradeCatalog" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/upgrade_catalog.gd" id="1_cat"]
+[ext_resource type="Script" path="res://scripts/cards/upgrade_offer.gd" id="2_offer"]
+
+[sub_resource type="Resource" id="o1"]
+script = ExtResource("2_offer")
+id = "edict_opening_strike"
+kind = "Edict"
+rarity = 2
+display_name = "Opening Strike"
+blurb = "The first attack card each battle deals 3 extra damage."
+
+[sub_resource type="Resource" id="o2"]
+script = ExtResource("2_offer")
+id = "edict_opening_guard"
+kind = "Edict"
+rarity = 2
+display_name = "Opening Guard"
+blurb = "The first guard card each battle grants 3 extra block."
+
+[sub_resource type="Resource" id="o3"]
+script = ExtResource("2_offer")
+id = "edict_field_repair"
+kind = "Edict"
+rarity = 2
+display_name = "Field Repair"
+blurb = "After each fight, every living mech that fought heals 2."
+
+[sub_resource type="Resource" id="o5"]
+script = ExtResource("2_offer")
+id = "edict_plus_two"
+kind = "Edict"
+rarity = 3
+display_name = "Plus Two"
+blurb = "Attacks deal +2 damage and guards grant +2 block."
+
+[sub_resource type="Resource" id="o6"]
+script = ExtResource("2_offer")
+id = "edict_free_opener"
+kind = "Edict"
+rarity = 3
+display_name = "Free Opener"
+blurb = "The first card each battle is free."
+
+[sub_resource type="Resource" id="o7"]
+script = ExtResource("2_offer")
+id = "edict_primed"
+kind = "Edict"
+rarity = 3
+display_name = "Primed"
+blurb = "Each battle adds 3 charge."
+
+[resource]
+script = ExtResource("1_cat")
+offers = Array[ExtResource("2_offer")]([SubResource("o1"), SubResource("o2"), SubResource("o3"), SubResource("o5"), SubResource("o6"), SubResource("o7")])

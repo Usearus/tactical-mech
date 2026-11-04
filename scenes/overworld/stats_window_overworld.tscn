@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button.tscn" id="7_teo3p"]
 
 [node name="StatsWindow" type="PanelContainer" unique_id=107101956]
+visible = false
 z_index = 25
 custom_minimum_size = Vector2(380, 0)
 anchors_preset = 2

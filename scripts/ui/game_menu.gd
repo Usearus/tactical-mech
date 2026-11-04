@@ -2,6 +2,7 @@ extends CanvasLayer
 
 const TITLE_SCENE := "res://scenes/command/command.tscn"
 const BOOT_SCENE := "res://scenes/main/main.tscn"
+const BONUS_ROW_SCENE := preload("res://scenes/ui/bonus_row.tscn")
 ## Above scene overlays such as the discard tray (layer 60). The screen fade stays at 100.
 const POPUP_LAYER := 90
 
@@ -16,6 +17,9 @@ const POPUP_LAYER := 90
 @onready var howto_close: Button = %HowToClose
 @onready var log_body: VBoxContainer = %LogBody
 @onready var legend: VBoxContainer = %Legend
+@onready var bonuses: Control = %Bonuses
+@onready var bonus_empty: Label = %BonusEmpty
+@onready var bonus_list: VBoxContainer = %BonusList
 
 
 func _ready() -> void:
@@ -58,6 +62,8 @@ func close() -> void:
 		detail.visible = false
 	if howto != null:
 		howto.visible = false
+	if bonuses != null:
+		bonuses.visible = false
 	if scrim != null:
 		scrim.visible = false
 
@@ -107,9 +113,32 @@ func open_help() -> void:
 		return
 	menu_panel.visible = false
 	detail.visible = false
+	if bonuses != null:
+		bonuses.visible = false
 	_select_topic("Loadout")
 	howto.visible = true
 	scrim.visible = true
+
+
+## The star on the overworld and in battle. Closes the menu and the help page.
+func open_bonuses() -> void:
+	if detail != null and detail.visible and bonuses != null and bonuses.visible:
+		close()
+		return
+	menu_panel.visible = false
+	if howto != null:
+		howto.visible = false
+	if log_body != null:
+		log_body.visible = false
+	if legend != null:
+		legend.visible = false
+	if bonuses != null:
+		bonuses.visible = true
+	if detail != null:
+		detail.visible = true
+	if scrim != null:
+		scrim.visible = true
+	_fill_bonuses()
 
 
 func _close_help() -> void:
@@ -150,26 +179,48 @@ func _fit_directions() -> void:
 func _show_page(showing_log: bool) -> void:
 	menu_panel.visible = false
 	howto.visible = false
+	if bonuses != null:
+		bonuses.visible = false
 	log_body.visible = showing_log
 	legend.visible = not showing_log
 	detail.visible = true
 	scrim.visible = true
 
 
+func _fill_bonuses() -> void:
+	if bonus_list == null:
+		return
+	for child in bonus_list.get_children():
+		bonus_list.remove_child(child)
+		child.free()
+	var edicts := GameManager.mission_upgrades.active_edicts()
+	if bonus_empty != null:
+		bonus_empty.visible = edicts.is_empty()
+	for offer in edicts:
+		var row := BONUS_ROW_SCENE.instantiate() as BonusRow
+		if row == null:
+			continue
+		bonus_list.add_child(row)
+		row.show_edict(offer)
+
+
 func _sync_legend() -> void:
 	var rows := {
+		"Heart": "hp",
 		"Attack": "atk",
 		"Range": "rng",
 		"Move": "mov",
-		"Dodge": "dodge",
+		"Evade": "evade",
+		"Intercept": "int",
 		"Defend": "def",
 		"Crescent": "bar",
+		"Clock": "act",
 	}
 	for row_name in rows:
-		var label := legend.get_node_or_null("Scroll/List/%s/Phrase" % row_name) as Label
+		var label := legend.get_node_or_null("Scroll/List/%s/Phrase" % row_name) as RichTextLabel
 		if label == null:
 			continue
-		label.text = UiIcons.phrase(rows[row_name])
+		label.text = UiIcons.gold_lead(UiIcons.phrase(rows[row_name]))
 
 
 func _on_scrim_input(event: InputEvent) -> void:

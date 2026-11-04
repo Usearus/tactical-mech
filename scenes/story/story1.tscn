@@ -1,33 +1,13 @@
 [gd_scene format=3 uid="uid://dtsm1drkyad5p"]
 
 [ext_resource type="PackedScene" path="res://scenes/story/story.tscn" id="1_base"]
-[ext_resource type="Script" uid="uid://d1hy6pewttitq" path="res://scripts/story/story_line.gd" id="2_line"]
+[ext_resource type="Resource" path="res://dialogue/story_alley.dialogue" id="10_talk"]
 [ext_resource type="Texture2D" uid="uid://bfsnt2gcpfks0" path="res://art/backgrounds/scene_alley.jpg" id="3_bg"]
-[ext_resource type="Texture2D" uid="uid://dtcn3mffw0nti" path="res://art/characters/player/purple/pilot.png" id="4_raven"]
-[ext_resource type="Texture2D" uid="uid://dj4ec55gtrtip" path="res://art/characters/player/white/pilot.png" id="5_comet"]
+[ext_resource type="Texture2D" uid="uid://bphxrvy6rkl1k" path="res://art/characters/player/white/white.pilot.png" id="5_comet"]
 [ext_resource type="Texture2D" uid="uid://cd7cswcd8k2ja" path="res://art/mechs/player/white/white.idle.png" id="6_white"]
 [ext_resource type="Texture2D" uid="uid://tf0wj5tn2i20" path="res://art/mechs/player/purple/purple.idle.png" id="7_purple"]
-
-[sub_resource type="Resource" id="l1"]
-script = ExtResource("2_line")
-speaker = "Comet"
-text = "Street's clear. The citadel is watching the far end."
-portrait = ExtResource("5_comet")
-art_id = "white"
-
-[sub_resource type="Resource" id="l2"]
-script = ExtResource("2_line")
-speaker = "Raven"
-text = "Then we walk it. Call them before they call us."
-portrait = ExtResource("4_raven")
-art_id = "purple"
-
-[sub_resource type="Resource" id="l3"]
-script = ExtResource("2_line")
-speaker = "Comet"
-text = "On your mark."
-portrait = ExtResource("5_comet")
-art_id = "white"
+[ext_resource type="Texture2D" uid="uid://bka0g2ogdhrs0" path="res://art/characters/player/white/white.pilot.body.png" id="8_white_body"]
+[ext_resource type="Texture2D" uid="uid://ckswc6krdgitg" path="res://art/characters/player/purple/purple.pilot.body.png" id="9_purple_body"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_white"]
 atlas = ExtResource("6_white")
@@ -60,36 +40,53 @@ animations = [{
 }]
 
 [node name="Story1" unique_id=1654964324 instance=ExtResource("1_base")]
-lines = Array[ExtResource("2_line")]([SubResource("l1"), SubResource("l2"), SubResource("l3")])
+dialogue = ExtResource("10_talk")
 next_scene = "res://scenes/select/mech_select.tscn"
 
 [node name="Background" parent="." index="0"]
 texture = ExtResource("3_bg")
 
 [node name="Comet" type="AnimatedSprite2D" parent="Cast" index="0" unique_id=595604282]
-position = Vector2(350, 650)
-scale = Vector2(8, 8)
+position = Vector2(300, 650)
+scale = Vector2(5, 5)
 sprite_frames = SubResource("SpriteFrames_white")
 animation = &"idle"
-offset = Vector2(0, -31)
+offset = Vector2(0, -26.35)
 metadata/art_id = "white"
 
 [node name="Raven" type="AnimatedSprite2D" parent="Cast" index="1" unique_id=1871329343]
-position = Vector2(950, 650)
-scale = Vector2(8, 8)
+position = Vector2(1000, 650)
+scale = Vector2(5, 5)
 sprite_frames = SubResource("SpriteFrames_purple")
 animation = &"idle"
-offset = Vector2(0, -31)
+offset = Vector2(0, -26.35)
 flip_h = true
 metadata/art_id = "purple"
 
-[node name="Portrait" parent="DialogueBar/Dialogue/PortraitWell" index="1"]
+[node name="CometPilot" type="Sprite2D" parent="Cast" index="2" unique_id=333949397]
+texture_filter = 1
+position = Vector2(470, 700)
+scale = Vector2(3, 3)
+texture = ExtResource("8_white_body")
+offset = Vector2(0, -89)
+metadata/art_id = "white"
+
+[node name="RavenPilot" type="Sprite2D" parent="Cast" index="3" unique_id=1045457285]
+texture_filter = 1
+position = Vector2(810, 700)
+scale = Vector2(3, 3)
+texture = ExtResource("9_purple_body")
+offset = Vector2(0, -88)
+flip_h = true
+metadata/art_id = "purple"
+
+[node name="Portrait" parent="DialogueBar/Dialogue/PortraitWell" index="0" unique_id=2134219065]
 texture = ExtResource("5_comet")
 
-[node name="Speaker" parent="DialogueBar/Dialogue" index="2"]
+[node name="Speaker" parent="DialogueBar/Dialogue" index="2" unique_id=1454966291]
 text = "Comet"
 
-[node name="Body" parent="DialogueBar/Dialogue" index="3"]
+[node name="Body" parent="DialogueBar/Dialogue" index="3" unique_id=1109985357]
 text = "Street's clear. The citadel is watching the far end."
 
 [editable path="DialogueBar"]

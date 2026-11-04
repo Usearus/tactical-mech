@@ -7,27 +7,29 @@
 script = ExtResource("2_card")
 id = "bulldog_ward"
 display_name = "Ward"
-description = "Step 1 cell, then give 3 barrier to an adjacent ally."
+description = "Step 1 cell, then give 3 barrier to yourself or an ally 1 cell away."
 card_type = "Defense"
+charge_cost = 2
 defense_kind = "Guard"
 barrier = 3
 move_timing = "Before"
 movement = 1
 reach = 0
-target_type = "ally"
+target_type = "friendly"
 
 [sub_resource type="Resource" id="c2"]
 script = ExtResource("2_card")
 id = "bulldog_ward_2"
 display_name = "Ward"
-description = "Step 1 cell, then give 3 barrier to an adjacent ally."
+description = "Step 1 cell, then give 3 barrier to yourself or an ally 1 cell away."
 card_type = "Defense"
+charge_cost = 2
 defense_kind = "Guard"
 barrier = 3
 move_timing = "Before"
 movement = 1
 reach = 0
-target_type = "ally"
+target_type = "friendly"
 
 [sub_resource type="Resource" id="c3"]
 script = ExtResource("2_card")

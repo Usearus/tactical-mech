@@ -1,0 +1,80 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/bonus_row.gd" id="1_row"]
+[ext_resource type="Texture2D" path="res://icodot-svg/ui/geometry/icon-geo-star-ui.svg" id="2_star"]
+[ext_resource type="Shader" path="res://shaders/icon_white.gdshader" id="3_gold"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gold"]
+shader = ExtResource("3_gold")
+shader_parameter/ink = Color(0.98, 0.84, 0.32, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_row"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.1, 0.11, 0.14, 0.94)
+
+[node name="BonusRow" type="PanelContainer"]
+theme_override_styles/panel = SubResource("StyleBoxFlat_row")
+script = ExtResource("1_row")
+
+[node name="Line" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Stars" type="HBoxContainer" parent="Line"]
+layout_mode = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="Star1" type="TextureRect" parent="Line/Stars"]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_gold")
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Star2" type="TextureRect" parent="Line/Stars"]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_gold")
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Star3" type="TextureRect" parent="Line/Stars"]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_gold")
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Copy" type="VBoxContainer" parent="Line"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="Name" type="Label" parent="Line/Copy"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 32
+text = "Opening Strike"
+autowrap_mode = 3
+
+[node name="Blurb" type="Label" parent="Line/Copy"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.8, 0.84, 1)
+theme_override_font_sizes/font_size = 24
+text = "The first attack card each battle deals 3 extra damage."
+autowrap_mode = 3

@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/listed_card.gd" id="1_slot"]
+[ext_resource type="PackedScene" path="res://scenes/ui/offer_kind_badge.tscn" id="2_tag"]
+
+[node name="ListedCard" type="Control"]
+custom_minimum_size = Vector2(176, 300)
+custom_maximum_size = Vector2(176, 300)
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("1_slot")
+
+[node name="CardHost" type="Control" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(176, 268)
+custom_maximum_size = Vector2(176, 268)
+layout_mode = 0
+offset_top = 32.0
+offset_right = 176.0
+offset_bottom = 300.0
+mouse_filter = 2
+
+[node name="Tag" parent="." instance=ExtResource("2_tag")]
+unique_name_in_owner = true
+z_index = 2
+layout_mode = 0
+mouse_filter = 2

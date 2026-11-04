@@ -2,24 +2,28 @@
 class_name DialogueBar
 extends Control
 
-## The line now on screen. Story scenes use this to mark who is talking.
-signal line_shown(line: StoryLine)
+## The line now on screen. Story scenes use the art tag to mark who is talking.
+signal line_shown(line: DialogueLine)
 signal finished
 
-const REVEAL_CPS := 46.0
+const PORTRAITS := {
+	"Comet": preload("res://art/characters/player/white/white.pilot.png"),
+	"Raven": preload("res://art/characters/player/purple/purple.pilot.png"),
+	"Comms": preload("res://art/characters/misc/comms.png"),
+}
 
 @onready var dialogue: Control = %Dialogue
 @onready var portrait_well: Control = %PortraitWell
 @onready var portrait: TextureRect = %Portrait
 @onready var speaker_label: Label = %Speaker
-@onready var body: Label = %Body
+@onready var body: DialogueLabel = %Body
 @onready var prompt: Label = %Prompt
+@onready var responses_menu: DialogueResponsesMenu = %Responses
 
-var _lines: Array[StoryLine] = []
-var _index := -1
-var _line_text := ""
-var _shown := 0.0
-var _revealing := false
+var _resource: DialogueResource
+var _extra_states: Array = []
+var _line: DialogueLine
+var _response: DialogueResponse
 var _waiting := false
 var _leaving := false
 var _playing := false
@@ -32,21 +36,46 @@ func _ready() -> void:
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	prompt.visible = false
+	responses_menu.hide()
+	responses_menu.response_selected.connect(_on_response_selected)
+	if body != null and body.has_signal("typing_held"):
+		body.connect("typing_held", _on_typing_held)
 
 
-## Shows the bar, waits through every line, then hides.
-func play(lines: Array[StoryLine]) -> void:
+## Entry used by DialogueManager.show_dialogue_balloon.
+func start(dialogue_resource: DialogueResource = null, cue: String = "", extra_game_states: Array = []) -> void:
+	await play(dialogue_resource, cue, extra_game_states)
+	if owner == null and is_inside_tree():
+		queue_free()
+
+
+## Shows the bar, waits through the cue, then hides.
+func play(dialogue_resource: DialogueResource, cue: String = "", extra_game_states: Array = []) -> void:
 	if _playing:
 		await finished
 		return
+	if dialogue_resource == null:
+		push_error("Dialogue bar has no dialogue resource.")
+		return
 	_playing = true
 	_leaving = false
-	_lines = lines
+	_resource = dialogue_resource
+	_extra_states = extra_game_states
 	visible = true
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	_show_line(0)
+	var line: DialogueLine = await dialogue_resource.get_next_dialogue_line(cue, _extra_states)
+	if not is_inside_tree() or _leaving:
+		return
 	_enter()
-	await finished
+	while line != null and is_inside_tree() and not _leaving:
+		var next_id := await _present(line)
+		if not is_inside_tree() or _leaving:
+			return
+		if next_id == "":
+			next_id = DMConstants.ID_END
+		line = await _resource.get_next_dialogue_line(next_id, _extra_states)
+	if is_inside_tree():
+		_finish()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -71,19 +100,10 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
-	if not _playing:
+	if not _playing or not prompt.visible:
 		return
-	if _revealing:
-		_shown += REVEAL_CPS * delta
-		var count := mini(int(_shown), _line_text.length())
-		body.visible_characters = count
-		if count >= _line_text.length():
-			_revealing = false
-			_waiting = true
-			prompt.visible = true
-	if prompt.visible:
-		_prompt_time += delta
-		prompt.modulate.a = 0.35 + 0.65 * (0.5 + 0.5 * sin(_prompt_time * 5.0))
+	_prompt_time += delta
+	prompt.modulate.a = 0.35 + 0.65 * (0.5 + 0.5 * sin(_prompt_time * 5.0))
 
 
 func _enter() -> void:
@@ -97,79 +117,80 @@ func _enter() -> void:
 
 
 func _advance() -> void:
-	if _leaving:
+	if _leaving or _line == null:
 		return
-	if _revealing:
-		_complete_line()
+	if _line.responses.size() > 0:
 		return
-	if not _waiting:
+	if body != null and body.is_typing:
+		body.skip_typing()
 		return
-	if _index + 1 >= _lines.size():
-		_finish()
-		return
-	_show_line(_index + 1)
+	if _waiting:
+		_waiting = false
 
 
 ## Shows one line on the bar. Colors and offsets stay on the nodes.
-func preview(line: StoryLine) -> void:
-	_fill(line)
+func preview(speaker: String, text: String, picture: Texture2D = null) -> void:
+	_fill_chrome(speaker, picture)
 	var body_node := _body()
-	if body_node != null:
-		body_node.visible_characters = -1
+	if body_node == null:
+		return
+	body_node.text = text
+	body_node.visible_characters = -1
 
 
-func _show_line(index: int) -> void:
-	_index = index
+func _present(line: DialogueLine) -> String:
+	_line = line
+	_response = null
 	_waiting = false
 	prompt.visible = false
-	if _lines.is_empty():
-		_fill(null)
-		_line_text = "Add lines on this scene."
-		var body_node := _body()
-		if body_node != null:
-			body_node.text = _line_text
-		_start_reveal()
-		return
-	var line := _lines[index]
-	_fill(line)
-	_line_text = "" if line == null else line.text
+	responses_menu.hide()
+	_fill_chrome(line.character, _portrait_for(line))
 	line_shown.emit(line)
-	_start_reveal()
-
-
-func _start_reveal() -> void:
-	body.text = _line_text
-	body.visible_characters = 0
-	_shown = 0.0
-	if _line_text.is_empty():
-		_revealing = false
-		_waiting = true
-		prompt.visible = true
-		return
-	_revealing = true
-
-
-func _complete_line() -> void:
-	_revealing = false
+	if body != null and not line.text.is_empty():
+		body.dialogue_line = line
+		SoundBank.play_typing()
+		body.type_out()
+		await body.finished_typing
+		SoundBank.stop_typing()
+		if not is_inside_tree() or _leaving:
+			return ""
+	if line.responses.size() > 0:
+		responses_menu.responses = line.responses
+		responses_menu.show()
+		while _response == null and is_inside_tree() and not _leaving:
+			await get_tree().process_frame
+		responses_menu.hide()
+		if _response == null:
+			return ""
+		return _response.next_id
+	if line.time != "":
+		var seconds := line.text.length() * 0.02 if line.time == "auto" else line.time.to_float()
+		if seconds > 0.0 and is_inside_tree():
+			await get_tree().create_timer(seconds).timeout
+		return line.next_id
 	_waiting = true
-	body.visible_characters = -1
 	prompt.visible = true
+	while _waiting and is_inside_tree() and not _leaving:
+		await get_tree().process_frame
+	return "" if _line == null else _line.next_id
 
 
-func _fill(line: StoryLine) -> void:
+func _on_response_selected(response: Variant) -> void:
+	_response = response as DialogueResponse
+
+
+func _on_typing_held(held: bool) -> void:
+	SoundBank.set_typing_paused(held)
+
+
+func _fill_chrome(speaker: String, picture: Texture2D) -> void:
 	var speaker_node := _speaker()
-	var body_node := _body()
 	var well := _well()
 	var portrait_node := _portrait_rect()
-	var speaker := "" if line == null else line.speaker
-	var written := "" if line == null else line.text
-	var picture: Texture2D = null if line == null else line.portrait
 	if speaker_node != null:
 		speaker_node.visible = speaker != ""
 		if speaker_node.text != speaker:
 			speaker_node.text = speaker
-	if body_node != null and line != null and body_node.text != written:
-		body_node.text = written
 	if well != null:
 		well.visible = picture != null
 	if portrait_node == null:
@@ -180,6 +201,19 @@ func _fill(line: StoryLine) -> void:
 	if current == picture:
 		return
 	portrait_node.texture = _cropped(picture)
+
+
+func _portrait_for(line: DialogueLine) -> Texture2D:
+	if line == null:
+		return null
+	var path := line.get_tag_value("portrait")
+	if path != "" and ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return portrait_for_name(line.character)
+
+
+static func portrait_for_name(speaker: String) -> Texture2D:
+	return PORTRAITS.get(speaker) as Texture2D
 
 
 func _cropped(texture: Texture2D) -> Texture2D:
@@ -193,7 +227,7 @@ func _cropped(texture: Texture2D) -> Texture2D:
 	var used := image.get_used_rect()
 	if used.size.x <= 0 or used.size.y <= 0:
 		return texture
-	var full: Rect2i = Rect2i(Vector2i.ZERO, Vector2i(image.get_width(), image.get_height()))
+	var full := Rect2i(Vector2i.ZERO, Vector2i(image.get_width(), image.get_height()))
 	if used == full:
 		return texture
 	var atlas := AtlasTexture.new()
@@ -206,8 +240,8 @@ func _speaker() -> Label:
 	return speaker_label if is_instance_valid(speaker_label) else get_node_or_null("Dialogue/Speaker") as Label
 
 
-func _body() -> Label:
-	return body if is_instance_valid(body) else get_node_or_null("Dialogue/Body") as Label
+func _body() -> RichTextLabel:
+	return body if is_instance_valid(body) else get_node_or_null("Dialogue/Body") as RichTextLabel
 
 
 func _well() -> CanvasItem:
@@ -218,13 +252,23 @@ func _portrait_rect() -> TextureRect:
 	return portrait if is_instance_valid(portrait) else get_node_or_null("Dialogue/PortraitWell/Portrait") as TextureRect
 
 
+func _exit_tree() -> void:
+	if Engine.is_editor_hint():
+		return
+	SoundBank.stop_typing()
+
+
 func _finish() -> void:
+	if not Engine.is_editor_hint():
+		SoundBank.stop_typing()
 	if _leaving:
 		return
 	_leaving = true
 	_playing = false
 	_waiting = false
+	_line = null
 	prompt.visible = false
+	responses_menu.hide()
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	finished.emit()

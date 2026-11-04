@@ -1,0 +1,33 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/bonus_panel_row.gd" id="1_row"]
+[ext_resource type="PackedScene" path="res://scenes/ui/info_badge.tscn" id="2_tip"]
+
+[node name="BonusPanelRow" type="VBoxContainer"]
+theme_override_constants/separation = 6
+script = ExtResource("1_row")
+
+[node name="Line" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Name" type="Label" parent="Line"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 24
+text = "Opening Strike"
+vertical_alignment = 1
+
+[node name="Tip" parent="Line" instance=ExtResource("2_tip")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Rule" type="ColorRect" parent="."]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.42, 0.46, 0.52, 0.9)

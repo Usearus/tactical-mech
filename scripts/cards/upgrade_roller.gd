@@ -4,12 +4,14 @@ extends RefCounted
 const PLAYER_PATH := "res://data/upgrades/player/%s.tres"
 const TEAM_PATH := "res://data/upgrades/team.tres"
 const REVIVE_PATH := "res://data/upgrades/revive.tres"
+const EDICT_PATH := "res://data/upgrades/edicts.tres"
 ## Group effects are offered, just less often than a new card or an upgrade.
 const KIND_WEIGHT := {
 	"Grant": 4,
 	"Modify": 4,
 	"Revive": 4,
 	"Immediate": 2,
+	"Edict": 4,
 }
 
 
@@ -17,14 +19,68 @@ static func refreshes_per_mission() -> int:
 	return maxi(DraftOdds.load_saved().refreshes_per_mission, 0)
 
 
-static func roll(units: Array, memory: MissionUpgrades, odds: DraftOdds = null, rng: RandomNumberGenerator = null) -> Array:
+static func roll(
+	units: Array,
+	memory: MissionUpgrades,
+	odds: DraftOdds = null,
+	rng: RandomNumberGenerator = null,
+	seen: Dictionary = {}
+) -> Array:
 	if odds == null:
 		odds = DraftOdds.load_saved()
 	if rng == null:
 		rng = RandomNumberGenerator.new()
 		rng.randomize()
 	odds = odds.for_fight(_count_team(units, "player"), _count_team(units, "enemy"))
-	return pick(legal_choices(units, memory), odds, rng)
+	return pick(fresh_pool(legal_choices(units, memory), seen), odds, rng)
+
+
+## One dealt offer. Two boosts of the same card are different pulls.
+static func pull_id(choice: UpgradeChoice) -> String:
+	if choice == null:
+		return ""
+	var offer_id := ""
+	if choice.offer != null:
+		offer_id = choice.offer.id
+	if offer_id == "":
+		return choice.slot_key
+	return "%s|%s" % [choice.slot_key, offer_id]
+
+
+## True when a later refresh can deal something this offer has not shown.
+static func has_unseen(legal: Array, seen: Dictionary) -> bool:
+	if seen.is_empty():
+		for choice in legal:
+			if choice is UpgradeChoice:
+				return true
+		return false
+	for choice in legal:
+		var item := choice as UpgradeChoice
+		if item == null:
+			continue
+		var pull := pull_id(item)
+		if pull == "" or not seen.has(pull):
+			return true
+	return false
+
+
+## Pulls already shown stay out of the next row. A fully spent list comes back
+## only so a refresh is never an empty hand.
+static func fresh_pool(legal: Array, seen: Dictionary) -> Array:
+	if seen.is_empty():
+		return legal
+	var fresh: Array = []
+	for choice in legal:
+		var item := choice as UpgradeChoice
+		if item == null:
+			continue
+		var pull := pull_id(item)
+		if pull != "" and seen.has(pull):
+			continue
+		fresh.append(item)
+	if fresh.is_empty():
+		return legal
+	return fresh
 
 
 static func any_alive(units: Array) -> bool:
@@ -71,6 +127,9 @@ static func legal_choices(units: Array, memory: MissionUpgrades) -> Array[Upgrad
 			for offer in team.offers:
 				if offer != null and offer.kind == "Immediate":
 					_add_immediate(found, offer, living)
+	# An edict covers every mech still standing. A wiped fight has no one to show.
+	if not living.is_empty():
+		_add_edicts(found, living, memory)
 	# Revive is for a mech who fell while someone else from this fight is still standing.
 	# If everyone brought in is gone, there is no reward row.
 	if living.is_empty():
@@ -184,6 +243,37 @@ static func _add_immediate(found: Array[UpgradeChoice], offer: UpgradeOffer, liv
 	choice.slot_key = "immediate:%s" % offer.id
 	choice.buff_keys = _buff_keys(offer)
 	found.append(choice)
+
+
+static func _add_edicts(found: Array[UpgradeChoice], living: Array[MechState], memory: MissionUpgrades) -> void:
+	var catalog := _catalog(EDICT_PATH)
+	if catalog == null:
+		return
+	for offer in catalog.offers:
+		if offer == null or offer.kind != "Edict" or offer.id == "":
+			continue
+		if memory.has_edict(offer.id):
+			continue
+		var preview := CardData.new()
+		preview.id = offer.id
+		preview.display_name = offer.display_name
+		preview.description = offer.blurb
+		preview.card_type = "Defense"
+		preview.reach = 0
+		preview.hide_cost = true
+		preview.target_type = "team"
+		var choice := UpgradeChoice.new()
+		choice.offer = offer
+		choice.kind = "Edict"
+		choice.rarity = clampi(offer.rarity, 2, 3)
+		var owners: Array[MechState] = []
+		for unit in living:
+			if unit != null and unit.alive and unit.data != null:
+				owners.append(unit)
+		choice.mechs = owners
+		choice.preview = preview
+		choice.slot_key = "edict:%s" % offer.id
+		found.append(choice)
 
 
 static func _add_revive(found: Array[UpgradeChoice], offer: UpgradeOffer, unit: MechState) -> void:

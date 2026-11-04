@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://c4wug2b2q41ke" path="res://scripts/ui/mech_panel.gd" id="2_panel"]
 [ext_resource type="PackedScene" uid="uid://uuk6s2xwa8ql" path="res://scenes/battle/battle_results.tscn" id="3_results"]
 [ext_resource type="PackedScene" uid="uid://dm2x0drnvxdgy" path="res://scenes/ui/mode_banner.tscn" id="4_banner"]
-[ext_resource type="Texture2D" uid="uid://dtcn3mffw0nti" path="res://art/characters/player/purple/pilot.png" id="4_oiw7q"]
+[ext_resource type="Texture2D" uid="uid://7ggnsjex8j1b" path="res://art/characters/player/purple/purple.pilot.png" id="4_oiw7q"]
 [ext_resource type="PackedScene" uid="uid://cr43116mbib6d" path="res://scenes/ui/finisher_banner.tscn" id="5_finisher"]
 [ext_resource type="PackedScene" uid="uid://c2fvjjatnm6rj" path="res://scenes/ui/menu_corner.tscn" id="6_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/info_note.tscn" id="7_note"]
@@ -16,7 +16,6 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_guard.tscn" id="8_guard"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_hit_points.tscn" id="8_hp"]
 [ext_resource type="PackedScene" uid="uid://b7n3handprom" path="res://scenes/ui/hand_prompt.tscn" id="9_prompt"]
-[ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button_square.tscn" id="10_btn"]
 [ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button_square.tscn" id="11_sq"]
 [ext_resource type="PackedScene" uid="uid://byj1wl4xpte36" path="res://scenes/ui/overdrive_meter.tscn" id="12_meter"]
 [ext_resource type="PackedScene" uid="uid://w2vke8x0fk42" path="res://scenes/ui/sci_flashing_button.tscn" id="13_flash"]
@@ -25,6 +24,26 @@
 [ext_resource type="PackedScene" uid="uid://ffgwtvttenp4" path="res://scenes/ui/upgrade_pick.tscn" id="17_upgrade"]
 [ext_resource type="PackedScene" path="res://scenes/ui/empty_card_slot.tscn" id="18_slot"]
 [ext_resource type="PackedScene" path="res://scenes/ui/card_effect_box.tscn" id="19_effect"]
+[ext_resource type="PackedScene" path="res://scenes/ui/card_active_glow.tscn" id="22_glow"]
+[ext_resource type="PackedScene" path="res://scenes/ui/bonus_panel.tscn" id="23_bonus"]
+[ext_resource type="PackedScene" uid="uid://braoo5qgd7dmm" path="res://scenes/ui/panel_bar.tscn" id="24_bar"]
+[ext_resource type="PackedScene" path="res://scenes/ui/play_prompt.tscn" id="25_prompt"]
+[ext_resource type="Script" path="res://scripts/ui/ui_click.gd" id="26_click"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_discard_glow"]
+bg_color = Color(0.2, 0.55, 1, 0)
+draw_center = false
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.45, 0.82, 1, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0.28, 0.68, 1, 0.95)
+shadow_size = 22
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_p86no"]
 animations = [{
@@ -77,7 +96,7 @@ theme_override_constants/separation = 12
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 12
+theme_override_constants/separation = 32
 
 [node name="Grid + Hand" type="VBoxContainer" parent="MarginContainer/Full Layout/Board Row" unique_id=192365957]
 layout_mode = 2
@@ -106,6 +125,13 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+
+[node name="PlayPrompt" parent="MarginContainer/Full Layout/Board Row/Grid + Hand/GridPanel/GridHost/Center" unique_id=1230948862 instance=ExtResource("25_prompt")]
+unique_name_in_owner = true
+offset_left = 10.0
+offset_top = -12.0
+offset_right = -14.0
+offset_bottom = 60.0
 
 [node name="Field" type="Control" parent="MarginContainer/Full Layout/Board Row/Grid + Hand/GridPanel/GridHost/Center" unique_id=1097916829]
 anchors_preset = 0
@@ -153,6 +179,7 @@ mouse_filter = 2
 color = Color(0, 0, 0, 0.3)
 
 [node name="SideBar" type="VBoxContainer" parent="MarginContainer/Full Layout/Board Row" unique_id=520126229]
+custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 8
@@ -184,30 +211,34 @@ vertical_alignment = 1
 [node name="MenuCorner" parent="MarginContainer/Full Layout/Board Row/SideBar/MenuMargin/MenuRow" unique_id=568833171 instance=ExtResource("6_menu")]
 layout_mode = 2
 size_flags_vertical = 0
+show_star = true
 
 [node name="Sidebar Column" type="VBoxContainer" parent="MarginContainer/Full Layout/Board Row/SideBar" unique_id=1847293311]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 20
 
-[node name="PanelContainer3" type="PanelContainer" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column" unique_id=1593714073]
+[node name="Bonus Panel" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column" unique_id=1427092320 instance=ExtResource("23_bonus")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Overdrive Panel" type="PanelContainer" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column" unique_id=1593714073]
 layout_mode = 2
 theme = ExtResource("2_n6gaa")
 theme_type_variation = &"SecondaryPanel"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PanelContainer3" unique_id=1301167218]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/Overdrive Panel" unique_id=1301167218]
 layout_mode = 2
 size_flags_vertical = 8
 
-[node name="GaugeFace" type="Control" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PanelContainer3/VBoxContainer" unique_id=841762110]
+[node name="GaugeFace" type="Control" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/Overdrive Panel/VBoxContainer" unique_id=841762110]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 1
 
-[node name="GaugeAlign" type="HBoxContainer" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PanelContainer3/VBoxContainer/GaugeFace" unique_id=1526875890]
+[node name="GaugeAlign" type="HBoxContainer" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/Overdrive Panel/VBoxContainer/GaugeFace" unique_id=1526875890]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -217,112 +248,50 @@ grow_vertical = 2
 mouse_filter = 2
 alignment = 2
 
-[node name="PlayerGauge" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PanelContainer3/VBoxContainer/GaugeFace/GaugeAlign" unique_id=2124016887 instance=ExtResource("12_meter")]
+[node name="PlayerGauge" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/Overdrive Panel/VBoxContainer/GaugeFace/GaugeAlign" unique_id=2124016887 instance=ExtResource("12_meter")]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="ActivateButton" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PanelContainer3/VBoxContainer" unique_id=636293191 instance=ExtResource("13_flash")]
+[node name="ChargeSlot" type="Control" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/Overdrive Panel/VBoxContainer" unique_id=636293193]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="DiscardGlow" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/Overdrive Panel/VBoxContainer/ChargeSlot" unique_id=1842201994 instance=ExtResource("22_glow")]
+unique_name_in_owner = true
+visible = true
+show_behind_parent = false
+z_index = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_discard_glow")
+
+[node name="ChargeBar" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/Overdrive Panel/VBoxContainer/ChargeSlot" unique_id=636293192 instance=ExtResource("24_bar")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ActivateButton" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/Overdrive Panel/VBoxContainer" unique_id=636293191 instance=ExtResource("13_flash")]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
 disabled = true
 text = "Activate Overdrive"
-
-[node name="PileRow" type="Control" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column" unique_id=1041843381]
-custom_minimum_size = Vector2(0, 116)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-mouse_filter = 2
-
-[node name="DeckStack" type="Control" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow" unique_id=1842201944]
-custom_minimum_size = Vector2(60, 75)
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -68.0
-offset_top = -76.70328
-offset_right = -8.0
-offset_bottom = -1.7032776
-grow_horizontal = 0
-grow_vertical = 0
-mouse_filter = 2
-
-[node name="DeckBackFar" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow/DeckStack" unique_id=1842201945 instance=ExtResource("14_back")]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 8.0
-offset_top = 10.0
-offset_right = 8.0
-offset_bottom = 10.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="DeckBackNear" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow/DeckStack" unique_id=1842201946 instance=ExtResource("14_back")]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 4.0
-offset_top = 5.0
-offset_right = 4.0
-offset_bottom = 5.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="DeckPile" type="Button" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow/DeckStack" unique_id=1281074807]
-unique_name_in_owner = true
-clip_contents = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_default_cursor_shape = 2
-theme = ExtResource("2_n6gaa")
-theme_type_variation = &"PrimaryButtonSquare"
-
-[node name="DeckMargin" type="MarginContainer" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow/DeckStack/DeckPile" unique_id=2089224455]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_constants/margin_left = 4
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 4
-theme_override_constants/margin_bottom = 4
-
-[node name="DeckBody" type="VBoxContainer" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow/DeckStack/DeckPile/DeckMargin" unique_id=1395742293]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-mouse_filter = 2
-theme_override_constants/separation = 2
-alignment = 1
-
-[node name="DeckTitle" type="Label" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow/DeckStack/DeckPile/DeckMargin/DeckBody" unique_id=577412592]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 28
-text = "Deck"
-horizontal_alignment = 1
-
-[node name="DeckCount" type="Label" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/PileRow/DeckStack/DeckPile/DeckMargin/DeckBody" unique_id=2105742526]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 28
-text = "0"
-horizontal_alignment = 1
 
 [node name="Hand Margin" type="MarginContainer" parent="MarginContainer/Full Layout" unique_id=1690501970]
 layout_mode = 2
@@ -385,64 +354,67 @@ mouse_filter = 2
 
 [node name="CornerColumn" type="VBoxContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor" unique_id=1842201980]
 custom_minimum_size = Vector2(140, 0)
+custom_maximum_size = Vector2(250, -1)
 layout_mode = 1
 anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -140.0
+offset_left = -220.0
 grow_horizontal = 0
 grow_vertical = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 20
 
-[node name="DiscardStack" type="Control" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn" unique_id=1842201941]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn" unique_id=1544128300]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="DeckStack" type="Control" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer" unique_id=1842201944]
+custom_minimum_size = Vector2(60, 75)
+layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="DiscardBackFar" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/DiscardStack" unique_id=1842201942 instance=ExtResource("14_back")]
+[node name="DeckBackFar" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer/DeckStack" unique_id=1842201945 instance=ExtResource("14_back")]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 37.0
-offset_top = 12.0
+offset_left = 8.0
+offset_top = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DeckBackNear" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer/DeckStack" unique_id=1842201946 instance=ExtResource("14_back")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 5.0
 offset_right = -4.0
-offset_bottom = -4.0
+offset_bottom = -5.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="DiscardBackNear" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/DiscardStack" unique_id=1842201943 instance=ExtResource("14_back")]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 33.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = -8.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="DiscardPile" type="Button" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/DiscardStack" unique_id=1445833075]
+[node name="DeckPile" type="Button" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer/DeckStack" unique_id=1281074807]
 unique_name_in_owner = true
 clip_contents = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 26.0
-offset_top = 2.0
-offset_right = -14.0
-offset_bottom = -14.0
+offset_right = -8.0
+offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
 theme = ExtResource("2_n6gaa")
 theme_type_variation = &"PrimaryButtonSquare"
-disabled = true
+script = ExtResource("26_click")
 
-[node name="DiscardMargin" type="MarginContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/DiscardStack/DiscardPile" unique_id=1769898166]
+[node name="DeckMargin" type="MarginContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer/DeckStack/DeckPile" unique_id=2089224455]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -450,12 +422,12 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/margin_left = 6
-theme_override_constants/margin_top = 6
-theme_override_constants/margin_right = 6
-theme_override_constants/margin_bottom = 6
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
 
-[node name="DiscardBody" type="VBoxContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/DiscardStack/DiscardPile/DiscardMargin" unique_id=585571863]
+[node name="DeckBody" type="VBoxContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer/DeckStack/DeckPile/DeckMargin" unique_id=1395742293]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -463,29 +435,116 @@ mouse_filter = 2
 theme_override_constants/separation = 2
 alignment = 1
 
-[node name="DiscardTitle" type="Label" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/DiscardStack/DiscardPile/DiscardMargin/DiscardBody" unique_id=1538672417]
+[node name="DeckTitle" type="Label" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer/DeckStack/DeckPile/DeckMargin/DeckBody" unique_id=577412592]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 0.5)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 28
-text = "Discard"
+text = "Deck"
 horizontal_alignment = 1
 
-[node name="DiscardLabel" type="Label" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/DiscardStack/DiscardPile/DiscardMargin/DiscardBody" unique_id=352864903]
+[node name="DeckCount" type="Label" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer/DeckStack/DeckPile/DeckMargin/DeckBody" unique_id=2105742526]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 0.5)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 28
 text = "0"
 horizontal_alignment = 1
 
-[node name="SkipButton" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn" unique_id=976583124 instance=ExtResource("10_btn")]
+[node name="DiscardStack" type="Control" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer" unique_id=1842201941]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="DiscardBackFar" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer/DiscardStack" unique_id=1842201942 instance=ExtResource("14_back")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 10.0
+offset_right = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+disabled = true
+
+[node name="DiscardBackNear" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer/DiscardStack" unique_id=1842201943 instance=ExtResource("14_back")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 5.0
+offset_right = 4.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+disabled = true
+
+[node name="DiscardPile" type="Button" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer/DiscardStack" unique_id=1445833075]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(140, 100)
-custom_maximum_size = Vector2(-1, -1)
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_n6gaa")
+theme_type_variation = &"PrimaryButtonSquare"
+script = ExtResource("26_click")
+disabled = true
+
+[node name="DiscardMargin" type="MarginContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer/DiscardStack/DiscardPile" unique_id=1769898166]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 5.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 6
+
+[node name="DiscardBody" type="VBoxContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer/DiscardStack/DiscardPile/DiscardMargin" unique_id=585571863]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="DiscardTitle" type="Label" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer/DiscardStack/DiscardPile/DiscardMargin/DiscardBody" unique_id=1538672417]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 0.5)
+theme_override_font_sizes/font_size = 28
+text = "Discard"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DiscardLabel" type="Label" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer/DiscardStack/DiscardPile/DiscardMargin/DiscardBody" unique_id=352864903]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 0.5)
+theme_override_font_sizes/font_size = 28
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SkipButton" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn" unique_id=976583124 instance=ExtResource("11_sq")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 90)
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
-theme_type_variation = &"SecondaryButtonSquare"
+theme_type_variation = &"PrimaryButton"
 
 [node name="Content" type="VBoxContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/SkipButton" unique_id=1842201960]
 layout_mode = 1
@@ -721,10 +780,10 @@ layout_mode = 1
 
 [node name="UpgradeLayer" type="CanvasLayer" parent="." unique_id=2127062876]
 layer = 90
+visible = false
 
 [node name="UpgradePick" parent="UpgradeLayer" unique_id=621985543 instance=ExtResource("17_upgrade")]
 unique_name_in_owner = true
-visible = false
 
 [node name="HandPromptLayer" type="CanvasLayer" parent="." unique_id=1928374651]
 layer = 80

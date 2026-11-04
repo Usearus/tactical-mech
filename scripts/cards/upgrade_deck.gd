@@ -1,6 +1,11 @@
 class_name UpgradeDeck
 extends RefCounted
 
+const TAG_UPGRADE := "Upgrade"
+const TAG_NEW := "New Card"
+const TAG_STANDARD := "Standard"
+const TAG_OVERDRIVE := "Overdrive"
+
 
 ## bastion_piledriver_2 and bastion_piledriver are one family. The first copy takes every boost.
 static func family_of(card_id: String) -> String:
@@ -87,6 +92,29 @@ static func runtime_cards(mech: MechData, memory: MissionUpgrades) -> Array[Card
 	return built
 
 
+## Overdrive on a special, Upgrade on the boosted copy, New Card on a grant, Standard on a printed card.
+static func listing_tag(card: CardData, mech: MechData) -> String:
+	if card != null and card.is_special:
+		return TAG_OVERDRIVE
+	if card != null and not card.upgrade_marks.is_empty():
+		return TAG_UPGRADE
+	if mech != null and card != null and not _printed(mech, card.id):
+		return TAG_NEW
+	return TAG_STANDARD
+
+
+static func _printed(mech: MechData, card_id: String) -> bool:
+	if card_id == "":
+		return false
+	var deck := MechDecks.for_mech(mech)
+	if deck == null:
+		return false
+	for printed in deck.cards:
+		if printed != null and printed.id == card_id:
+			return true
+	return false
+
+
 static func paint(card: CardData, mod: Dictionary) -> void:
 	if card == null or int(mod.get("upgrade_count", 0)) <= 0:
 		return
@@ -136,6 +164,9 @@ static func apply(choice: UpgradeChoice, memory: MissionUpgrades) -> void:
 			for unit in choice.mechs:
 				if unit != null and unit.alive:
 					unit.add_barrier(amount)
+		"Edict":
+			if choice.offer != null:
+				memory.add_edict(choice.offer.id)
 		"Revive":
 			var unit := choice.bound_mech
 			if unit == null or unit.data == null:

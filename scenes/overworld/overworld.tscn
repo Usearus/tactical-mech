@@ -190,10 +190,11 @@ vertical_alignment = 1
 
 [node name="MenuCorner" parent="Chrome" unique_id=1726355825 instance=ExtResource("6_menu")]
 layout_mode = 0
-offset_left = 1144.0
+offset_left = 1076.0
 offset_top = 8.0
 offset_right = 1268.0
 offset_bottom = 64.0
+show_star = true
 
 [node name="StatusLabel" type="Label" parent="Chrome" unique_id=371576363]
 unique_name_in_owner = true
@@ -304,7 +305,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.08, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 32
-text = "Tactics"
+text = "Select tactics"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -446,6 +447,7 @@ text = "Back to title"
 
 [node name="StatsWindow" parent="." unique_id=107101956 instance=ExtResource("8_8is1o")]
 unique_name_in_owner = true
+visible = false
 layout_mode = 0
 anchors_preset = 0
 anchor_top = 0.0

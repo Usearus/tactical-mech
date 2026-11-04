@@ -83,3 +83,15 @@ static func create_from_tactic(
 		encounter.encounter_location = moving_unit.overworld_position
 		encounter.approach_step = Vector2i.ZERO
 	return encounter
+
+
+## Offense and Defense tilt the draw only when the player chose that field.
+## An enemy opening keeps the same rectangle and drops the pull.
+func grants_tactic_bonus() -> bool:
+	return attacker == null or attacker.team != "enemy"
+
+
+func favored_card_type() -> String:
+	if not grants_tactic_bonus() or tactic == null:
+		return ""
+	return tactic.favored_card_type()

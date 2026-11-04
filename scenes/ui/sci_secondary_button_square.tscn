@@ -1,8 +1,10 @@
 [gd_scene format=3]
 
 [ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="1_theme"]
+[ext_resource type="Script" path="res://scripts/ui/ui_click.gd" id="2_click"]
 
 [node name="sci_secondary_button_square" type="Button"]
 custom_minimum_size = Vector2(56, 56)
 theme = ExtResource("1_theme")
 theme_type_variation = &"SecondaryButtonSquare"
+script = ExtResource("2_click")

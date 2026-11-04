@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bbl7v4hpmxmkg" path="res://scripts/command/command_screen.gd" id="1_command"]
 [ext_resource type="Texture2D" uid="uid://bxxnnm23koq7y" path="res://art/backgrounds/title_screen_background.jpg" id="2_bg"]
-[ext_resource type="Texture2D" uid="uid://daumv0v074k4h" path="res://art/characters/player/purple/pilot_full_body.png" id="3_pilot"]
+[ext_resource type="Texture2D" uid="uid://ckswc6krdgitg" path="res://art/characters/player/purple/purple.pilot.body.png" id="3_pilot"]
 [ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="4_btn"]
 [ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button.tscn" id="4_sec"]
 

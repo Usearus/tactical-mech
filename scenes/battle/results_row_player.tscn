@@ -30,7 +30,7 @@ z_index = 0
 z_index = 1
 
 [node name="Stats" type="VBoxContainer" parent="Line" unique_id=1199753181]
-custom_maximum_size = Vector2(135, -1)
+custom_maximum_size = Vector2(190, -1)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 2
@@ -101,9 +101,10 @@ vertical_alignment = 1
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.8, 0.84, 1)
+theme_override_colors/font_color = Color(0.55, 0.85, 0.45, 1)
 theme_override_font_sizes/font_size = 22
-text = "Note"
+text = "Field Repair"
+autowrap_mode = 2
 
 [node name="Stamp" type="Control" parent="Line" unique_id=599765479]
 unique_name_in_owner = true

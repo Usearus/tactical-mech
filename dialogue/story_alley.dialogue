@@ -1,0 +1,7 @@
+# Alley, before mission 1. [#art=id] marks who is speaking on the street.
+~ start
+
+Comet: Street's clear. The citadel is watching the far end. [#art=white]
+Raven: Then we walk it. Call them before they call us. [#art=purple]
+Comet: On your mark. [#art=white]
+=> END

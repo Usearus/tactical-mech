@@ -41,18 +41,20 @@ move_timing = "After"
 script = ExtResource("2_card")
 id = "raven_blink"
 display_name = "Blink"
-description = "Move 1 cell near instantaneously."
-card_type = "Move"
+description = "Step 2 cells, then add 2 guard."
+card_type = "Defense"
 cost_kind = "Free"
+defense_kind = "Guard"
+block = 2
 reach = 0
-movement = 1
+movement = 2
 target_type = "self"
 
 [sub_resource type="Resource" id="c6"]
 script = ExtResource("2_card")
 id = "raven_evade"
 display_name = "Evade"
-description = "Dodge 1 attack entirely if in hand."
+description = "Evade 1 attack entirely if in hand."
 card_type = "Defense"
 cost_kind = "Free"
 defense_kind = "Dodge"

@@ -83,14 +83,20 @@ func _show_unit(unit: MechState) -> void:
 	pose.texture = _pose_for(unit.art_id)
 
 
-## Raven, Bastion, and Barrage play their attack strip. A still pose is used for everyone else.
+## Raven, Bastion, Barrage, Comet, and Shepherd play their attack strip. Everyone else keeps a still pose.
 static func uses_attack_strip(unit: MechState) -> bool:
 	if unit == null:
 		return false
 	var mech_id := ""
 	if unit.data != null:
 		mech_id = unit.data.id
-	return unit.art_id == "purple" or mech_id == "raven" or unit.art_id == "blue" or mech_id == "bastion" or unit.art_id == "orange" or mech_id == "barrage"
+	return (
+		unit.art_id == "purple" or mech_id == "raven"
+		or unit.art_id == "blue" or mech_id == "bastion"
+		or unit.art_id == "orange" or mech_id == "barrage"
+		or unit.art_id == "white" or mech_id == "comet"
+		or unit.art_id == "red" or mech_id == "bulldog"
+	)
 
 
 func _show_attack_strip(unit: MechState) -> bool:
@@ -144,7 +150,7 @@ func _pose_for(art_id: String) -> Texture2D:
 
 
 func _load_pilot(art_id: String) -> Texture2D:
-	return _load_from("res://art/characters/player/%s/pilot.png" % art_id)
+	return _load_from("res://art/characters/player/%s/%s.pilot.png" % [art_id, art_id])
 
 
 func _load_art(art_id: String, file_name: String) -> Texture2D:

@@ -2,6 +2,12 @@
 
 [ext_resource type="Script" uid="uid://c1snhtv4m0rjv" path="res://scripts/ui/menu_corner.gd" id="1_corner"]
 [ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button_square.tscn" id="2_sq"]
+[ext_resource type="Texture2D" path="res://icodot-svg/ui/geometry/icon-geo-star-ui.svg" id="3_star"]
+[ext_resource type="Shader" path="res://shaders/icon_white.gdshader" id="4_gold"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gold"]
+shader = ExtResource("4_gold")
+shader_parameter/ink = Color(0.98, 0.84, 0.32, 1)
 
 [node name="MenuCorner" type="HBoxContainer" unique_id=1302927831]
 custom_minimum_size = Vector2(124, 56)
@@ -10,6 +16,30 @@ offset_bottom = 56.0
 mouse_filter = 2
 theme_override_constants/separation = 12
 script = ExtResource("1_corner")
+
+[node name="StarButton" parent="." unique_id=1843053244 instance=ExtResource("2_sq")]
+visible = false
+layout_mode = 2
+focus_mode = 0
+
+[node name="Glyph" type="TextureRect" parent="StarButton"]
+material = SubResource("ShaderMaterial_gold")
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_star")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="HowToButton" parent="." unique_id=1843053243 instance=ExtResource("2_sq")]
 layout_mode = 2

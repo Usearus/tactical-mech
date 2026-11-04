@@ -5,6 +5,8 @@ extends RefCounted
 var _grants: Dictionary = {}
 ## mech id -> family -> summed boost.
 var _mods: Dictionary = {}
+## Edict ids picked this mission. A second copy is not offered.
+var _edicts: Array[String] = []
 ## Rerolls left for every upgrade offer in this mission.
 var refreshes_left := UpgradeRoller.refreshes_per_mission()
 
@@ -12,6 +14,7 @@ var refreshes_left := UpgradeRoller.refreshes_per_mission()
 func clear() -> void:
 	_grants.clear()
 	_mods.clear()
+	_edicts.clear()
 	refreshes_left = UpgradeRoller.refreshes_per_mission()
 
 
@@ -24,6 +27,35 @@ func spend_refresh() -> bool:
 
 func upgrade_count(mech_id: String, family: String) -> int:
 	return int(mod_for(mech_id, family).get("upgrade_count", 0))
+
+
+func has_edict(edict_id: String) -> bool:
+	return edict_id != "" and _edicts.has(edict_id)
+
+
+func add_edict(edict_id: String) -> void:
+	if edict_id == "" or has_edict(edict_id):
+		return
+	_edicts.append(edict_id)
+
+
+## Picked edicts, in the order they were taken. Names and blurbs come from the catalog.
+func active_edicts() -> Array[UpgradeOffer]:
+	var found: Array[UpgradeOffer] = []
+	if _edicts.is_empty():
+		return found
+	var catalog := load(UpgradeRoller.EDICT_PATH) as UpgradeCatalog
+	if catalog == null:
+		return found
+	var by_id := {}
+	for offer in catalog.offers:
+		if offer != null and offer.id != "":
+			by_id[offer.id] = offer
+	for edict_id in _edicts:
+		var offer: Variant = by_id.get(edict_id)
+		if offer is UpgradeOffer:
+			found.append(offer)
+	return found
 
 
 func has_grant(mech_id: String, card_id: String) -> bool:

@@ -7,6 +7,7 @@ var _holding_world := false
 @onready var dim: ColorRect = %Dim
 @onready var stripe: Control = %Stripe
 @onready var title: Label = %Title
+@onready var charge_mark: CanvasItem = %ChargeMark
 
 
 func _ready() -> void:
@@ -22,7 +23,8 @@ func _exit_tree() -> void:
 
 
 ## hold_world freezes the rest of the game until the stripe has left.
-func play(line: String, _attack: bool, hold_world := false) -> void:
+## charge draws the lightning mark after the words. Primed uses it.
+func play(line: String, _attack: bool, hold_world := false, charge := false) -> void:
 	if _playing:
 		return
 	_playing = true
@@ -34,6 +36,8 @@ func play(line: String, _attack: bool, hold_world := false) -> void:
 	if hold_world:
 		_hold_world()
 	title.text = line
+	if charge_mark != null:
+		charge_mark.visible = charge
 	var stripe_w := clampf(size.x * 0.68, 520.0, 900.0)
 	var stripe_h := 132.0
 	stripe.size = Vector2(stripe_w, stripe_h)
@@ -92,5 +96,7 @@ func _release_world() -> void:
 
 
 func _end_play() -> void:
+	if charge_mark != null:
+		charge_mark.visible = false
 	_release_world()
 	_playing = false

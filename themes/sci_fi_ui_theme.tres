@@ -2,6 +2,18 @@
 
 [ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="1_nl1x6"]
 
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_bar"]
+content_margin_left = 14.0
+content_margin_top = 6.0
+content_margin_right = 36.0
+content_margin_bottom = 20.0
+texture = ExtResource("1_nl1x6")
+texture_margin_left = 12.0
+texture_margin_top = 17.0
+texture_margin_right = 23.0
+texture_margin_bottom = 18.0
+region_rect = Rect2(444, 320, 145, 36)
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_1luc2"]
 atlas = ExtResource("1_nl1x6")
 region = Rect2(196, 206, 132, 156)
@@ -155,28 +167,6 @@ texture_margin_right = 24.0
 texture_margin_bottom = 24.0
 region_rect = Rect2(2, 2, 92, 92)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_rvuqs"]
-atlas = ExtResource("1_nl1x6")
-region = Rect2(102, 4, 88, 88)
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_i8rxg"]
-texture = SubResource("AtlasTexture_rvuqs")
-texture_margin_left = 10.0
-texture_margin_top = 10.0
-texture_margin_right = 10.0
-texture_margin_bottom = 10.0
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_1w6sa"]
-atlas = ExtResource("1_nl1x6")
-region = Rect2(102, 206, 88, 88)
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_7o8bn"]
-texture = SubResource("AtlasTexture_1w6sa")
-texture_margin_left = 10.0
-texture_margin_top = 10.0
-texture_margin_right = 10.0
-texture_margin_bottom = 10.0
-
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sec_disabled"]
 texture = ExtResource("1_nl1x6")
 texture_margin_left = 22.0
@@ -263,7 +253,31 @@ texture_margin_right = 12.0
 texture_margin_bottom = 12.0
 region_rect = Rect2(626, 147, 64, 64)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_rvuqs"]
+atlas = ExtResource("1_nl1x6")
+region = Rect2(102, 4, 88, 88)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_i8rxg"]
+texture = SubResource("AtlasTexture_rvuqs")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1w6sa"]
+atlas = ExtResource("1_nl1x6")
+region = Rect2(102, 206, 88, 88)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_7o8bn"]
+texture = SubResource("AtlasTexture_1w6sa")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+
 [resource]
+BarPanel/base_type = &"PanelContainer"
+BarPanel/styles/panel = SubResource("StyleBoxTexture_bar")
 CardBase/base_type = &"PanelContainer"
 CardBase/styles/panel = SubResource("StyleBoxTexture_p86no")
 CheckBox/colors/icon_disabled_color = Color(1, 1, 1, 1)
@@ -364,22 +378,6 @@ PrimaryButtonSquare/styles/hover = SubResource("StyleBoxTexture_sq_hover")
 PrimaryButtonSquare/styles/hover_pressed = SubResource("StyleBoxTexture_sq_pressed")
 PrimaryButtonSquare/styles/normal = SubResource("StyleBoxTexture_sq_normal")
 PrimaryButtonSquare/styles/pressed = SubResource("StyleBoxTexture_sq_pressed")
-SecondaryButton/base_type = &"Button"
-SecondaryButton/constants/align_to_largest_stylebox = 1
-SecondaryButton/styles/disabled = SubResource("StyleBoxTexture_sec_disabled")
-SecondaryButton/styles/focus = SubResource("StyleBoxTexture_sec_hover")
-SecondaryButton/styles/hover = SubResource("StyleBoxTexture_sec_hover")
-SecondaryButton/styles/hover_pressed = SubResource("StyleBoxTexture_sec_pressed")
-SecondaryButton/styles/normal = SubResource("StyleBoxTexture_sec_normal")
-SecondaryButton/styles/pressed = SubResource("StyleBoxTexture_sec_pressed")
-SecondaryButtonSquare/base_type = &"Button"
-SecondaryButtonSquare/constants/align_to_largest_stylebox = 1
-SecondaryButtonSquare/styles/disabled = SubResource("StyleBoxTexture_sec_sq_disabled")
-SecondaryButtonSquare/styles/focus = SubResource("StyleBoxTexture_sec_sq_hover")
-SecondaryButtonSquare/styles/hover = SubResource("StyleBoxTexture_sec_sq_hover")
-SecondaryButtonSquare/styles/hover_pressed = SubResource("StyleBoxTexture_sec_sq_pressed")
-SecondaryButtonSquare/styles/normal = SubResource("StyleBoxTexture_sec_sq_normal")
-SecondaryButtonSquare/styles/pressed = SubResource("StyleBoxTexture_sec_sq_pressed")
 PrimaryPanel/base_type = &"PanelContainer"
 PrimaryPanel/styles/panel = SubResource("StyleBoxTexture_primary")
 SciCheckbox/base_type = &"CheckBox"
@@ -399,6 +397,22 @@ SciCheckbox/styles/hover = SubResource("StyleBoxEmpty_checkbox")
 SciCheckbox/styles/hover_pressed = SubResource("StyleBoxEmpty_checkbox")
 SciCheckbox/styles/normal = SubResource("StyleBoxEmpty_checkbox")
 SciCheckbox/styles/pressed = SubResource("StyleBoxEmpty_checkbox")
+SecondaryButton/base_type = &"Button"
+SecondaryButton/constants/align_to_largest_stylebox = 1
+SecondaryButton/styles/disabled = SubResource("StyleBoxTexture_sec_disabled")
+SecondaryButton/styles/focus = SubResource("StyleBoxTexture_sec_hover")
+SecondaryButton/styles/hover = SubResource("StyleBoxTexture_sec_hover")
+SecondaryButton/styles/hover_pressed = SubResource("StyleBoxTexture_sec_pressed")
+SecondaryButton/styles/normal = SubResource("StyleBoxTexture_sec_normal")
+SecondaryButton/styles/pressed = SubResource("StyleBoxTexture_sec_pressed")
+SecondaryButtonSquare/base_type = &"Button"
+SecondaryButtonSquare/constants/align_to_largest_stylebox = 1
+SecondaryButtonSquare/styles/disabled = SubResource("StyleBoxTexture_sec_sq_disabled")
+SecondaryButtonSquare/styles/focus = SubResource("StyleBoxTexture_sec_sq_hover")
+SecondaryButtonSquare/styles/hover = SubResource("StyleBoxTexture_sec_sq_hover")
+SecondaryButtonSquare/styles/hover_pressed = SubResource("StyleBoxTexture_sec_sq_pressed")
+SecondaryButtonSquare/styles/normal = SubResource("StyleBoxTexture_sec_sq_normal")
+SecondaryButtonSquare/styles/pressed = SubResource("StyleBoxTexture_sec_sq_pressed")
 SecondaryPanel/base_type = &"PanelContainer"
 SecondaryPanel/styles/panel = SubResource("StyleBoxTexture_i8rxg")
 SecondaryPanelEnemy/base_type = &"PanelContainer"

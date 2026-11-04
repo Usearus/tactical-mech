@@ -5,6 +5,10 @@ var _pulse: Tween
 var _blend: StyleBoxCrossfade
 
 
+func _ready() -> void:
+	pressed.connect(func() -> void: SoundBank.play("ui"))
+
+
 ## Loop the normal texture toward the pressed texture.
 ## Hover, a real press, and disabled stay the theme styles.
 func start_pulse() -> void:

@@ -6,8 +6,10 @@ extends Resource
 @export var display_name: String = ""
 @export var description: String = ""
 @export var card_type: String = "Attack"
-## One cost. Action ticks every enemy clock. Free ticks nothing. Charge spends 1 squad charge, or nothing in Overdrive.
+## One cost. Action ticks every enemy clock. Free ticks nothing. Charge spends its printed squad charge, or nothing in Overdrive.
 @export_enum("Action", "Free", "Charge") var cost_kind: String = "Action"
+## Squad charge spent outside Overdrive. Overdrive waives it.
+@export var charge_cost: int = 1
 ## Held out of the hand until Overdrive. A deck can mark more than one.
 @export var is_special: bool = false
 ## Guard adds block to a mech. Dodge stays in hand and negates one attack.
@@ -62,10 +64,10 @@ func pays_action() -> bool:
 	return not pays_charge() and cost_kind != "Free"
 
 
-## 1 outside Overdrive, 0 while Overdrive is on. Anything else owes nothing.
+## Printed charge outside Overdrive, 0 while Overdrive is on. Anything else owes nothing.
 func charge_due(overdrive: bool) -> int:
 	if pays_charge() and not overdrive:
-		return 1
+		return maxi(charge_cost, 1)
 	return 0
 
 
@@ -85,9 +87,9 @@ func cost_note(overdrive: bool) -> String:
 	return "Cost: Card costs no action to use."
 
 
-## Played onto an adjacent ally. Other guard cards protect the owner.
+## Played onto a chosen mech. An ally card needs an adjacent teammate. A friendly card also allows the owner.
 func guards_ally() -> bool:
-	return is_guard() and target_type == "ally"
+	return is_guard() and (target_type == "ally" or target_type == "friendly")
 
 
 ## Played on the owner. A team or squad card covers more than one mech.

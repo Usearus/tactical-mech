@@ -20,7 +20,7 @@ static func load_saved() -> DraftOdds:
 	return DraftOdds.new()
 
 
-## "advantaged" halves rare-card weight when the player side outnumbers the enemy. "disadvantaged" raises it. Equal numbers, including 1v1, stay "even" and keep the saved weights.
+## "advantaged" halves rare-card weight when the player side outnumbers the enemy. "disadvantaged" doubles it. Equal numbers, including 1v1, stay "even" and keep the saved weights.
 static func fight_band(players: int, enemies: int) -> String:
 	if players > enemies:
 		return "advantaged"
@@ -29,7 +29,7 @@ static func fight_band(players: int, enemies: int) -> String:
 	return "even"
 
 
-## A larger player squad makes 2- and 3-star cards rarer. An even fight keeps these weights. A smaller squad against more enemies makes them more common.
+## A larger player squad makes 2- and 3-star cards rarer. An even fight keeps these weights. A smaller squad against more enemies doubles them.
 func for_fight(players: int, enemies: int) -> DraftOdds:
 	var copy := duplicate() as DraftOdds
 	match fight_band(players, enemies):
@@ -40,11 +40,13 @@ func for_fight(players: int, enemies: int) -> DraftOdds:
 			copy.weight_3 = maxi(third, 0)
 			copy.weight_1 = weight_1 + (weight_2 - copy.weight_2) + (weight_3 - copy.weight_3)
 		"disadvantaged":
-			var bonus_2 := int(round(float(weight_2) * 0.5))
-			var bonus_3 := weight_3
-			var room := weight_1
-			var take_2 := mini(maxi(bonus_2, 0), room)
-			var take_3 := mini(maxi(bonus_3, 0), room - take_2)
+			var doubled_2 := int(round(float(weight_2) * 2.0))
+			var doubled_3 := int(round(float(weight_3) * 2.0))
+			var extra_2 := maxi(doubled_2 - weight_2, 0)
+			var extra_3 := maxi(doubled_3 - weight_3, 0)
+			var room := maxi(weight_1, 0)
+			var take_2 := mini(extra_2, room)
+			var take_3 := mini(extra_3, room - take_2)
 			copy.weight_1 = weight_1 - take_2 - take_3
 			copy.weight_2 = weight_2 + take_2
 			copy.weight_3 = weight_3 + take_3

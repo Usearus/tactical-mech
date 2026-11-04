@@ -65,7 +65,38 @@ func test_the_picker_lists_the_enabled_tactics() -> void:
 	assert_true(names.has("offense"), "offense")
 	assert_true(names.has("north"), "north")
 	assert_true(names.has("south"), "south")
+	assert_false(BattleTactic.by_id("north").shows_on_panel(), "flank above stays off the panel")
+	assert_false(BattleTactic.by_id("south").shows_on_panel(), "flank below stays off the panel")
+	assert_true(BattleTactic.standard().shows_on_panel(), "defense stays on the panel")
+	assert_true(BattleTactic.by_id("offense").shows_on_panel(), "offense stays on the panel")
+	assert_eq(BattleTactic.standard().note, "Slightly increase \"Defense\" card pulls.")
+	assert_eq(BattleTactic.by_id("offense").note, "Slightly increase \"Offense\" card pulls.")
 	var hidden_ids: PackedStringArray = ["westward", "plaza", "broad", "deep"]
 	for hidden in hidden_ids:
 		var tucked := BattleTactic.by_id(hidden)
 		assert_false(tucked.enabled, hidden)
+
+
+func test_an_enemy_opening_drops_the_offense_and_defense_pull() -> void:
+	var player := _unit("player")
+	var enemy := _unit("enemy")
+	var roster: Array[MechState] = [player, enemy]
+	var defense := EncounterData.create_from_tactic(enemy, BattleTactic.standard(), roster)
+	var offense := EncounterData.create_from_tactic(enemy, BattleTactic.by_id("offense"), roster)
+	assert_false(defense.grants_tactic_bonus(), "an enemy field grants no tactic bonus")
+	assert_eq(defense.favored_card_type(), "", "defense pull stays off")
+	assert_eq(offense.favored_card_type(), "", "offense pull stays off")
+	assert_eq(defense.tactic.id, "standard", "the defense rectangle still opens")
+	assert_eq(offense.tactic.id, "offense", "the offense rectangle still opens")
+	var chosen_defense := EncounterData.create_from_tactic(player, BattleTactic.standard(), roster)
+	var chosen_offense := EncounterData.create_from_tactic(player, BattleTactic.by_id("offense"), roster)
+	assert_eq(chosen_defense.favored_card_type(), "Defense")
+	assert_eq(chosen_offense.favored_card_type(), "Attack")
+
+
+func _unit(side: String) -> MechState:
+	var data := MechData.new()
+	data.team = side
+	data.id = side
+	data.max_hp = 10
+	return MechState.from_data(data, Vector2i.ZERO)

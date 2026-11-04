@@ -40,6 +40,7 @@ var _syncing := false
 @onready var mech_sprite: AnimatedSprite2D = %Mech
 @onready var preview_name: Label = %PreviewName
 @onready var details: BoxContainer = %Details
+@onready var role: Label = %Role
 @onready var blurb: Label = %Blurb
 @onready var stat_table: VBoxContainer = %StatTable
 @onready var stat_grid: GridContainer = %StatGrid
@@ -162,6 +163,7 @@ func _refresh() -> void:
 
 func _show_focused() -> void:
 	var show_stats := _focused != null
+	role.visible = show_stats
 	blurb.visible = show_stats
 	stat_table.visible = show_stats
 	if _focused == null:
@@ -172,6 +174,7 @@ func _show_focused() -> void:
 		_show_deck()
 		return
 	preview_name.text = _focused.display_name
+	role.text = _focused.role_line()
 	blurb.text = _focused.blurb
 	_show_stat(hp_stat, hp_grade, _focused.max_hp, _focused.hp_grade)
 	var attack := _attack_span(_focused)

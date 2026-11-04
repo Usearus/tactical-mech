@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bk80n66tnqgvp"
+path="res://.godot/imported/Rock Impact 37.wav-fce68ec86adb452eeb8f6e865e319a5b.sample"
+
+[deps]
+
+source_file="res://audio/Free Sounds Pack/Rock Impact 37.wav"
+dest_files=["res://.godot/imported/Rock Impact 37.wav-fce68ec86adb452eeb8f6e865e319a5b.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

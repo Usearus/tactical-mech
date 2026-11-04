@@ -4,7 +4,8 @@ extends Resource
 
 ## Grant adds a card. Modify boosts one the mech already has.
 ## Immediate is a group effect. Revive brings a destroyed mech back.
-@export_enum("Grant", "Modify", "Immediate", "Revive") var kind: String = "Modify"
+## Edict is a rule for every living mech, kept until the mission ends.
+@export_enum("Grant", "Modify", "Immediate", "Revive", "Edict") var kind: String = "Modify"
 @export_range(1, 3, 1) var rarity: int = 1
 @export var id: String = ""
 ## Set on a grant or a modify. Team and revive templates leave this empty.

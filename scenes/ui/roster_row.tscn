@@ -3,6 +3,7 @@
 [ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="1_3bh40"]
 [ext_resource type="PackedScene" uid="uid://bgrbx6435mfm7" path="res://scenes/ui/sci_checkbox.tscn" id="1_check"]
 [ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="1_sheet"]
+[ext_resource type="Script" path="res://scripts/ui/ui_click.gd" id="2_click"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_normal"]
 content_margin_left = 60.0
@@ -62,6 +63,7 @@ theme = ExtResource("1_3bh40")
 theme_type_variation = &"PrimaryButtonSquare"
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+script = ExtResource("2_click")
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 36
 theme_override_styles/normal = SubResource("StyleBoxTexture_normal")

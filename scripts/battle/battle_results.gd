@@ -3,6 +3,7 @@ extends Control
 
 const PLAYER_ROW_SCENE := preload("res://scenes/battle/results_row_player.tscn")
 const ENEMY_ROW_SCENE := preload("res://scenes/battle/results_row_enemy.tscn")
+const EDICT_BONUS := preload("res://scripts/game/edict_amounts.gd")
 const LOSS := Color(0.92, 0.28, 0.24)
 const GAIN := Color(0.55, 0.85, 0.45)
 const GUARD_TINT := Color(0.45, 0.78, 1.0)
@@ -82,6 +83,9 @@ func _play_fight_counts() -> void:
 	await _animate_stats(lines)
 	if not is_inside_tree():
 		return
+	await _animate_repairs()
+	if not is_inside_tree():
+		return
 	await get_tree().create_timer(1.0).timeout
 	if not is_inside_tree():
 		return
@@ -119,6 +123,22 @@ func _animate_stats(lines: Array[StatLine]) -> void:
 	for line in lines:
 		line.hide_delta()
 		line.show_value(line.closed)
+		line.clear_heal_tint()
+
+
+## Field Repair plays after the fight totals, so the +2 reads as its own heal.
+func _animate_repairs() -> void:
+	var lines: Array[StatLine] = []
+	for row in _rows:
+		if row.repair <= 0 or row.hp_stat == null:
+			continue
+		var line := row.hp_stat
+		line.heal = true
+		line.prepare(line.closed, line.closed + row.repair)
+		line.show_delta(GAIN)
+		_set_note(row.note, "Field Repair", GAIN)
+		lines.append(line)
+	await _animate_stats(lines)
 
 
 func _paint_stat(t: float, line: StatLine) -> void:
@@ -126,6 +146,12 @@ func _paint_stat(t: float, line: StatLine) -> void:
 		return
 	var value := int(round(lerpf(float(line.opened), float(line.closed), t)))
 	line.show_value(value)
+	if not line.heal:
+		return
+	var tint := GAIN.lerp(Color.WHITE, t)
+	line.value_label.add_theme_color_override("font_color", tint)
+	if is_instance_valid(line.icon):
+		line.icon.modulate = tint
 
 
 func _tween_gauges() -> void:
@@ -196,6 +222,7 @@ func _add_unit(unit: MechState, opened: Dictionary) -> void:
 	name_label.text = unit.display_name
 	_bind_portrait(portrait, unit)
 	row.hp_stat = _bind_stat(panel.get_node("%Hp") as HBoxContainer, "HP", hp_open, unit.hp, false)
+	row.repair = _repair_gain(unit)
 	var guard_row := panel.get_node("%Guard") as HBoxContainer
 	if standing_open > 0 or shell > 0:
 		guard_row.visible = true
@@ -310,6 +337,7 @@ func _bind_stat(row: HBoxContainer, prefix: String, opened: int, closed: int, gu
 	line.guard_stat = guard_stat
 	line.value_label = row.get_node("Value") as Label
 	line.delta_label = row.get_node("Delta") as Label
+	line.icon = row.get_node("Icon") as CanvasItem
 	if guard_stat and closed > opened:
 		line.show_value(closed)
 		line.opened = closed
@@ -334,6 +362,25 @@ func _set_note(label: Label, text: String, color: Color) -> void:
 	label.visible = text != ""
 	label.text = text
 	label.add_theme_color_override("font_color", color)
+
+
+## Health this row will gain when the fight is left. Full mechs, the dead, and enemies stay put.
+func _repair_gain(unit: MechState) -> int:
+	if unit == null or not _owns_field_repair() or not _fought(unit) or not EDICT_BONUS.repairs(unit):
+		return 0
+	var cap := unit.hp
+	if unit.data != null:
+		cap = unit.data.max_hp
+	return EDICT_BONUS.healed_hp(unit.hp, cap) - unit.hp
+
+
+func _owns_field_repair() -> bool:
+	return GameManager.mission_upgrades != null and GameManager.mission_upgrades.has_edict("edict_field_repair")
+
+
+func _fought(unit: MechState) -> bool:
+	var encounter := GameManager.current_encounter
+	return encounter != null and encounter.participants.has(unit)
 
 
 func _outcome_color(outcome: String) -> Color:
@@ -384,6 +431,7 @@ class UnitRow extends RefCounted:
 	var hp_stat: StatLine
 	var guard_stat: StatLine
 	var note: Label
+	var repair := 0
 
 
 class StatLine extends RefCounted:
@@ -393,6 +441,8 @@ class StatLine extends RefCounted:
 	var guard_stat := false
 	var value_label: Label
 	var delta_label: Label
+	var icon: CanvasItem
+	var heal := false
 
 
 	func show_value(amount: int) -> void:
@@ -424,3 +474,11 @@ class StatLine extends RefCounted:
 			return
 		delta_label.visible = false
 		delta_label.modulate.a = 1.0
+
+
+	func clear_heal_tint() -> void:
+		heal = false
+		if is_instance_valid(value_label):
+			value_label.remove_theme_color_override("font_color")
+		if is_instance_valid(icon):
+			icon.modulate = Color.WHITE

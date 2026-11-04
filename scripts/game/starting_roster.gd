@@ -6,11 +6,11 @@ const UNPLACED := Vector2i(-1, -1)
 
 const PLAYER_MECHS: Array[String] = [
 	"res://data/mechs/player/raven.tres",
-	"res://data/mechs/player/bulldog.tres",
-	"res://data/mechs/player/bastion.tres",
-	"res://data/mechs/player/lancer.tres",
-	"res://data/mechs/player/barrage.tres",
 	"res://data/mechs/player/comet.tres",
+	"res://data/mechs/player/lancer.tres",
+	"res://data/mechs/player/bastion.tres",
+	"res://data/mechs/player/barrage.tres",
+	"res://data/mechs/player/bulldog.tres",
 ]
 
 

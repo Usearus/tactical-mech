@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dcj6os8mqkath"]
 
 [ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="1_co4aa"]
+[ext_resource type="Script" path="res://scripts/ui/ui_click.gd" id="2_click"]
 
 [node name="sci_primary_button" type="Button" unique_id=1312133095]
 custom_maximum_size = Vector2(-1, 56)
@@ -12,3 +13,4 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("1_co4aa")
 theme_type_variation = &"PrimaryButton"
+script = ExtResource("2_click")

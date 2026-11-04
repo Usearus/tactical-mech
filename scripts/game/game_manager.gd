@@ -22,7 +22,7 @@ func overworld_size() -> Vector2i:
 	StageMap.use(stage_scene)
 	return StageMap.bounds.size
 ## Squad Overdrive gauge length. The same for every mission.
-const SQUAD_ATTACK_MAX := 12
+const SQUAD_ATTACK_MAX := 10
 
 var phase: Phase = Phase.COMMAND
 var available_mechs: Array[MechData] = []
@@ -39,10 +39,18 @@ var player_attack_max := SQUAD_ATTACK_MAX
 ## Charge waiting for the gauge that remains after Overdrive spends this one.
 var player_banked_gauge := 0
 const SPARK_CHARGE := 2
+## Charge for passing a mission buff instead of taking one.
+const SKIP_CHARGE := 2
 const FADE_SECONDS := 0.45
 const FADE_SCENE := preload("res://scenes/ui/screen_fade.tscn")
 ## True once the player activates Overdrive in a battle. That fight spends the gauge.
 var battle_offense := false
+## Opening Strike lasts until the first attack card of this battle is played.
+var opening_strike_ready := true
+## Opening Guard lasts until the first guard card of this battle is played.
+var opening_guard_ready := true
+## Free Opener lasts until the first card of this battle is played.
+var free_opener_ready := true
 ## Grants and card boosts picked after a fight. Cleared when a mission starts.
 var mission_upgrades := MissionUpgrades.new()
 var battle_zoom_scale := 2.4
@@ -110,6 +118,7 @@ func open_scene(scene_path: String) -> void:
 
 
 func quit_stage() -> void:
+	SoundBank.stop_loop()
 	player_mechs = []
 	enemy_mechs = StartingRoster.create_enemies()
 	turn_number = 1
@@ -167,6 +176,7 @@ func begin_encounter(encounter: EncounterData) -> void:
 	current_encounter = encounter
 	phase = Phase.BATTLE
 	battle_offense = false
+	reset_opening_edicts()
 	var attacker := encounter.attacker
 	if attacker != null:
 		attacker.has_moved = true
@@ -177,6 +187,7 @@ func finish_battle(reason: String = "", battle_positions: Dictionary = {}) -> vo
 		return
 	for unit in player_mechs:
 		unit.close_battle_guard()
+	_apply_field_repair()
 	if current_encounter != null:
 		BattleDeployment.commit_to_overworld(
 			current_encounter,
@@ -201,6 +212,7 @@ func finish_battle(reason: String = "", battle_positions: Dictionary = {}) -> vo
 	player_attack_gauge = int(gauge["charge"])
 	player_banked_gauge = int(gauge["banked"])
 	battle_offense = false
+	reset_opening_edicts()
 	battle_finished.emit()
 
 
@@ -249,38 +261,108 @@ func _tally_row(unit_id: String) -> Dictionary:
 	return mission_tally[unit_id]
 
 
+const EDICT_BONUS := preload("res://scripts/game/edict_amounts.gd")
+
+
 ## Stepped quarter-step. 1–4 gains 1, 5–10 gains 2, 11–15 gains 3.
 static func tactic_bonus(amount: int) -> int:
-	if amount <= 4:
-		return 1 if amount > 0 else 0
-	if amount <= 10:
-		return 2
-	if amount <= 15:
-		return 3
-	return 4
+	return EDICT_BONUS.tactic_bonus(amount)
 
 
-## Attack cards in Overdrive. Printed damage in a standard fight, and for every enemy attack.
+## Attack cards. Overdrive adds its step, then Opening Strike and Plus Two.
 func card_damage(card: CardData) -> int:
-	var amount := 0 if card == null else maxi(card.damage, 0)
-	if battle_offense and card != null and card.card_type == "Attack":
-		amount += tactic_bonus(maxi(card.damage, 0))
-	return amount
+	return EDICT_BONUS.attack_amount(
+		card,
+		battle_offense,
+		opening_strike_ready and _has_edict("edict_opening_strike"),
+		_has_edict("edict_plus_two")
+	)
 
 
-## Guard cards in Overdrive. Printed block in a standard fight.
+## Guard cards. Overdrive adds its step, then Opening Guard and Plus Two. A dodge stays printed.
 func card_block(card: CardData) -> int:
-	var amount := 0 if card == null else maxi(card.block, 0)
-	if battle_offense and card != null and card.is_guard():
-		amount += tactic_bonus(maxi(card.block, 0))
-	return amount
+	return EDICT_BONUS.guard_amount(
+		card,
+		battle_offense,
+		opening_guard_ready and _has_edict("edict_opening_guard"),
+		_has_edict("edict_plus_two")
+	)
 
 
-## One charge off the squad gauge. Refuses when the gauge is short.
-func spend_charge() -> bool:
-	if player_attack_gauge < 1:
+## Charge the card asks for. Free Opener makes the first card of the battle cost nothing.
+func card_charge_due(card: CardData) -> int:
+	return EDICT_BONUS.charge_due(card, battle_offense, opener_is_free())
+
+
+## An action ticks every enemy clock. Free Opener skips that on the first card.
+func card_pays_action(card: CardData) -> bool:
+	return EDICT_BONUS.pays_action(card, opener_is_free())
+
+
+func opener_is_free() -> bool:
+	return free_opener_ready and _has_edict("edict_free_opener")
+
+
+## Living player mechs from this fight gain 2 health, stopping at their maximum.
+func _apply_field_repair() -> void:
+	if current_encounter == null or not _has_edict("edict_field_repair"):
+		return
+	for unit in current_encounter.participants:
+		var mech := unit as MechState
+		if not EDICT_BONUS.repairs(mech):
+			continue
+		var cap := mech.hp
+		if mech.data != null:
+			cap = mech.data.max_hp
+		mech.hp = EDICT_BONUS.healed_hp(mech.hp, cap)
+
+
+## Primed fills the squad gauge when the battle opens. A full gauge keeps what it can.
+func grant_primed_charge() -> void:
+	player_attack_gauge += EDICT_BONUS.primed_gain(player_attack_gauge, player_attack_max)
+
+
+## Each battle offers these once. The hand paints whatever card_damage and card_block return.
+func reset_opening_edicts() -> void:
+	opening_strike_ready = true
+	opening_guard_ready = true
+	free_opener_ready = true
+
+
+## False on a later attack, so the hand is repainted only when the bonus actually leaves.
+func spend_opening_strike() -> bool:
+	if not opening_strike_ready:
 		return false
-	player_attack_gauge -= 1
+	opening_strike_ready = false
+	return true
+
+
+## False on a later guard, so the hand is repainted only when the bonus actually leaves.
+func spend_opening_guard() -> bool:
+	if not opening_guard_ready:
+		return false
+	opening_guard_ready = false
+	return true
+
+
+## False after the first card, so the rest of the hand shows its real cost again.
+func spend_free_opener() -> bool:
+	if not free_opener_ready:
+		return false
+	free_opener_ready = false
+	return true
+
+
+func _has_edict(edict_id: String) -> bool:
+	return mission_upgrades != null and mission_upgrades.has_edict(edict_id)
+
+
+## Printed charge off the squad gauge. Refuses when the gauge is short.
+func spend_charge(amount: int = 1) -> bool:
+	var due := maxi(amount, 1)
+	if player_attack_gauge < due:
+		return false
+	player_attack_gauge -= due
 	return true
 
 
@@ -289,6 +371,19 @@ func charge_from_pitch() -> bool:
 		return false
 	player_attack_gauge += 1
 	return true
+
+
+## Passing a mission buff fills the gauge kept after the fight.
+## Overdrive spends the live bar on the way out, so that grant waits on the next gauge.
+## A full bar keeps the leftover for that next gauge.
+func charge_from_skip() -> void:
+	if battle_offense:
+		player_banked_gauge += SKIP_CHARGE
+		return
+	var room := maxi(player_attack_max - player_attack_gauge, 0)
+	var live := mini(SKIP_CHARGE, room)
+	player_attack_gauge += live
+	player_banked_gauge += SKIP_CHARGE - live
 
 
 ## Live charge first. Overflow waits for the next gauge only while Overdrive is spending this one.

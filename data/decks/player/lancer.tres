@@ -47,23 +47,25 @@ target_type = "enemy"
 [sub_resource type="Resource" id="c5"]
 script = ExtResource("2_card")
 id = "lancer_guard_stance"
-display_name = "Guard Stance"
-description = "Add guard to this mech."
+display_name = "Sidestep"
+description = "Add guard, then step 1 cell."
 card_type = "Defense"
 defense_kind = "Guard"
 block = 5
 reach = 0
+movement = 1
 target_type = "self"
 
 [sub_resource type="Resource" id="c6"]
 script = ExtResource("2_card")
 id = "lancer_guard_stance_2"
-display_name = "Guard Stance"
-description = "Add guard to this mech."
+display_name = "Sidestep"
+description = "Add guard, then step 1 cell."
 card_type = "Defense"
 defense_kind = "Guard"
 block = 5
 reach = 0
+movement = 1
 target_type = "self"
 
 [sub_resource type="Resource" id="c7"]

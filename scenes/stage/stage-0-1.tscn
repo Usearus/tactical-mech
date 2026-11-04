@@ -109,6 +109,24 @@ tile_size = Vector2i(32, 32)
 physics_layer_0/collision_layer = 1
 sources/1 = SubResource("TileSetAtlasSource_t4eb8")
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_urlt7"]
+size = Vector2(1277, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_j26p1"]
+size = Vector2(1120, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_y8frh"]
+size = Vector2(128, 64)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3dx3j"]
+size = Vector2(127.625, 64)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_m7yey"]
+size = Vector2(127.625, 64)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6qtvs"]
+size = Vector2(160, 96)
+
 [node name="Stage" type="Node2D" unique_id=1231153862]
 
 [node name="Water" type="TileMapLayer" parent="." unique_id=1800448114]
@@ -266,13 +284,29 @@ physics_quadrant_size = 64
 
 [node name="InvisibleWall" type="StaticBody2D" parent="." unique_id=2031279986]
 
-[node name="CollisionShape2D" type="CollisionPolygon2D" parent="InvisibleWall" unique_id=811158108]
-position = Vector2(640, 224)
-polygon = PackedVector2Array(0, 0, 0, 0, -640, 0, -640, 32, -320, 32, -320, 96, -192, 96, -192, 32, 640, 32, 640, 0)
+[node name="CollisionShape" type="CollisionShape2D" parent="InvisibleWall" unique_id=1008603742]
+position = Vector2(641.5, 240)
+shape = SubResource("RectangleShape2D_urlt7")
 
-[node name="CollisionShape2D2" type="CollisionPolygon2D" parent="InvisibleWall" unique_id=1079317161]
-position = Vector2(640, 544)
-polygon = PackedVector2Array(-224, 0, -320, -32, -608, -32, -608, 0, 640, 0, 640, -32, 320, -32, 320, -96, 192, -96, 192, -32, -192, -32, -192, -96, -320, -96, -320, -32)
+[node name="CollisionShape2" type="CollisionShape2D" parent="InvisibleWall" unique_id=1015374982]
+position = Vector2(567, 544)
+shape = SubResource("RectangleShape2D_j26p1")
+
+[node name="CollisionShape3" type="CollisionShape2D" parent="InvisibleWall" unique_id=1380396386]
+position = Vector2(384, 480)
+shape = SubResource("RectangleShape2D_y8frh")
+
+[node name="CollisionShape4" type="CollisionShape2D" parent="InvisibleWall" unique_id=1004348418]
+position = Vector2(895.8125, 480)
+shape = SubResource("RectangleShape2D_3dx3j")
+
+[node name="CollisionShape5" type="CollisionShape2D" parent="InvisibleWall" unique_id=334710534]
+position = Vector2(384, 288)
+shape = SubResource("RectangleShape2D_m7yey")
+
+[node name="CollisionShape6" type="CollisionShape2D" parent="InvisibleWall" unique_id=468698347]
+position = Vector2(1216, 512)
+shape = SubResource("RectangleShape2D_6qtvs")
 
 [node name="Above" type="TileMapLayer" parent="." unique_id=471232291]
 z_index = 10

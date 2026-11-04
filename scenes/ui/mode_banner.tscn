@@ -2,6 +2,12 @@
 
 [ext_resource type="Script" uid="uid://c76w438kv8st2" path="res://scripts/ui/mode_banner.gd" id="1_banner"]
 [ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="2_boiln"]
+[ext_resource type="Texture2D" path="res://icodot-svg/ui/weather-nature/icon-lightning-ui.svg" id="3_bolt"]
+[ext_resource type="Shader" path="res://shaders/icon_white.gdshader" id="4_ink"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bolt"]
+shader = ExtResource("4_ink")
+shader_parameter/ink = Color(0.95, 0.96, 0.98, 1)
 
 [node name="ModeBanner" type="Control" unique_id=685734311]
 clip_contents = true
@@ -34,10 +40,30 @@ offset_bottom = 132.0
 theme = ExtResource("2_boiln")
 theme_type_variation = &"DialoguePanel"
 
-[node name="Title" type="Label" parent="Stripe" unique_id=1806923307]
+[node name="Row" type="HBoxContainer" parent="Stripe"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Stripe/Row" unique_id=1806923307]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 theme_override_font_sizes/font_size = 64
 text = "Overdrive mode"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="ChargeMark" type="TextureRect" parent="Stripe/Row"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("3_bolt")
+expand_mode = 1
+stretch_mode = 5
+material = SubResource("ShaderMaterial_bolt")

@@ -8,7 +8,8 @@ const ICONS := {
 	"atk": preload("res://art/icons/stats/attack.svg"),
 	"rng": preload("res://art/icons/stats/range.svg"),
 	"mov": preload("res://art/icons/stats/move.svg"),
-	"dodge": preload("res://art/icons/stats/dodge.svg"),
+	"evade": preload("res://art/icons/stats/evade.svg"),
+	"int": preload("res://art/icons/stats/dodge.svg"),
 	"def": preload("res://art/icons/stats/defend.svg"),
 	"bar": preload("res://art/icons/stats/crescent.svg"),
 	"chg": preload("res://icodot-svg/ui/weather-nature/icon-lightning-ui.svg"),
@@ -26,7 +27,7 @@ func show_card(card: CardData, damage: int, block: int) -> void:
 		visible = false
 		return
 	var overdrive := GameManager.battle_offense
-	var key := "%d|%d|%d|%d" % [card.get_instance_id(), damage, block, card.charge_due(overdrive)]
+	var key := "%d|%d|%d|%d|%d" % [card.get_instance_id(), damage, block, GameManager.card_charge_due(card), 1 if GameManager.opener_is_free() else 0]
 	if key == _shown_key and visible:
 		return
 	_shown_key = key
@@ -39,6 +40,8 @@ func show_card(card: CardData, damage: int, block: int) -> void:
 
 
 func _cost_row(card: CardData, overdrive: bool) -> Dictionary:
+	if GameManager.opener_is_free() and (card.pays_charge() or card.pays_action()):
+		return {"kind": "act", "text": "Free"}
 	if card.pays_charge():
 		var owed := card.charge_due(overdrive)
 		var label := "1 charge" if owed == 1 else "%d charge" % owed
@@ -63,7 +66,7 @@ func _effect_rows(card: CardData, damage: int, block: int) -> Array[Dictionary]:
 			elif card.barrier > 0:
 				rows.append({"kind": "bar", "text": "%d barrier" % card.barrier})
 			elif card.is_dodge():
-				rows.append({"kind": "dodge", "text": "Negates one attack"})
+				rows.append({"kind": "evade", "text": "1 evade"})
 			elif card.block > 0:
 				rows.append({"kind": "def", "text": "%d guard" % block})
 			if card.movement > 0:
@@ -71,7 +74,7 @@ func _effect_rows(card: CardData, damage: int, block: int) -> Array[Dictionary]:
 		"Move":
 			rows.append({"kind": "mov", "text": "%d movement" % card.movement})
 	if card.intercept and not card.is_dodge():
-		rows.append({"kind": "dodge", "text": "Intercepts one attack"})
+		rows.append({"kind": "int", "text": "1 intercept"})
 	return rows
 
 

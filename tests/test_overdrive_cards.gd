@@ -67,8 +67,10 @@ func test_shepherd_plates_from_range() -> void:
 			assert_eq(card.movement, 1, "ward steps 1")
 			assert_eq(card.move_timing, "Before", "ward steps first")
 			assert_eq(card.barrier, 3, "ward gives 3 barrier")
-			assert_eq(card.target_type, "ally", "ward plates an ally")
+			assert_eq(card.target_type, "friendly", "ward plates self or an ally")
+			assert_eq(card.description, "Step 1 cell, then give 3 barrier to yourself or an ally 1 cell away.")
 			assert_false(card.is_special, "ward is a normal card")
+			assert_eq(card.charge_due(false), 2, "ward costs 2 charge")
 		if card.display_name == "Dart":
 			darts += 1
 	assert_eq(wards, 2, "two wards, no reposition")
@@ -145,14 +147,44 @@ func test_spark_banks_two_for_the_next_gauge() -> void:
 	GameManager.player_banked_gauge = saved_bank
 
 
+func test_skipping_a_buff_adds_two_charge() -> void:
+	var saved_offense := GameManager.battle_offense
+	var saved_gauge := GameManager.player_attack_gauge
+	var saved_max := GameManager.player_attack_max
+	var saved_bank := GameManager.player_banked_gauge
+	GameManager.battle_offense = false
+	GameManager.player_attack_max = GameManager.SQUAD_ATTACK_MAX
+	GameManager.player_attack_gauge = 4
+	GameManager.player_banked_gauge = 0
+	GameManager.charge_from_skip()
+	assert_eq(GameManager.player_attack_gauge, 6, "skip fills the gauge by 2")
+	assert_eq(GameManager.player_banked_gauge, 0, "room on the bar takes the whole grant")
+	GameManager.player_attack_gauge = GameManager.SQUAD_ATTACK_MAX - 1
+	GameManager.charge_from_skip()
+	assert_eq(GameManager.player_attack_gauge, GameManager.SQUAD_ATTACK_MAX, "a nearly full bar takes what fits")
+	assert_eq(GameManager.player_banked_gauge, 1, "the rest waits for the next gauge")
+	GameManager.battle_offense = true
+	GameManager.player_attack_gauge = 9
+	GameManager.player_banked_gauge = 1
+	GameManager.charge_from_skip()
+	assert_eq(GameManager.player_attack_gauge, 9, "overdrive keeps the live bar for the fight")
+	assert_eq(GameManager.player_banked_gauge, 3, "overdrive banks the skip for the gauge you keep")
+	var preview := GameManager.preview_battle_return()
+	assert_eq(int(preview["charge"]), 3, "the banked skip is the gauge you return with")
+	GameManager.battle_offense = saved_offense
+	GameManager.player_attack_gauge = saved_gauge
+	GameManager.player_attack_max = saved_max
+	GameManager.player_banked_gauge = saved_bank
+
+
 func test_pitch_fills_one_and_stops_when_full() -> void:
 	var saved_gauge := GameManager.player_attack_gauge
 	var saved_max := GameManager.player_attack_max
 	GameManager.player_attack_max = GameManager.SQUAD_ATTACK_MAX
 	GameManager.player_attack_gauge = GameManager.SQUAD_ATTACK_MAX - 1
-	assert_eq(GameManager.SQUAD_ATTACK_MAX, 12, "the squad gauge is 12 long")
+	assert_eq(GameManager.SQUAD_ATTACK_MAX, 10, "the squad gauge is 10 long")
 	assert_true(GameManager.charge_from_pitch(), "one discard fills a point")
-	assert_eq(GameManager.player_attack_gauge, 12, "the gauge holds that point")
+	assert_eq(GameManager.player_attack_gauge, 10, "the gauge holds that point")
 	assert_false(GameManager.charge_from_pitch(), "a full gauge takes no more")
 	GameManager.player_attack_gauge = saved_gauge
 	GameManager.player_attack_max = saved_max
@@ -212,9 +244,45 @@ func test_bastion_holds_the_line() -> void:
 	assert_true(FinisherBanner.uses_attack_strip(barrage_unit), "barrage finisher plays the attack")
 	var comet_unit := MechState.new()
 	comet_unit.data = load("res://data/mechs/player/comet.tres") as MechData
-	assert_false(FinisherBanner.uses_attack_strip(comet_unit), "comet keeps the still pose")
+	assert_true(FinisherBanner.uses_attack_strip(comet_unit), "comet finisher plays the laser")
+	var shepherd_unit := MechState.new()
+	shepherd_unit.data = load("res://data/mechs/player/bulldog.tres") as MechData
+	assert_true(FinisherBanner.uses_attack_strip(shepherd_unit), "shepherd finisher plays the missiles")
 	var pilot := MechSprites.pilot_frames("blue")
 	assert_true(pilot != null and pilot.get_frame_count("idle") >= 1, "blue pilot")
+
+
+func test_comet_finisher_plays_the_laser() -> void:
+	var comet := load("res://data/mechs/player/comet.tres") as MechData
+	var unit := MechState.new()
+	unit.data = comet
+	assert_eq(unit.art_id, "white", "comet uses the white sheet")
+	assert_true(FinisherBanner.uses_attack_strip(unit), "comet finisher plays the laser")
+	var white := MechSprites.frames_for("white")
+	assert_true(white != null and white.has_animation("attack"), "white laser strip")
+	if white == null:
+		return
+	assert_eq(white.get_frame_count("attack"), 11, "laser frames")
+	var beam := white.get_frame_texture("attack", 0)
+	assert_eq(int(beam.get_width()), 64, "laser cell width")
+	assert_eq(int(beam.get_height()), 64, "laser cell height")
+
+
+func test_shepherd_finisher_plays_the_missiles() -> void:
+	var shepherd := load("res://data/mechs/player/bulldog.tres") as MechData
+	var unit := MechState.new()
+	unit.data = shepherd
+	assert_eq(shepherd.display_name, "Shepherd", "name")
+	assert_eq(unit.art_id, "red", "shepherd uses the red sheet")
+	assert_true(FinisherBanner.uses_attack_strip(unit), "shepherd finisher plays the missiles")
+	var red := MechSprites.frames_for("red")
+	assert_true(red != null and red.has_animation("attack"), "red missile strip")
+	if red == null:
+		return
+	assert_eq(red.get_frame_count("attack"), 12, "missile frames")
+	var shot := red.get_frame_texture("attack", 0)
+	assert_eq(int(shot.get_width()), 64, "missile cell width")
+	assert_eq(int(shot.get_height()), 64, "missile cell height")
 
 
 func test_a_card_pays_one_cost() -> void:
@@ -223,7 +291,10 @@ func test_a_card_pays_one_cost() -> void:
 	for card in bulldog.cards:
 		if card.display_name == "Ward":
 			wards += 1
-			_assert_charge(card, "ward")
+			assert_true(card.pays_charge(), "ward")
+			assert_false(card.pays_action(), "ward")
+			assert_eq(card.charge_due(false), 2, "ward costs 2")
+			assert_eq(card.charge_due(true), 0, "ward")
 		elif card.display_name == "Screen":
 			_assert_action(card, "screen")
 	assert_eq(wards, 2, "bulldog has two wards")
@@ -235,15 +306,27 @@ func test_a_card_pays_one_cost() -> void:
 			_assert_free(card, card.display_name)
 		elif card.display_name == "Skim" or card.display_name == "Spark":
 			_assert_action(card, card.display_name)
-	var graze := _card_named(load("res://data/decks/player/lancer.tres"), "Graze")
+	var lancer := load("res://data/decks/player/lancer.tres") as MechDeck
+	var graze := _card_named(lancer, "Graze")
 	_assert_free(graze, "graze")
+	var sidesteps := 0
+	for card in lancer.cards:
+		if card.display_name != "Sidestep":
+			continue
+		sidesteps += 1
+		assert_eq(card.movement, 1, "sidestep steps 1")
+		assert_eq(card.block, 5, "sidestep guards 5")
+		assert_true(card.guards_self(), "sidestep guards its owner")
+	assert_eq(sidesteps, 2, "lancer has two sidesteps")
 	var raven := load("res://data/decks/player/raven.tres") as MechDeck
 	var evade := _card_named(raven, "Evade")
 	_assert_free(evade, "evade")
 	var blink := _card_named(raven, "Blink")
 	_assert_free(blink, "blink")
-	assert_eq(blink.movement, 1, "blink steps 1")
-	assert_true(blink.moves_only(), "blink only moves")
+	assert_eq(blink.movement, 2, "blink steps 2")
+	assert_eq(blink.block, 2, "blink guards 2")
+	assert_true(blink.guards_self(), "blink guards its owner")
+	assert_eq(blink.description, "Step 2 cells, then add 2 guard.")
 	var bolt := CardData.new()
 	bolt.card_type = "Attack"
 	bolt.cost_kind = "Charge"
@@ -277,6 +360,12 @@ func test_a_card_pays_one_cost() -> void:
 	assert_true(GameManager.spend_charge(), "one charge is enough")
 	assert_eq(GameManager.player_attack_gauge, 1, "the gauge drops by one")
 	assert_eq(GameManager.player_banked_gauge, 4, "spending live charge leaves the bank")
+	assert_false(GameManager.spend_charge(2), "one charge cannot pay for two")
+	assert_eq(GameManager.player_attack_gauge, 1, "a refused spend leaves the gauge")
+	GameManager.player_attack_gauge = 2
+	assert_true(GameManager.spend_charge(2), "two charge spends both")
+	assert_eq(GameManager.player_attack_gauge, 0, "the gauge drops by two")
+	assert_eq(GameManager.player_banked_gauge, 4, "a two-charge spend leaves the bank")
 	GameManager.battle_offense = saved_offense
 	GameManager.player_attack_gauge = saved_gauge
 	GameManager.player_banked_gauge = saved_bank

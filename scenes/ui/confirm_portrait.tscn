@@ -1,4 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_hit_points.tscn" id="1_hp"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_chip"]
 bg_color = Color(0.08, 0.09, 0.11, 1)
@@ -22,3 +24,17 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_chip")
 [node name="Portrait" type="AnimatedSprite2D" parent="."]
 texture_filter = 0
 centered = true
+
+[node name="HitPoints" parent="." instance=ExtResource("1_hp")]
+visible = true
+z_index = 2
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 2.0
+offset_top = -32.0
+offset_right = 78.0
+offset_bottom = -2.0
+grow_horizontal = 0
+grow_vertical = 0

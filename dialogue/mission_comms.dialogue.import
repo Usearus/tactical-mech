@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://b28dypcxk8s8k"
+path="res://.godot/imported/mission_comms.dialogue-245dba5aefc8943cbeba0daff536fbb4.tres"
+
+[deps]
+
+source_file="res://dialogue/mission_comms.dialogue"
+dest_files=["res://.godot/imported/mission_comms.dialogue-245dba5aefc8943cbeba0daff536fbb4.tres"]
+
+[params]
+
+defaults=true
