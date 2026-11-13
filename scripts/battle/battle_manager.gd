@@ -19,6 +19,7 @@ const LISTED_CARD := preload("res://scenes/ui/listed_card.tscn")
 const CELL_SCENE := preload("res://scenes/battle/battle_cell.tscn")
 const FLOAT_SCENE := preload("res://scenes/ui/float_number.tscn")
 const GAUGE_PITCH_SCENE := preload("res://scenes/ui/gauge_pitch.tscn")
+const PITCH_MARK_SCENE := preload("res://scenes/ui/pitch_mark.tscn")
 const SLOT_SCENE := preload("res://scenes/ui/empty_card_slot.tscn")
 const BARRIER_SCENE: PackedScene = preload("res://scenes/props/barrier.tscn")
 const EXPLOSION_SCENE: PackedScene = preload("res://scenes/battle/explosion.tscn")
@@ -68,6 +69,9 @@ var _active_cell_pulse: Tween
 
 var state: BattleState
 var _closing := false
+var _tutorial_gauge := 0
+var _tutorial_bank := 0
+var _tutorial_pitch_id := ""
 var _selected: MechState
 var _status_unit: MechState
 ## True while _refresh is painting, so a status change inside it does not paint twice.
@@ -126,14 +130,13 @@ var _hand_drop_px := 0.0
 ## Seat size taken from the card slots. The end-round button keeps the size set on the scene.
 var _hand_card_size := CARD_SIZE
 var _hand_drop_tween: Tween
-var _played_a_card := false
 ## -1 is an end-of-round tick. A spent card sets 0 or 1, and the next clock step uses it once.
 var _pending_clock_steps := -1
-## Discard pile size when this player turn's hand was dealt. A larger pile means a card left the hand.
-var _discard_at_turn := 0
-var _prompting := false
 var _opened: Dictionary = {}
 var _results_reason := ""
+## Matches the Overdrive row on the bonus panel, so a refresh rebuilds that list only when the mode changes.
+var _bonus_shows_overdrive := false
+var _pitch_marks: Array[PitchMark] = []
 
 @onready var grid_host: Control = %GridHost
 @onready var grid: GridContainer = %Grid
@@ -164,12 +167,13 @@ var _results_reason := ""
 @onready var finisher_banner: FinisherBanner = %FinisherBanner
 @onready var results: BattleResults = %BattleResults
 @onready var upgrade_pick: UpgradePick = %UpgradePick
-@onready var hand_prompt: HandPrompt = %HandPrompt
 @onready var _info_note: InfoNote = %SpecialNote
 @onready var _play_prompt: PlayPrompt = %PlayPrompt
 @onready var _hand_chrome: CanvasItem = $"MarginContainer/Full Layout/Hand Margin"
 @onready var _side_chrome: CanvasItem = $"MarginContainer/Full Layout/Board Row/SideBar"
 @onready var _tip_host: CanvasItem = $TipLayer/TipHost
+@onready var _banner_layer: CanvasLayer = $BannerLayer
+@onready var bonus_panel: BonusPanel = %"Bonus Panel"
 
 
 func _process(_delta: float) -> void:
@@ -187,9 +191,6 @@ func _ready() -> void:
 	if upgrade_pick != null:
 		upgrade_pick.confirmed.connect(_on_upgrade_confirmed)
 		upgrade_pick.skipped.connect(_on_upgrade_skipped)
-	hand_prompt.new_hand_chosen.connect(_on_new_hand_chosen)
-	hand_prompt.end_turn_chosen.connect(_on_confirm_end_turn)
-	hand_prompt.dismissed.connect(_close_hand_prompt)
 	grid_host.resized.connect(_fit_grid)
 	_hand_anchor.resized.connect(_place_hand_row)
 	_place_hand_row()
@@ -225,6 +226,7 @@ func _ready() -> void:
 		await _finish_enemy_side(false)
 	elif state.battle_status == "active" and state.phase == "player":
 		await _return_to_player(true)
+		_tutorial_player_ready()
 
 
 func _style_end_turn() -> void:
@@ -350,7 +352,7 @@ func _fill_discard_list() -> void:
 		slot.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		slot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		discard_list.add_child(slot)
-		slot.show_card(card, stroke, GameManager.card_damage(card), GameManager.card_block(card), UpgradeDeck.listing_tag(card, mech))
+		slot.show_card(card, stroke, card.damage, card.block, UpgradeDeck.listing_tag(card, mech), false)
 		if slot.card_view != null:
 			_shine_if_special(slot.card_view, card)
 		_silence_mouse(slot)
@@ -412,6 +414,16 @@ func _setup_battle() -> void:
 	_arm_enemy_turns()
 	_remember_opening()
 	_build_deck()
+	if GameManager.tutorial_mission:
+		var phase := TutorialHooks.phase()
+		GameManager.tutorial_charge_open = phase == "b3"
+		if phase == "b3":
+			GameManager.player_attack_gauge = maxi(GameManager.player_attack_max - 1, 0)
+			GameManager.player_banked_gauge = 0
+			GameManager.battle_offense = false
+		_tutorial_gauge = GameManager.player_attack_gauge
+		_tutorial_bank = GameManager.player_banked_gauge
+		_refresh_squad_gauge()
 
 
 func _remember_opening() -> void:
@@ -512,7 +524,7 @@ func _refresh() -> void:
 		return
 	_refreshing = true
 	var player_phase := state.battle_status == "active" and state.phase == "player" and not _animating
-	skip_button.disabled = not player_phase or _moved_for_card or _prompting
+	skip_button.disabled = not player_phase or _moved_for_card
 	var end_label := skip_button.get_node_or_null("Content") as CanvasItem
 	if end_label != null:
 		end_label.modulate.a = 0.35 if skip_button.disabled else 1.0
@@ -534,8 +546,18 @@ func _refresh() -> void:
 	_refresh_discard()
 	_refresh_round()
 	_refresh_squad_gauge()
+	_sync_bonus_overdrive()
 	_sync_play_prompt()
 	_refreshing = false
+
+
+## Rebuilds the bonus list only when Overdrive turns on or off.
+func _sync_bonus_overdrive() -> void:
+	var on := GameManager.battle_offense
+	if bonus_panel == null or on == _bonus_shows_overdrive:
+		return
+	_bonus_shows_overdrive = on
+	bonus_panel.refresh()
 
 
 func _input(event: InputEvent) -> void:
@@ -578,7 +600,7 @@ func _on_field_mouse_button(event: InputEventMouseButton) -> void:
 		_gesture_panned = false
 		_field_drag_total = 0.0
 		_field_dragging = _pointer_on_field(event.global_position) and (
-			event.button_index == MOUSE_BUTTON_MIDDLE or _field_can_pan()
+			_field_can_pan() or (event.button_index == MOUSE_BUTTON_MIDDLE and not GameManager.tutorial_mission)
 		)
 	else:
 		var panned := _gesture_panned
@@ -590,7 +612,7 @@ func _on_field_mouse_button(event: InputEventMouseButton) -> void:
 func _on_field_mouse_drag(event: InputEventMouseMotion) -> void:
 	if _touch_points.size() >= 2:
 		return
-	if not _field_can_pan() and not Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE):
+	if not _field_can_pan() and not (Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE) and not GameManager.tutorial_mission):
 		return
 	_field_drag_total += event.relative.length()
 	if _field_drag_total < FIELD_PAN_THRESHOLD:
@@ -619,8 +641,6 @@ func _status_click_blocked() -> bool:
 	if _upgrade_open():
 		return true
 	if results != null and results.visible:
-		return true
-	if hand_prompt != null and hand_prompt.visible:
 		return true
 	if discard_overlay != null and discard_overlay.visible:
 		return true
@@ -767,8 +787,6 @@ func _field_pointer_open() -> bool:
 		return false
 	if discard_overlay != null and discard_overlay.visible:
 		return false
-	if hand_prompt != null and hand_prompt.visible:
-		return false
 	return true
 
 
@@ -777,7 +795,7 @@ func _pointer_on_field(point: Vector2) -> bool:
 
 
 func _zoom_field(factor: float) -> void:
-	if _attack_zoom_active:
+	if GameManager.tutorial_mission or _attack_zoom_active:
 		return
 	var next := clampf(_field_zoom * factor, _field_zoom_floor(), FIELD_ZOOM_MAX)
 	if is_equal_approx(next, _field_zoom):
@@ -789,6 +807,8 @@ func _zoom_field(factor: float) -> void:
 
 
 func _field_can_pan() -> bool:
+	if GameManager.tutorial_mission:
+		return false
 	var field := grid.get_parent() as Control
 	if field == null or grid_host == null or _attack_zoom_active:
 		return false
@@ -798,7 +818,7 @@ func _field_can_pan() -> bool:
 
 
 func _pan_field(delta: Vector2) -> void:
-	if _attack_zoom_active or _field_zoom <= 0.0:
+	if GameManager.tutorial_mission or _attack_zoom_active or _field_zoom <= 0.0:
 		return
 	_field_focus -= delta / _field_zoom
 	_field_focus = _clamp_field_focus(_field_focus, _field_zoom)
@@ -939,7 +959,7 @@ func _on_cell_pressed(coords: Vector2i) -> void:
 	if _gesture_panned:
 		_gesture_panned = false
 		return
-	if _animating or _prompting or state.battle_status != "active" or state.phase != "player":
+	if _animating or state.battle_status != "active" or state.phase != "player":
 		return
 	var unit := _unit_at(coords)
 	if _targeting:
@@ -978,6 +998,16 @@ func _on_cell_pressed(coords: Vector2i) -> void:
 		await _try_attack(unit)
 		return
 	if unit != null and unit.alive:
+		if GameManager.tutorial_mission:
+			var who := unit.data.id if unit.data != null else ""
+			if not TutorialHooks.allows("select", who):
+				return
+			_chosen = null
+			_targeting = false
+			_selected = unit
+			_refresh()
+			TutorialHooks.notify("select", who)
+			return
 		if unit == _selected:
 			_selected = null
 		else:
@@ -1014,6 +1044,19 @@ func _try_attack(target: MechState) -> void:
 		_targeting = true
 		_refresh()
 		return
+	if GameManager.tutorial_mission and not TutorialHooks.allows("target"):
+		_chosen = card
+		_targeting = true
+		_refresh()
+		return
+	if GameManager.tutorial_mission and not TutorialHooks.any_target():
+		var aimed := _tutorial_enemy_target()
+		if aimed != null and target != aimed:
+			_chosen = card
+			_targeting = true
+			_refresh()
+			return
+	TutorialHooks.notify("target")
 	attacker.face_toward_x(attacker_pos.x, target_pos.x)
 	_animating = true
 	_play_step = ""
@@ -1160,86 +1203,102 @@ func _front_cells(origin: Vector2i, direction: int) -> Array[Vector2i]:
 
 
 func _on_end_turn() -> void:
-	if _animating or _moved_for_card or _prompting:
-		return
-	if _offer_unused_hand() and hand_prompt != null:
-		_open_hand_prompt()
-		return
-	await _finish_player_turn()
-
-
-func _on_new_hand_chosen() -> void:
 	if _animating or _moved_for_card:
-		_close_hand_prompt()
 		return
-	_close_hand_prompt()
-	_replace_hand()
+	if GameManager.tutorial_mission and not TutorialHooks.allows("end_round"):
+		return
+	if GameManager.tutorial_mission:
+		TutorialHooks.notify("end_round")
 	await _finish_player_turn()
 
 
-func _on_confirm_end_turn() -> void:
-	if _animating or _moved_for_card:
-		_close_hand_prompt()
-		return
-	_close_hand_prompt()
-	await _finish_player_turn()
-
-
-## Round 2 ends the battle, so the unused-hand choice only exists on round 1.
-func _offer_unused_hand() -> bool:
-	return state != null and state.turn < ROUND_LIMIT and not _cards_were_used()
-
-
-## A spent card, a pitched card, a readied dodge, or a card still being aimed all count as used.
-func _cards_were_used() -> bool:
-	return (
-		_played_a_card
-		or _chosen != null
-		or _followup_move
-		or _discard.size() > _discard_at_turn
-	)
-
-
-func _remember_turn_hand() -> void:
-	_played_a_card = false
-	_discard_at_turn = _discard.size()
-
-
-func _open_hand_prompt() -> void:
-	_prompting = true
-	_clear_play()
-	_hide_status_tip()
-	if discard_overlay != null and discard_overlay.visible:
-		_close_discard_view()
-	hand_prompt.open()
-	_refresh()
-
-
-func _close_hand_prompt() -> void:
-	_prompting = false
-	if hand_prompt != null:
-		hand_prompt.close()
-
-
-func _replace_hand() -> void:
+## Cards without Retain leave when a round continues, feeding Overdrive until the gauge is full.
+## Past full, they still leave the hand. The last round takes Retain too, since nothing follows it.
+func _pitch_unretained(include_retain := false) -> void:
 	_clear_play()
 	_selected = null
-	var pitched: Array[CardData] = _hand.duplicate()
-	_hand.clear()
-	var ordered: Array[CardData] = []
+	var pitched: Array[CardData] = []
+	var kept: Array[CardData] = []
+	for card in _hand:
+		if card == null:
+			continue
+		if card.retain and not include_retain:
+			kept.append(card)
+		else:
+			pitched.append(card)
+	if pitched.is_empty():
+		return
+	_hand = kept
 	for card in pitched:
 		_discard.append(card)
-		ordered.append(card)
-	ordered.sort_custom(func(a: CardData, b: CardData) -> bool:
+	pitched.sort_custom(func(a: CardData, b: CardData) -> bool:
 		return _pitch_origin(_view_for(a)).x < _pitch_origin(_view_for(b)).x
 	)
-	for index in ordered.size():
-		var view := _view_for(ordered[index])
+	for index in pitched.size():
+		var view := _view_for(pitched[index])
 		var start_scale := view.scale.x if view != null else 1.0
 		_grant_pitch_charge(_pitch_origin(view), index * CARD_STAGGER, start_scale)
-	_draw_up()
-	_remember_turn_hand()
+
+
+## The last round pitches the whole hand, Retain included. Results wait until those cards have left.
+func _pitch_before_results() -> void:
+	var leaving := 0
+	for card in _hand:
+		if card != null:
+			leaving += 1
+	_pitch_unretained(true)
 	_refresh()
+	if leaving <= 0 or not is_inside_tree():
+		return
+	var tail := CARD_STAGGER * float(leaving - 1)
+	await get_tree().create_timer(GaugePitch.FLIGHT + tail).timeout
+
+
+## Next-round banner plays while leaving cards are still in hand, each marked with a lightning 1.
+func _announce_pitch(include_retain: bool) -> void:
+	var tucked := _hand_tucked
+	# Held true so the pre-banner refresh raises the hand without drawing Overdrive cards into it.
+	_animating = true
+	state.phase = "player"
+	state.active_unit_id = ""
+	_refresh()
+	if tucked and is_inside_tree():
+		await get_tree().create_timer(HAND_TUCK_TIME).timeout
+	if _closing or not is_inside_tree() or state == null:
+		_animating = false
+		return
+	_show_pitch_marks(include_retain)
+	await _announce_round(state.turn + 1, true)
+	_animating = false
+	_clear_pitch_marks()
+
+
+func _show_pitch_marks(include_retain: bool) -> void:
+	_clear_pitch_marks()
+	if _banner_layer == null:
+		return
+	var leaving: Array[CardData] = []
+	for card in _hand:
+		if card == null:
+			continue
+		if card.retain and not include_retain:
+			continue
+		leaving.append(card)
+	for card in leaving:
+		var view := _view_for(card)
+		if view == null:
+			continue
+		var mark := PITCH_MARK_SCENE.instantiate() as PitchMark
+		_banner_layer.add_child(mark)
+		_pitch_marks.append(mark)
+		mark.pop_on(view)
+
+
+func _clear_pitch_marks() -> void:
+	for mark in _pitch_marks:
+		if is_instance_valid(mark):
+			mark.queue_free()
+	_pitch_marks.clear()
 
 
 func _finish_player_turn() -> void:
@@ -1268,15 +1327,22 @@ func _complete_player_side() -> void:
 		_finish_if_over()
 		return
 	if state.turn >= ROUND_LIMIT:
-		_refresh()
+		if not (GameManager.tutorial_mission and _tutorial_loss(true)):
+			await _pitch_before_results()
+		if _closing or not is_inside_tree() or state == null:
+			return
 		_finish_if_over(true)
 		return
+	await _announce_pitch(false)
+	if _closing or not is_inside_tree() or state == null:
+		return
+	_pitch_unretained()
 	_advance_round()
 	state.phase = "player"
 	state.active_unit_id = ""
 	_refresh()
-	await _announce_round()
 	await _return_to_player(true)
+	_tutorial_player_ready()
 
 
 func _next_ready_player() -> MechState:
@@ -1301,19 +1367,24 @@ func _finish_enemy_side(advance_round: bool) -> void:
 		return
 	if advance_round:
 		if state.turn >= ROUND_LIMIT:
-			_refresh()
+			if not (GameManager.tutorial_mission and _tutorial_loss(true)):
+				await _pitch_before_results()
+			if _closing or not is_inside_tree() or state == null:
+				return
 			_finish_if_over(true)
 			return
+		await _announce_pitch(false)
+		if _closing or not is_inside_tree() or state == null:
+			return
+		_pitch_unretained()
 		_advance_round()
 	else:
 		_draw_up()
-	_remember_turn_hand()
 	state.phase = "player"
 	state.active_unit_id = ""
 	_refresh()
-	if advance_round:
-		await _announce_round()
 	await _return_to_player(true)
+	_tutorial_player_ready()
 
 
 func _execute_enemy_phase() -> void:
@@ -1465,6 +1536,12 @@ func _finish_if_over(round_limit := false) -> void:
 		return
 	if state.battle_status == "active" and not round_limit:
 		return
+	if GameManager.tutorial_mission and _tutorial_loss(round_limit):
+		_closing = true
+		_targeting = false
+		_clear_play()
+		_restart_tutorial_fight()
+		return
 	_closing = true
 	_targeting = false
 	_clear_play()
@@ -1476,12 +1553,13 @@ func _finish_if_over(round_limit := false) -> void:
 	_stop_active_cell_pulse()
 	if discard_overlay != null:
 		discard_overlay.visible = false
-	_close_hand_prompt()
 	_hide_status_tip()
 	var reason := ""
 	if round_limit:
 		reason = "Battle ended after %d rounds." % ROUND_LIMIT
 	_results_reason = reason
+	if GameManager.tutorial_mission and state != null and state.battle_status == "victory":
+		TutorialHooks.notify("won")
 	_show_results()
 
 
@@ -1502,10 +1580,23 @@ func _on_results_confirmed() -> void:
 	var units: Array = []
 	if state != null:
 		units = state.units
-	if upgrade_pick == null or _mission_is_won() or UpgradeRoller.legal_choices(units, GameManager.mission_upgrades).is_empty():
+	var reward_lesson := GameManager.tutorial_mission and TutorialHooks.phase().begins_with("r")
+	var no_reward := upgrade_pick == null or _mission_is_won() or UpgradeRoller.legal_choices(units, GameManager.mission_upgrades).is_empty()
+	if (GameManager.tutorial_mission and not reward_lesson) or no_reward:
+		if reward_lesson:
+			TutorialHooks.notify("won")
 		_leave_battle()
 		return
 	upgrade_pick.present(units, GameManager.mission_upgrades)
+	if reward_lesson:
+		_tutorial_reward_ready()
+
+
+func _tutorial_reward_ready() -> void:
+	await get_tree().process_frame
+	if not is_inside_tree():
+		return
+	TutorialHooks.settled()
 
 
 ## The last fight of a mission has nothing left to spend an upgrade on.
@@ -1520,6 +1611,8 @@ func _on_upgrade_confirmed(choice: UpgradeChoice) -> void:
 	UpgradeDeck.apply(choice, GameManager.mission_upgrades)
 	if upgrade_pick != null:
 		upgrade_pick.visible = false
+	if GameManager.tutorial_mission:
+		TutorialHooks.notify("reward")
 	_leave_battle()
 
 
@@ -1527,6 +1620,8 @@ func _on_upgrade_skipped() -> void:
 	GameManager.charge_from_skip()
 	if upgrade_pick != null:
 		upgrade_pick.visible = false
+	if GameManager.tutorial_mission and TutorialHooks.phase().begins_with("r"):
+		TutorialHooks.notify("won")
 	_leave_battle()
 
 
@@ -1635,7 +1730,10 @@ func _on_move_cell(coords: Vector2i) -> void:
 			_clear_play()
 			_refresh()
 		elif _chosen.target_type == "enemies" and _chosen.moves_before():
+			if GameManager.tutorial_mission and not TutorialHooks.allows("stay"):
+				return
 			if _can_strike_from(origin, _chosen):
+				TutorialHooks.notify("stay")
 				await _play_breach(actor, _chosen)
 		elif _steps_before_guard(_chosen):
 			_stay_for_guard(actor)
@@ -1782,7 +1880,7 @@ func _on_breach_cell(coords: Vector2i) -> void:
 
 
 func _on_card_undo_drag(card: CardData) -> void:
-	if card != _chosen or not _step_undo or _animating or _prompting:
+	if card != _chosen or not _step_undo or _animating:
 		return
 	await _on_undo_step()
 
@@ -1792,7 +1890,6 @@ func _can_undo_drag(card: CardData) -> bool:
 		_step_undo
 		and card == _chosen
 		and not _animating
-		and not _prompting
 		and state != null
 		and state.battle_status == "active"
 		and state.phase == "player"
@@ -1800,7 +1897,7 @@ func _can_undo_drag(card: CardData) -> bool:
 
 
 func _on_undo_step() -> void:
-	if not _step_undo or _animating or _prompting or _selected == null or state == null:
+	if not _step_undo or _animating or _selected == null or state == null:
 		return
 	var actor := _selected
 	var dest := _step_origin
@@ -2499,6 +2596,9 @@ func _spawn_impacts(button: Button, heavy: bool, destroyed: bool, pending: Array
 	if button == null or not is_instance_valid(button):
 		return
 	SoundBank.play("explosion")
+	var again := create_tween()
+	again.tween_interval(0.5)
+	again.tween_callback(SoundBank.play.bind("explosion"))
 	if destroyed:
 		SoundBank.play("explosion_large")
 	var center := _impact_center(button)
@@ -2682,6 +2782,10 @@ func _sync_barrier(sprite: AnimatedSprite2D, unit: MechState) -> void:
 
 
 func _build_deck() -> void:
+	for id in _card_views.keys():
+		var old := _card_views[id] as MechCard
+		if is_instance_valid(old):
+			old.queue_free()
 	_deck.clear()
 	_specials.clear()
 	_special_ids.clear()
@@ -2710,7 +2814,6 @@ func _build_deck() -> void:
 	# An enemy who forced the fight attacks before the player is dealt a hand.
 	if state == null or state.phase != "enemy":
 		_draw_up()
-	_remember_turn_hand()
 
 
 ## Fill open hand slots from the overdrive pile. No-op until Overdrive is on.
@@ -2752,6 +2855,9 @@ func _draw_up() -> void:
 		var card := TacticDraw.take(_deck, favored)
 		if card != null:
 			_hand.append(card)
+	if GameManager.tutorial_mission:
+		var round := 1 if state == null else state.turn
+		TutorialHands.arrange(_deck, _hand, TutorialHooks.phase(), _hand_limit(), round)
 	_layout_hand()
 
 
@@ -2768,7 +2874,6 @@ func _advance_round() -> void:
 	_chosen = null
 	_targeting = false
 	_draw_up()
-	_remember_turn_hand()
 
 
 func _note_acted(unit: MechState) -> void:
@@ -2815,7 +2920,16 @@ func _on_card_drop(global_pos: Vector2, released: bool, card: CardData, view: Me
 			view.set_active_pulse(true)
 			_sync_effect_box()
 		return false
+	if over_bar and GameManager.tutorial_mission and not TutorialHooks.allows("pitch", card.id if card != null else ""):
+		return false
 	_commit_discard(card, view, over_bar)
+	if over_bar and GameManager.tutorial_mission:
+		var pitched := card.id if card != null else ""
+		if _pitch_pending > 0:
+			_tutorial_pitch_id = pitched
+		else:
+			TutorialHooks.notify("pitch", pitched)
+			TutorialHooks.settled()
 	_sync_discard_glow(false)
 	_sync_effect_box()
 	return true
@@ -2837,7 +2951,6 @@ func _can_drop_discard() -> bool:
 		and state.battle_status == "active"
 		and state.phase == "player"
 		and not _animating
-		and not _prompting
 		and not _moved_for_card
 		and not _followup_move
 	)
@@ -2853,7 +2966,6 @@ func _commit_discard(card: CardData, view: MechCard, grant_charge: bool) -> void
 	_card_views.erase(card.get_instance_id())
 	_hand.erase(card)
 	_discard.append(card)
-	_played_a_card = true
 	_pull_specials()
 	var landing: Control = discard_pile
 	if grant_charge:
@@ -2865,16 +2977,253 @@ func _commit_discard(card: CardData, view: MechCard, grant_charge: bool) -> void
 
 
 func _on_activate_pressed() -> void:
-	if _closing or _prompting or GameManager.battle_offense or not GameManager.attack_ready("player"):
+	if _closing or GameManager.battle_offense or not GameManager.attack_ready("player"):
+		return
+	if GameManager.tutorial_mission and not TutorialHooks.allows("overdrive"):
 		return
 	GameManager.battle_offense = true
+	SoundBank.music("overdrive")
 	_specials.shuffle()
 	_pull_specials()
 	_layout_hand()
 	_repaint_hand()
 	_play_overdrive_waves()
 	_refresh()
+	if GameManager.tutorial_mission:
+		_deal_tutorial_salvo()
+		_layout_hand()
+		_repaint_hand()
+		_refresh()
+		await mode_banner.play("Overdrive mode", true)
+		TutorialHooks.notify("overdrive")
+		return
 	mode_banner.play("Overdrive mode", true)
+
+
+func _tutorial_player_ready() -> void:
+	if not GameManager.tutorial_mission or _closing:
+		return
+	TutorialHooks.notify("player_turn")
+	TutorialHooks.settled()
+
+
+func _deal_tutorial_salvo() -> void:
+	for card in _hand:
+		if card != null and card.id == "barrage_salvo":
+			return
+	var salvo: CardData = null
+	for card in _specials:
+		if card != null and card.id == "barrage_salvo":
+			salvo = card
+			break
+	if salvo == null:
+		return
+	_specials.erase(salvo)
+	if _hand.size() >= _hand_limit() and not _hand.is_empty():
+		var bumped := _hand.pop_back() as CardData
+		if bumped != null:
+			_discard.append(bumped)
+	_hand.append(salvo)
+
+
+func _tutorial_card_token(card: CardData) -> String:
+	if card == null:
+		return ""
+	if TutorialHooks.detail() == "attack" and card.card_type == "Attack":
+		return "attack"
+	return card.id
+
+
+func _note_tutorial_card(card: CardData) -> void:
+	if not GameManager.tutorial_mission or card == null:
+		return
+	if not _targeting or _chosen != card:
+		return
+	TutorialHooks.notify("card", _tutorial_card_token(card))
+
+
+func _tutorial_loss(round_limit: bool) -> bool:
+	if state == null:
+		return false
+	if state.battle_status == "defeat":
+		return true
+	return round_limit and not state.living_units("enemy").is_empty()
+
+
+func _restart_tutorial_fight() -> void:
+	await get_tree().process_frame
+	if not is_inside_tree() or state == null:
+		return
+	TutorialHooks.retry()
+	for unit in state.units:
+		var opened: Dictionary = _opened.get(unit.id, {})
+		if opened.is_empty():
+			continue
+		unit.hp = int(opened.get("hp", unit.hp))
+		unit.guard = int(opened.get("guard", 0))
+		unit.standing_guard = int(opened.get("standing", 0))
+		unit.alive = true
+	GameManager.player_attack_gauge = _tutorial_gauge
+	GameManager.player_banked_gauge = _tutorial_bank
+	GameManager.battle_offense = false
+	SoundBank.music("battle")
+	_closing = false
+	_animating = false
+	_targeting = false
+	_clear_play()
+	_setup_battle()
+	_build_grid()
+	_refresh()
+	await get_tree().process_frame
+	await _return_to_player(true)
+
+
+func tutorial_anchor(anchor: String) -> Control:
+	if anchor == "battle.end_round":
+		return skip_button
+	if anchor == "battle.charge":
+		return charge_bar
+	if anchor == "battle.overdrive":
+		return activate_button
+	if anchor == "battle.card" or anchor == "battle.pitch":
+		return _tutorial_card_view()
+	if anchor == "battle.badge" or anchor == "battle.cost":
+		return _tutorial_card_mark(anchor)
+	if anchor == "battle.clock":
+		return _tutorial_enemy_clock()
+	if anchor == "battle.rewards":
+		return upgrade_pick.options_row() if upgrade_pick != null else null
+	if anchor == "battle.reward_continue":
+		return upgrade_pick.continue_button() if upgrade_pick != null else null
+	if anchor == "battle.reward_tools":
+		return _tutorial_reward_tools()
+	if anchor == "battle.enemy":
+		var button := _button_for(_tutorial_enemy_target())
+		if button != null and TutorialHooks.any_target():
+			var company: Array[Control] = []
+			for enemy in state.living_units("enemy"):
+				var other := _button_for(enemy)
+				if other != null:
+					company.append(other)
+			button.set_meta("tutorial_company", company)
+		elif button != null and button.has_meta("tutorial_company"):
+			button.remove_meta("tutorial_company")
+		return button
+	if anchor.begins_with("battle."):
+		return _button_for(_tutorial_unit(anchor.trim_prefix("battle.")))
+	return null
+
+
+func _tutorial_reward_tools() -> Control:
+	if upgrade_pick == null:
+		return null
+	var refresh := upgrade_pick.refresh_button()
+	var skip := upgrade_pick.skip_button()
+	if refresh == null:
+		return skip
+	var company: Array[Control] = []
+	if skip != null:
+		company.append(skip)
+	refresh.set_meta("tutorial_company", company)
+	return refresh
+
+
+func _tutorial_unit(data_id: String) -> MechState:
+	if state == null:
+		return null
+	for unit in state.units:
+		if unit != null and unit.data != null and unit.data.id == data_id and unit.alive:
+			return unit
+	return null
+
+
+## The contact this card can actually hit. Closest one, so Dart is not aimed past its reach.
+func _tutorial_enemy_target() -> MechState:
+	if state == null:
+		return null
+	var enemies := state.living_units("enemy")
+	if enemies.is_empty():
+		return null
+	var card := _chosen
+	var attacker := _selected if _selected != null else _owner_of(card)
+	if card == null or attacker == null:
+		return enemies[0]
+	var origin := state.position_of(attacker)
+	var best: MechState = null
+	var best_distance := 999999
+	for enemy in enemies:
+		var distance := _manhattan(origin, state.position_of(enemy))
+		if not card.reaches(distance):
+			continue
+		if distance < best_distance:
+			best = enemy
+			best_distance = distance
+	return best if best != null else enemies[0]
+
+
+func _tutorial_card_mark(anchor: String) -> Control:
+	if anchor == "battle.badge":
+		return _tutorial_owner_badges()
+	var view := _tutorial_card_view() as MechCard
+	if view == null:
+		return null
+	return view.cost_mark()
+
+
+## The lead card of each mech. The first badge is the outline; the rest join it on a spanning step.
+func _tutorial_owner_badges() -> Control:
+	var marks: Array[Control] = []
+	var seen := {}
+	for card in _hand:
+		if card == null:
+			continue
+		var holder := _owner_of(card)
+		var key := holder.id if holder != null else ""
+		if key == "" or seen.has(key):
+			continue
+		var view := _card_views.get(card.get_instance_id()) as MechCard
+		if view == null:
+			continue
+		var mark := view.owner_mark()
+		if mark == null:
+			continue
+		seen[key] = true
+		marks.append(mark)
+	if marks.is_empty():
+		return null
+	var lead := marks[0]
+	if marks.size() > 1:
+		lead.set_meta("tutorial_company", marks)
+	elif lead.has_meta("tutorial_company"):
+		lead.remove_meta("tutorial_company")
+	return lead
+
+
+func _tutorial_enemy_clock() -> Control:
+	var enemy := _tutorial_unit("scout")
+	if enemy == null and state != null:
+		var enemies := state.living_units("enemy")
+		if not enemies.is_empty():
+			enemy = enemies[0]
+	var button := _button_for(enemy)
+	if button == null:
+		return null
+	return button.get_node_or_null("Vitals/TurnCount") as Control
+
+
+func _tutorial_card_view() -> Control:
+	var want := TutorialHooks.detail()
+	for card in _hand:
+		if card == null:
+			continue
+		if want != "" and want != "attack" and not card.id.begins_with(want):
+			continue
+		if want == "attack" and card.card_type != "Attack":
+			continue
+		var view := _card_views.get(card.get_instance_id()) as MechCard
+		if view != null and is_instance_valid(view):
+			return view
+	return null
 
 
 func _repaint_hand() -> void:
@@ -2957,17 +3306,19 @@ func _announce_primed() -> void:
 		_refresh()
 
 
-func _announce_round() -> void:
+func _announce_round(shown_turn := -1, hold_layout := false) -> void:
 	if mode_banner == null or state == null or _closing:
 		return
+	var turn := state.turn if shown_turn < 1 else shown_turn
 	_hide_status_tip()
 	_animating = true
-	_refresh()
-	await mode_banner.play("Round %d/%d" % [state.turn, ROUND_LIMIT], true, true)
+	if not hold_layout:
+		_refresh()
+	await mode_banner.play("Round %d/%d" % [turn, ROUND_LIMIT], true, true)
 	if not is_inside_tree():
 		return
 	_animating = false
-	if not _closing and state != null and state.battle_status == "active":
+	if not hold_layout and not _closing and state != null and state.battle_status == "active":
 		_refresh()
 
 
@@ -2988,7 +3339,6 @@ func _style_activate_button() -> void:
 	if activate_button == null:
 		return
 	activate_button.text = ACTIVATE_TEXT
-	activate_button.add_theme_font_size_override("font_size", OverdriveMeter.TEXT_SIZE)
 	activate_button.stop_pulse()
 
 
@@ -3051,6 +3401,11 @@ func _on_gauge_pitch_arrived() -> void:
 		_gauge_visual = -1
 	if is_inside_tree():
 		_refresh_squad_gauge()
+	if _pitch_pending == 0 and _tutorial_pitch_id != "":
+		var pitched := _tutorial_pitch_id
+		_tutorial_pitch_id = ""
+		TutorialHooks.notify("pitch", pitched)
+		TutorialHooks.settled()
 
 
 func _refresh_squad_gauge() -> void:
@@ -3065,7 +3420,6 @@ func _refresh_squad_gauge() -> void:
 	var can_activate := (
 		gauge_full
 		and not _closing
-		and not _prompting
 		and state != null
 		and state.battle_status == "active"
 		and not GameManager.battle_offense
@@ -3134,7 +3488,6 @@ func _spend(card: CardData) -> void:
 	if card == null:
 		return
 	var free := GameManager.opener_is_free()
-	_played_a_card = true
 	_pending_clock_steps = 0 if free or not card.pays_action() else 1
 	var due := 0 if free else card.charge_due(GameManager.battle_offense)
 	if due > 0 and GameManager.spend_charge(due):
@@ -3344,14 +3697,13 @@ func _sprite_reach(sprite: AnimatedSprite2D) -> float:
 
 
 func _on_hand_card_pressed(card: CardData) -> void:
-	if _animating or _prompting or _moved_for_card:
+	if _animating or _moved_for_card:
 		return
 	# Staying put is a legal end to "shoot, then step". Choosing another card does that, then plays.
 	if _followup_move:
 		await _finish_followup()
 		if (
 			_animating
-			or _prompting
 			or _moved_for_card
 			or _followup_move
 			or _closing
@@ -3361,6 +3713,8 @@ func _on_hand_card_pressed(card: CardData) -> void:
 	if state == null or state.battle_status != "active" or state.phase != "player":
 		return
 	if card == null or _hand.find(card) < 0:
+		return
+	if GameManager.tutorial_mission and not TutorialHooks.allows("card", _tutorial_card_token(card)):
 		return
 	var due := GameManager.card_charge_due(card) if card != null else 0
 	if due > GameManager.player_attack_gauge:
@@ -3380,6 +3734,7 @@ func _on_hand_card_pressed(card: CardData) -> void:
 		return
 	if card.target_type == "squad" or card.target_type == "team" or card.target_type == "enemies" or card.hits_front():
 		await _play_special(card)
+		_note_tutorial_card(card)
 		return
 	if card.is_guard():
 		await _begin_guard(card)
@@ -3401,6 +3756,7 @@ func _on_hand_card_pressed(card: CardData) -> void:
 			_play_step = "front"
 		else:
 			_play_step = "move" if card.moves_before() else "attack"
+	_note_tutorial_card(card)
 	_refresh()
 
 
@@ -3571,7 +3927,6 @@ func _on_confirm_cell(unit: MechState) -> void:
 		_refresh()
 		return
 	if card.is_dodge():
-		_played_a_card = true
 		_clear_play()
 		_refresh()
 		return
@@ -3771,12 +4126,13 @@ func _return_to_player(round_opened: bool = false) -> void:
 		await _complete_player_side()
 		return
 	_refresh()
+	_tutorial_player_ready()
 
 
 func _end_round_if_no_cards() -> bool:
 	if state == null or state.battle_status != "active" or state.phase != "player":
 		return false
-	if _animating or _prompting or _moved_for_card or _followup_move or _chosen != null or _play_step != "":
+	if _animating or _moved_for_card or _followup_move or _chosen != null or _play_step != "":
 		return false
 	_pull_specials()
 	if not _hand.is_empty():
@@ -3827,7 +4183,6 @@ func _update_hand_controls() -> void:
 		and state.battle_status == "active"
 		and state.phase == "player"
 		and not _animating
-		and not _prompting
 		and not _moved_for_card
 	)
 	for card in _hand:
@@ -3883,11 +4238,8 @@ func _place_effect_box() -> void:
 	if view == null or not is_instance_valid(view):
 		_effect_box.visible = false
 		return
-	var box_size := _effect_box.get_combined_minimum_size()
-	if _effect_box.size.x > box_size.x:
-		box_size.x = _effect_box.size.x
-	if _effect_box.size.y > box_size.y:
-		box_size.y = _effect_box.size.y
+	_effect_box.hug()
+	var box_size := _effect_box.size
 	var origin := view.global_position + Vector2(view.size.x + 12.0, 0.0)
 	var view_size := get_viewport_rect().size
 	if origin.x + box_size.x > view_size.x - 8.0:

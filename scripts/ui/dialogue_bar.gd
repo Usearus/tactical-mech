@@ -9,7 +9,7 @@ signal finished
 const PORTRAITS := {
 	"Comet": preload("res://art/characters/player/white/white.pilot.png"),
 	"Raven": preload("res://art/characters/player/purple/purple.pilot.png"),
-	"Comms": preload("res://art/characters/misc/comms.png"),
+	"Comms": preload("res://art/characters/npc/comms.png"),
 }
 
 @onready var dialogue: Control = %Dialogue

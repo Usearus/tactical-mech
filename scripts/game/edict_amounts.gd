@@ -6,6 +6,7 @@ extends RefCounted
 const OPENING := 3
 const PLUS_TWO := 2
 const FIELD_REPAIR := 2
+const FIELD_REPAIR_NOW := 3
 const PRIMED_CHARGE := 3
 
 
@@ -53,11 +54,11 @@ static func repairs(unit: MechState) -> bool:
 	return unit != null and unit.alive and unit.team == "player"
 
 
-## Health after Field Repair. The result never passes the mech's maximum, and never drops.
-static func healed_hp(current: int, max_hp: int) -> int:
+## Health after a Field Repair grant. The result never passes the mech's maximum, and never drops.
+static func healed_hp(current: int, max_hp: int, amount: int = FIELD_REPAIR) -> int:
 	var held := maxi(current, 0)
 	var cap := maxi(max_hp, held)
-	return mini(held + FIELD_REPAIR, cap)
+	return mini(held + maxi(amount, 0), cap)
 
 
 ## Charge that fits on the squad gauge when a battle opens.

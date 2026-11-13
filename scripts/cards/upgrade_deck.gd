@@ -167,6 +167,8 @@ static func apply(choice: UpgradeChoice, memory: MissionUpgrades) -> void:
 		"Edict":
 			if choice.offer != null:
 				memory.add_edict(choice.offer.id)
+				if choice.offer.id == "edict_field_repair":
+					GameManager.grant_field_repair_now()
 		"Revive":
 			var unit := choice.bound_mech
 			if unit == null or unit.data == null:

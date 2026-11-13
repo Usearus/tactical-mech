@@ -13,7 +13,7 @@ const PHRASES := {
 	"atk": "Attack: Damage this card deals.",
 	"rng": "Range: How far this card can reach.",
 	"mov": "Move: Cells this card moves.",
-	"evade": "Evade: Negates one incoming attack.",
+	"evade": "Evade: Has [gold]Retain[/gold] and negates one incoming attack.",
 	"int": "Intercept: Takes the hit of any ally that is 1 cell away.",
 	"def": "Guard: Absorbs hits before hit points. Only active during a battle.",
 	"bar": "Barrier: Absorbs hits after guard, before hit points. Remains after battle.",

@@ -1,0 +1,36 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/pitch_mark.gd" id="1_mark"]
+[ext_resource type="Shader" uid="uid://b474y1xvdk7dn" path="res://shaders/icon_white.gdshader" id="2_white"]
+[ext_resource type="Texture2D" uid="uid://c005sck28lhl3" path="res://icodot-svg/ui/weather-nature/icon-lightning-ui.svg" id="3_bolt"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bolt"]
+shader = ExtResource("2_white")
+shader_parameter/ink = Color(1, 0.92, 0.55, 1)
+
+[node name="PitchMark" type="HBoxContainer"]
+z_index = 10
+mouse_filter = 2
+theme_override_constants/separation = 6
+alignment = 1
+script = ExtResource("1_mark")
+
+[node name="Icon" type="TextureRect" parent="."]
+texture_filter = 1
+material = SubResource("ShaderMaterial_bolt")
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("3_bolt")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Amount" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.78, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 12
+theme_override_font_sizes/font_size = 64
+text = "1"
+vertical_alignment = 1

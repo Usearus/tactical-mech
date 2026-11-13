@@ -2,22 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/ui/info_note.gd" id="1_note"]
 [ext_resource type="Script" path="res://scripts/ui/gold_text.gd" id="2_gold"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_note"]
-content_margin_left = 12.0
-content_margin_top = 12.0
-content_margin_right = 12.0
-content_margin_bottom = 12.0
-bg_color = Color(0.09, 0.1, 0.13, 0.98)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.86, 0.9, 0.96, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
+[ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="3_theme"]
 
 [sub_resource type="RichTextEffect" id="RichTextEffect_gold"]
 script = ExtResource("2_gold")
@@ -28,7 +13,8 @@ script = ExtResource("1_note")
 z_as_relative = false
 z_index = 40
 mouse_filter = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_note")
+theme = ExtResource("3_theme")
+theme_type_variation = &"PrimaryPanel"
 
 [node name="Row" type="HBoxContainer" parent="."]
 layout_mode = 2

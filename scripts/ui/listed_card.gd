@@ -17,7 +17,7 @@ func _ready() -> void:
 	_pin_bounds()
 
 
-func show_card(card: CardData, stroke: Color, damage: int, block: int, tag: String) -> void:
+func show_card(card: CardData, stroke: Color, damage: int, block: int, tag: String, battle_rules := true) -> void:
 	if _host == null or card == null:
 		return
 	if card_view == null:
@@ -31,7 +31,7 @@ func show_card(card: CardData, stroke: Color, damage: int, block: int, tag: Stri
 		card_view.size_flags_vertical = SIZE_SHRINK_CENTER
 		card_view.scale = Vector2.ONE
 		_host.add_child(card_view)
-	card_view.present(card, stroke, damage, block)
+	card_view.present(card, stroke, damage, block, battle_rules)
 	if _tag == null:
 		return
 	_tag.show_caption(tag, _tone_for(tag))

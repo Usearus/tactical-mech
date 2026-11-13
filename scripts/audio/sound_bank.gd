@@ -1,27 +1,99 @@
 extends Node
 
 ## Short names for the clips that match moments already in the game.
-## Call SoundBank.play("gunshot") or SoundBank.loop("rain") from the moment itself.
-
+## Call SoundBank.play("gunshot"), SoundBank.loop("rain"), or SoundBank.music("title").
+## volume_db is that clip's loudness. 0 is full level. Rain, wind, typing, and music start quieter.
 const _CLIPS := {
-	"rain": preload("res://audio/Free Sounds Pack/Ambient Rain Moderate Loop 1.wav"),
-	"wind": preload("res://audio/Free Sounds Pack/Ambient Wind Loop 1.wav"),
-	"gunshot": preload("res://audio/Free Sounds Pack/Sci-Fi Gun 1-1.wav"),
-	"shotgun": preload("res://audio/Free Sounds Pack/Gunshot 1-1.wav"),
-	"gunshot_heavy": preload("res://audio/Free Sounds Pack/Gunshot 7-1.wav"),
-	"missile": preload("res://audio/Free Sounds Pack/Fire Whoosh 2-15.wav"),
-	"explosion": preload("res://audio/Free Sounds Pack/Explosion Medium 2-1.wav"),
-	"explosion_large": preload("res://audio/Free Sounds Pack/Explosion Large 1-1.wav"),
-	"hit": preload("res://audio/Free Sounds Pack/Hit Generic 5-1.wav"),
-	"melee": preload("res://audio/Free Sounds Pack/Punch 2-1.wav"),
-	"blade": preload("res://audio/Free Sounds Pack/Stab 4-1.wav"),
-	"guard": preload("res://audio/Free Sounds Pack/Shield Metal Impact 1-3.wav"),
-	"dodge": preload("res://audio/Free Sounds Pack/Whoosh 4-1.wav"),
-	"step": preload("res://audio/Free Sounds Pack/Rock Impact 11.wav"),
-	"draw": preload("res://audio/Free Sounds Pack/Draw Weapon Metal 1-1.wav"),
-	"ui": preload("res://audio/Free Sounds Pack/Sci-Fi Interface 8-1.wav"),
-	"upgrade": preload("res://audio/Free Sounds Pack/Special Collectible 9-1.wav"),
-	"typing": preload("res://audio/Free Sounds Pack/Interface 3-3.wav"),
+	"rain": {
+		"stream": preload("res://audio/Free Sounds Pack/Ambient Rain Moderate Loop 1.wav"),
+		"volume_db": -6.0,
+	},
+	"wind": {
+		"stream": preload("res://audio/Free Sounds Pack/Ambient Wind Loop 1.wav"),
+		"volume_db": -6.0,
+	},
+	"gunshot": {
+		"stream": preload("res://audio/Free Sounds Pack/Sci-Fi Gun 1-1.wav"),
+		"volume_db": 0.0,
+	},
+	"shotgun": {
+		"stream": preload("res://audio/Free Sounds Pack/Gunshot 1-1.wav"),
+		"volume_db": 0.0,
+	},
+	"gunshot_heavy": {
+		"stream": preload("res://audio/Free Sounds Pack/Gunshot 7-1.wav"),
+		"volume_db": 0.0,
+	},
+	"missile": {
+		"stream": preload("res://audio/Free Sounds Pack/Fire Whoosh 2-15.wav"),
+		"volume_db": 0.0,
+	},
+	"explosion": {
+		"stream": preload("res://audio/Free Sounds Pack/Explosion Medium 2-1.wav"),
+		"volume_db": 0.0,
+	},
+	"explosion_large": {
+		"stream": preload("res://audio/Free Sounds Pack/Explosion Large 1-1.wav"),
+		"volume_db": 0.0,
+	},
+	"hit": {
+		"stream": preload("res://audio/Free Sounds Pack/Hit Generic 5-1.wav"),
+		"volume_db": 0.0,
+	},
+	"melee": {
+		"stream": preload("res://audio/Free Sounds Pack/Punch 2-1.wav"),
+		"volume_db": 0.0,
+	},
+	"blade": {
+		"stream": preload("res://audio/Free Sounds Pack/Stab 4-1.wav"),
+		"volume_db": 0.0,
+	},
+	"guard": {
+		"stream": preload("res://audio/Free Sounds Pack/Shield Metal Impact 1-3.wav"),
+		"volume_db": 0.0,
+	},
+	"dodge": {
+		"stream": preload("res://audio/Free Sounds Pack/Whoosh 4-1.wav"),
+		"volume_db": 0.0,
+	},
+	"step": {
+		"stream": preload("res://audio/Free Sounds Pack/Rock Impact 11.wav"),
+		"volume_db": 0.0,
+	},
+	"draw": {
+		"stream": preload("res://audio/Free Sounds Pack/Draw Weapon Metal 1-1.wav"),
+		"volume_db": 0.0,
+	},
+	"ui": {
+		"stream": preload("res://audio/Free Sounds Pack/Sci-Fi Interface 8-1.wav"),
+		"volume_db": 0.0,
+	},
+	"upgrade": {
+		"stream": preload("res://audio/Free Sounds Pack/Special Collectible 9-1.wav"),
+		"volume_db": 0.0,
+	},
+	"typing": {
+		"stream": preload("res://audio/Free Sounds Pack/Interface 3-3.wav"),
+		"volume_db": -10.0,
+	},
+	## Title, the mission pick, and mech select share this track.
+	"title": {
+		"stream": preload("res://audio/CraftPix.com/Music/WAV/Main_theme_sewerage.wav"),
+		"volume_db": -10.0,
+	},
+	"overworld": {
+		"stream": preload("res://audio/CraftPix.com/Music/WAV/Alternative_theme_prison.wav"),
+		"volume_db": -10.0,
+	},
+	"battle": {
+		"stream": preload("res://audio/CraftPix.com/Music/WAV/Prisoners_escape_theme.wav"),
+		"volume_db": -10.0,
+	},
+	## Plays for the rest of the fight once Overdrive is activated.
+	"overdrive": {
+		"stream": preload("res://audio/CraftPix.com/Music/WAV/Track race.wav"),
+		"volume_db": -10.0,
+	},
 }
 
 ## Rockets, missiles, and the barrage that throws them.
@@ -36,23 +108,29 @@ const _BLADES: PackedStringArray = ["Spike", "Cut", "Lance"]
 const _SHOTGUNS: PackedStringArray = ["Shotgun", "Charge"]
 
 const _POOL_SIZE := 6
-const _LOOP_VOLUME_DB := -14.0
 ## The letter tick is a short chirp played faster, so it chatters while text types.
-## -10 dB is half the amplitude of the previous -4 dB level.
 const _TYPING_PITCH := 2.0
-const _TYPING_VOLUME_DB := -10.0
 ## Interface 3-3 is one chirp and then silence. Loop only the chirp.
 const _TYPING_LOOP_SECONDS := 0.1
 
 var _oneshots: Array[AudioStreamPlayer] = []
 var _loop_player: AudioStreamPlayer
+var _music_player: AudioStreamPlayer
 var _typing_player: AudioStreamPlayer
 var _loop_name := ""
+var _music_name := ""
+## Where each track left off, so a return continues instead of starting over.
+var _music_at: Dictionary = {}
+var _music_streams: Dictionary = {}
 
 
 func _ready() -> void:
+	## Round banners pause the tree. Music and beds keep playing through that.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_loop_player = AudioStreamPlayer.new()
 	add_child(_loop_player)
+	_music_player = AudioStreamPlayer.new()
+	add_child(_music_player)
 	_typing_player = AudioStreamPlayer.new()
 	add_child(_typing_player)
 	for _index in _POOL_SIZE:
@@ -62,25 +140,27 @@ func _ready() -> void:
 
 
 ## One-shot. A second play overlaps instead of cutting the first.
+## volume_db is added on top of the clip's own volume.
 func play(clip: String, volume_db: float = 0.0) -> void:
-	var stream := _stream(clip)
-	if stream == null:
+	var entry := _entry(clip)
+	if entry.is_empty():
 		return
 	var player := _free_player()
-	player.stream = stream
-	player.volume_db = volume_db
+	player.stream = entry["stream"]
+	player.volume_db = float(entry["volume_db"]) + volume_db
 	player.play()
 
 
 ## Bed under the fight. A new name replaces the one that is playing.
-func loop(clip: String, volume_db: float = _LOOP_VOLUME_DB) -> void:
+## volume_db is added on top of the clip's own volume.
+func loop(clip: String, volume_db: float = 0.0) -> void:
 	if clip == _loop_name and _loop_player.playing:
 		return
-	var source := _stream(clip)
-	if source == null:
+	var entry := _entry(clip)
+	if entry.is_empty():
 		return
-	_loop_player.stream = _looping_copy(source)
-	_loop_player.volume_db = volume_db
+	_loop_player.stream = _looping_copy(entry["stream"])
+	_loop_player.volume_db = float(entry["volume_db"]) + volume_db
 	_loop_player.play()
 	_loop_name = clip
 
@@ -90,14 +170,34 @@ func stop_loop() -> void:
 	_loop_name = ""
 
 
+## Score under a screen. The same name keeps playing. A return picks up where it left off.
+## volume_db is added on top of the clip's own volume.
+func music(clip: String, volume_db: float = 0.0) -> void:
+	if clip == _music_name and _music_player.playing:
+		return
+	var entry := _entry(clip)
+	if entry.is_empty():
+		return
+	if _music_name != "" and _music_player.playing:
+		_music_at[_music_name] = _music_player.get_playback_position()
+	var stream: AudioStream = _music_streams.get(clip)
+	if stream == null:
+		stream = _looping_copy(entry["stream"])
+		_music_streams[clip] = stream
+	_music_player.stream = stream
+	_music_player.volume_db = float(entry["volume_db"]) + volume_db
+	_music_player.play(float(_music_at.get(clip, 0.0)))
+	_music_name = clip
+
+
 ## Chatter under dialogue while letters are still appearing.
 func play_typing() -> void:
-	var source := _stream("typing")
-	if source == null:
+	var entry := _entry("typing")
+	if entry.is_empty():
 		return
-	_typing_player.stream = _looping_copy(source, _TYPING_LOOP_SECONDS)
+	_typing_player.stream = _looping_copy(entry["stream"], _TYPING_LOOP_SECONDS)
 	_typing_player.pitch_scale = _TYPING_PITCH
-	_typing_player.volume_db = _TYPING_VOLUME_DB
+	_typing_player.volume_db = float(entry["volume_db"])
 	_typing_player.stream_paused = false
 	_typing_player.play()
 
@@ -163,11 +263,12 @@ func _looping_copy(source: AudioStream, loop_seconds: float = -1.0) -> AudioStre
 	return wav
 
 
-func _stream(clip: String) -> AudioStream:
-	var stream: AudioStream = _CLIPS.get(clip)
-	if stream == null:
-		push_warning("SoundBank has no clip named %s" % clip)
-	return stream
+func _entry(clip: String) -> Dictionary:
+	var entry: Variant = _CLIPS.get(clip)
+	if entry is Dictionary:
+		return entry
+	push_warning("SoundBank has no clip named %s" % clip)
+	return {}
 
 
 func _free_player() -> AudioStreamPlayer:

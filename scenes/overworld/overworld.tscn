@@ -38,6 +38,10 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_overworld")
 
+[node name="TutorialField" type="Control" parent="."]
+unique_name_in_owner = true
+mouse_filter = 2
+
 [node name="Background" type="ColorRect" parent="." unique_id=177531370]
 layout_mode = 1
 anchors_preset = 15

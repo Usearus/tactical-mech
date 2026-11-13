@@ -3,6 +3,8 @@ extends Control
 
 const ENGAGE_COLOR := Color(0.45, 0.18, 0.18)
 const STEP_SECONDS := 0.22
+## Camera settle before an enemy walks. The same beat holds after they arrive.
+const TURN_SETTLE := 0.32
 const SELECT_BLUE := Color(0.55, 0.82, 1.0)
 const SELECT_RED := Color(1.0, 0.48, 0.45)
 const ATTACK_SHADE := Color(0.95, 0.18, 0.14, 0.58)
@@ -28,8 +30,13 @@ const BATTLE_WINDOW_FILL := Color(1.0, 0.9, 0.45, 0.16)
 const BARRIER_SCENE: PackedScene = preload("res://scenes/props/barrier.tscn")
 const BATTLE_SCENE: PackedScene = preload("res://scenes/battle/battle.tscn")
 const CELL_SCENE := preload("res://scenes/overworld/map_cell.tscn")
-## One envelope both ways: camera, battle cover, and the map chrome.
+## Camera and chrome share this length. Entering a fight uses it as one crossfade.
 const SCENE_BLEND_SECONDS := 0.5
+## Black cover before the map is put back, and the fade that lifts onto that still view.
+const RETURN_DIP_SECONDS := 0.2
+const RETURN_REVEAL_SECONDS := 0.35
+## Tutorial returns stay covered until the lesson's map is already posed.
+const TUTORIAL_RETURN_HOLD := 1.0
 const CHIP_SCENE := preload("res://scenes/ui/timeline_chip.tscn")
 const COMMENCE_TEXT := "COMMENCE"
 const ATTACK_TEXT := "ATTACK"
@@ -74,6 +81,8 @@ var _attack_frame_token := 0
 var _attack_frame_tries := 0
 ## Holds a pan that sits the fight above Commence, past the usual map-edge clamp.
 var _attack_framing := false
+## The attack frame right after a fight cuts instead of zooming. The cover already showed that view.
+var _snap_return_field := false
 var _preview_return_held := false
 var _preview_returning := false
 var _saved_map_zoom := 1.0
@@ -140,6 +149,7 @@ var _enemies_before_battle := 0
 var _campaign_over := false
 ## Holds every turn until the opening banner has left the screen.
 var _opening := true
+var _tutorial: TutorialDirector
 ## The squad is still being dragged onto the blue starting squares.
 var _placing := false
 var _placement_confirmed := false
@@ -198,6 +208,7 @@ func _can_attack() -> bool:
 		and not _placing
 		and not _confirming
 		and not _field_preview
+		and (not GameManager.tutorial_mission or TutorialHooks.allows("attack"))
 	)
 
 
@@ -239,7 +250,12 @@ func _ready() -> void:
 	)
 	_fill_round()
 	_open_placement()
+	if GameManager.tutorial_mission:
+		_boot_tutorial()
 	_rebuild()
+	if GameManager.tutorial_mission:
+		_open_tutorial_under_cover.call_deferred()
+		return
 	await GameManager.wait_until_shown()
 	if not is_inside_tree():
 		return
@@ -322,6 +338,19 @@ func _fill_round() -> void:
 			return a.team == "player"
 		return a.display_name < b.display_name
 	)
+	if GameManager.tutorial_mission:
+		var lead_id := "raven"
+		if _tutorial != null:
+			lead_id = TutorialStage.lead_id(_tutorial.fight_index())
+		var lead_only: Array[MechState] = []
+		for unit in living:
+			if unit.team != "player" or unit.data == null or unit.data.id != lead_id:
+				continue
+			if unit.overworld_position == StartingRoster.UNPLACED:
+				continue
+			lead_only.append(unit)
+		_round = lead_only
+		return
 	_round = living
 
 
@@ -689,6 +718,9 @@ func _build_tactic_buttons() -> void:
 func _on_tactic_toggled(pressed: bool, tactic_id: String) -> void:
 	if _tactic_syncing or not pressed or not _field_preview:
 		return
+	if GameManager.tutorial_mission and not TutorialHooks.allows("tactic", tactic_id):
+		_sync_tactic_buttons()
+		return
 	var tactic := BattleTactic.by_id(tactic_id)
 	if tactic == null or not tactic.enabled:
 		return
@@ -696,6 +728,8 @@ func _on_tactic_toggled(pressed: bool, tactic_id: String) -> void:
 	_confirm_key = ""
 	_refresh()
 	_begin_preview_camera()
+	if GameManager.tutorial_mission:
+		TutorialHooks.notify("tactic", tactic_id)
 
 
 func _sync_tactic_buttons() -> void:
@@ -723,7 +757,7 @@ func _preview_has_enemy() -> bool:
 
 
 func _open_field_preview(actor: MechState) -> void:
-	if actor == null or _enemies_in_range(actor).is_empty():
+	if actor == null or not _attack_ready(actor):
 		return
 	_field_preview = true
 	_confirming = true
@@ -752,7 +786,7 @@ func _apply_confirm_bar() -> void:
 		_timeline_panel.visible = not confirming
 	if not confirming:
 		attack_button.visible = _can_attack()
-		attack_button.disabled = _enemies_in_range(actor).is_empty()
+		attack_button.disabled = not _attack_ready(actor)
 		if attack_button.text != ATTACK_TEXT:
 			attack_button.text = ATTACK_TEXT
 		_confirm_key = ""
@@ -948,6 +982,19 @@ func _sync_attack_pulse() -> void:
 		attack_button.stop_pulse()
 
 
+## Weapon range, or the scripted tutorial attack when that field already holds an enemy.
+func _attack_ready(actor: MechState) -> bool:
+	if not _enemies_in_range(actor).is_empty():
+		return true
+	if actor == null or not GameManager.tutorial_mission or not TutorialHooks.allows("attack"):
+		return false
+	for cell in BattleTactic.standard().world_cells(actor.overworld_position):
+		var unit := _unit_at(cell)
+		if unit != null and unit.alive and unit.team == "enemy":
+			return true
+	return false
+
+
 func _enemies_in_range(unit: MechState) -> Array[MechState]:
 	var found: Array[MechState] = []
 	if unit == null:
@@ -962,18 +1009,20 @@ func _enemies_in_range(unit: MechState) -> Array[MechState]:
 	return found
 
 
-## Attack marks while a move is open. Empty cells this step cannot enter stay clear.
-## An enemy already in reach stays marked.
-func _attack_reach_on_move(unit: MechState, move_cells: Dictionary) -> Dictionary:
+## Attack marks on movable ground inside this mech's reach, including cells
+## this turn cannot step onto. An enemy already in reach stays marked.
+## Impassable ground stays clear.
+func _attack_reach_on_move(unit: MechState) -> Dictionary:
 	var cells := {}
 	for raw in _attack_reach_cells(unit):
 		var coords: Vector2i = raw
-		if move_cells.has(coords):
-			cells[coords] = true
-			continue
 		var standing := _unit_at(coords)
 		if standing != null and standing.alive and standing.team == "enemy":
 			cells[coords] = true
+			continue
+		if StageMap.blocked(coords):
+			continue
+		cells[coords] = true
 	return cells
 
 
@@ -1014,7 +1063,7 @@ func _clear_confirm(animate_camera: bool = false) -> void:
 	_confirm_target = null
 	_confirm_key = ""
 	if attack_button != null:
-		attack_button.disabled = _enemies_in_range(_current_actor()).is_empty()
+		attack_button.disabled = not _attack_ready(_current_actor())
 	_stop_engage_pulse()
 	_cancel_enemy_field_frame()
 	_end_preview_camera(false, animate_camera)
@@ -1496,7 +1545,7 @@ func _pan_map(delta: Vector2) -> void:
 	_apply_map_view()
 
 
-func _reveal_unit(unit: MechState) -> void:
+func _reveal_unit(unit: MechState, instant: bool = false, nudge := Vector2.ZERO) -> void:
 	if unit == null or (_opening and not _placing) or _map_locked or _intro_tweening or grid == null or grid_host == null:
 		return
 	if _field_preview or _preview_camera:
@@ -1510,7 +1559,7 @@ func _reveal_unit(unit: MechState) -> void:
 	var cell_pos := origin + _map_pan + button.position * zoom
 	var cell_size := button.size * zoom
 	var pad := maxf(18.0, cell_size.x * 0.45)
-	var shift := _view_shift(cell_pos, cell_size, grid_host.size, pad)
+	var shift := _view_shift(cell_pos, cell_size, grid_host.size, pad) + nudge
 	if shift.length_squared() < 1.0:
 		return
 	var slack := visual - grid_host.size
@@ -1523,11 +1572,14 @@ func _reveal_unit(unit: MechState) -> void:
 		dest.y = clampf(dest.y, -slack.y * 0.5, slack.y * 0.5)
 	else:
 		dest.y = slack.y * 0.5
+	if instant:
+		_set_map_pan(dest)
+		return
 	if _reveal_tween != null and _reveal_tween.is_valid():
 		_reveal_tween.kill()
 	_reveal_tween = create_tween()
 	_reveal_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_reveal_tween.tween_method(_set_map_pan, _map_pan, dest, 0.32)
+	_reveal_tween.tween_method(_set_map_pan, _map_pan, dest, TURN_SETTLE)
 	var glide := _reveal_tween
 	while is_inside_tree() and glide != null and is_instance_valid(glide) and glide.is_running():
 		await get_tree().process_frame
@@ -1620,7 +1672,7 @@ func _on_timeline_input(event: InputEvent, unit: MechState) -> void:
 	if _animating or _turn_busy:
 		return
 	if _status_click_blocked() or _blocks_status_tip(unit):
-		_hide_status_tip()
+		_release_status_tip()
 	_on_cell_pressed(unit.overworld_position)
 	_reveal_unit(unit)
 
@@ -1680,9 +1732,16 @@ func _refresh() -> void:
 			if standing != null and standing.alive:
 				continue
 			move_cells[cell] = true
+	if GameManager.tutorial_mission:
+		var only := {}
+		if TutorialHooks.allows("moved"):
+			var dest := TutorialStage.lead_cell(TutorialHooks.fight(), true)
+			if move_cells.has(dest):
+				only[dest] = true
+		move_cells = only
 	var attack_cells := {}
 	if show_reach and _selected != null and _selected.team == "player":
-		attack_cells = _attack_reach_on_move(_selected, move_cells)
+		attack_cells = _attack_reach_on_move(_selected)
 	var threat_cells := {}
 	if show_reach and _selected != null and _selected.team == "enemy":
 		threat_cells = OverworldAi.threat_zone(distances, _selected.attack_range, _selected.overworld_position)
@@ -1784,7 +1843,7 @@ func _refresh() -> void:
 			phase_note = "Select an enemy to attack."
 		elif actor.team == "enemy":
 			phase_note = "%s is acting." % actor.display_name
-		elif not _enemies_in_range(actor).is_empty():
+		elif _attack_ready(actor):
 			phase_note = "%s can attack." % actor.display_name
 		else:
 			phase_note = "%s's turn." % actor.display_name
@@ -1809,7 +1868,7 @@ func _try_status_click(point: Vector2, panned: bool) -> void:
 	if panned:
 		return
 	if _status_click_blocked():
-		_hide_status_tip()
+		_release_status_tip()
 		return
 	if stats_window != null and stats_window.visible and stats_window.get_global_rect().has_point(point):
 		return
@@ -1820,18 +1879,18 @@ func _try_status_click(point: Vector2, panned: bool) -> void:
 		var timeline_root: Node = timeline_column if timeline_column != null else turn_timeline
 		if not _has_ancestor(hovered, timeline_root):
 			_leave_scout()
-			_hide_status_tip()
+			_release_status_tip()
 		return
 	var coords := _coords_at_global(point)
 	if coords.x < 0:
 		_leave_scout()
-		_hide_status_tip()
+		_release_status_tip()
 		return
 	if _scouting() and (_is_approach_cell(coords) or _unit_at(coords) == _selected):
 		return
 	var unit := _unit_at(coords)
 	if unit == null or _blocks_status_tip(unit):
-		_hide_status_tip()
+		_release_status_tip()
 
 
 func _status_click_blocked() -> bool:
@@ -1872,7 +1931,7 @@ func _coords_at_global(point: Vector2) -> Vector2i:
 
 func _open_status_tip(unit: MechState) -> void:
 	if _status_click_blocked() or _blocks_status_tip(unit):
-		_hide_status_tip()
+		_release_status_tip()
 		return
 	_show_status_tip(unit)
 
@@ -1904,6 +1963,36 @@ func _hide_status_tip() -> void:
 		stats_window.visible = false
 
 
+## Drop an inspect popup. On a player's turn their own stats stay in the corner.
+func _release_status_tip() -> void:
+	var actor := _turn_stats_actor()
+	if actor != null:
+		_show_status_tip(actor)
+		return
+	_hide_status_tip()
+
+
+## The player whose turn it is. Their stats stay in the bottom left until the turn passes.
+## The commence screen takes that corner, so the window stays down while it is up.
+func _turn_stats_actor() -> MechState:
+	if _placing or _opening or _campaign_over or _map_locked:
+		return null
+	if _confirming and (_confirm_target != null or _field_preview):
+		return null
+	if resolution_overlay != null and resolution_overlay.visible:
+		return null
+	if GameMenu.is_open():
+		return null
+	if mode_banner != null and mode_banner.visible:
+		return null
+	var actor := _current_actor()
+	if actor == null or not actor.alive or actor.team != "player":
+		return null
+	if actor.overworld_position == StartingRoster.UNPLACED:
+		return null
+	return actor
+
+
 func _on_deck_pressed() -> void:
 	if _status_unit == null or _status_unit.team != "player" or deck_overlay == null:
 		return
@@ -1932,16 +2021,27 @@ func _close_deck_overlay() -> void:
 func _sync_status_tip() -> void:
 	if stats_window == null:
 		return
-	if _confirming or _status_click_blocked():
+	var actor := _turn_stats_actor()
+	if actor == null and (_confirming or _status_click_blocked()):
 		_hide_status_tip()
 		return
+	if actor != null:
+		var inspecting := (
+			_status_unit != null
+			and stats_window.visible
+			and _status_unit != actor
+			and _selected == _status_unit
+		)
+		if not inspecting:
+			_show_status_tip(actor)
+			return
 	if _status_unit == null or not stats_window.visible:
 		return
 	if _targeting and _status_unit.team == "enemy":
-		_hide_status_tip()
+		_release_status_tip()
 		return
-	if _unit_at(_status_unit.overworld_position) != _status_unit:
-		_hide_status_tip()
+	if not _status_unit.alive or _unit_at(_status_unit.overworld_position) != _status_unit:
+		_release_status_tip()
 		return
 	mech_panel.present_unit(_status_unit, false)
 	_place_status_tip()
@@ -2055,6 +2155,11 @@ func _on_cell_pressed(coords: Vector2i) -> void:
 		_note_status("It's %s's turn." % actor.display_name)
 		return
 	var allowed := _anchored_steps(actor)
+	if GameManager.tutorial_mission:
+		if not TutorialHooks.allows("moved"):
+			return
+		if coords != TutorialStage.lead_cell(TutorialHooks.fight(), true):
+			return
 	if not allowed.has(coords):
 		_note_status("%s can move %d cells." % [actor.display_name, actor.move_range])
 		return
@@ -2081,6 +2186,10 @@ func _on_attack_pressed() -> void:
 		return
 	var actor := _current_actor()
 	if _field_preview:
+		if GameManager.tutorial_mission and not TutorialHooks.allows("commence"):
+			if TutorialHooks.allows("attack"):
+				TutorialHooks.notify("attack")
+			return
 		if not _preview_has_enemy():
 			_note_status("No enemy in this field.")
 			return
@@ -2089,6 +2198,7 @@ func _on_attack_pressed() -> void:
 		_clear_confirm()
 		if actor != null and tactic != null and actor.team == "player":
 			SoundBank.play("draw")
+		TutorialHooks.notify("commence")
 		_try_tactic_attack(actor, tactic)
 		return
 	if _confirming:
@@ -2102,9 +2212,12 @@ func _on_attack_pressed() -> void:
 		return
 	if _targeting:
 		return
-	if not _can_attack() or _enemies_in_range(actor).is_empty():
+	if not _can_attack() or not _attack_ready(actor):
+		return
+	if GameManager.tutorial_mission and not TutorialHooks.allows("attack"):
 		return
 	_open_field_preview(actor)
+	TutorialHooks.notify("attack")
 
 
 func _chosen_attack_target(enemies: Array[MechState]) -> MechState:
@@ -2129,6 +2242,8 @@ func _stands_on_attack_tile(actor: MechState, unit: MechState) -> bool:
 
 
 func _arm_attack(actor: MechState, _target: MechState) -> void:
+	if GameManager.tutorial_mission:
+		return
 	_targeting = false
 	_open_field_preview(actor)
 
@@ -2199,6 +2314,10 @@ func _move_player_to(coords: Vector2i) -> void:
 	_animating = false
 	_status_override = ""
 	_refresh()
+	if GameManager.tutorial_mission:
+		TutorialHooks.notify("moved")
+		TutorialHooks.settled()
+		_refresh()
 
 
 ## _input can start a map pan before the button sees the press. Drop that pan.
@@ -2249,6 +2368,8 @@ func _on_end_turn() -> void:
 	if from_pointer and not _pointer_still_on_end_turn():
 		return
 	if _placing or _opening or _campaign_over or _turn_busy or _animating:
+		return
+	if GameManager.tutorial_mission:
 		return
 	var actor := _current_actor()
 	if actor == null or actor.team != "player":
@@ -2349,6 +2470,19 @@ func _apply_enemy_field_frame(token: int) -> void:
 		return
 	var zoom := float(pose["zoom"])
 	var pan := pose["pan"] as Vector2
+	if _snap_return_field:
+		_snap_return_field = false
+		if is_equal_approx(_map_zoom, zoom) and _map_pan.distance_to(pan) < 0.5:
+			return
+		if not _preview_return_held:
+			_saved_map_zoom = _map_zoom
+			_saved_map_pan = _map_pan
+			_preview_return_held = true
+		_attack_framing = true
+		_map_zoom = zoom
+		_map_pan = pan
+		_apply_map_view()
+		return
 	if is_equal_approx(_map_zoom, zoom) and _map_pan.distance_to(pan) < 0.5:
 		return
 	if not _preview_return_held:
@@ -2590,8 +2724,18 @@ func _preview_camera_pose() -> Dictionary:
 	zoom = clampf(zoom, _map_zoom_floor(), MAP_ZOOM_MAX)
 	var window_screen := window.size * zoom
 	var half := window_screen * 0.5
-	var center := Vector2(grid_host.size.x * 0.5 + PREVIEW_PAN_RIGHT, clear.get_center().y)
-	center.x = clampf(center.x, clear.position.x + half.x, clear.end.x - half.x)
+	var nudge_right := PREVIEW_PAN_RIGHT
+	# Fight 3's field sits against the tactic list. Center it in the open band.
+	if GameManager.tutorial_mission and TutorialHooks.fight() >= 3:
+		nudge_right = clear.get_center().x - grid_host.size.x * 0.5
+	var center := Vector2(grid_host.size.x * 0.5 + nudge_right, clear.get_center().y)
+	var low_x := clear.position.x + half.x
+	var high_x := clear.end.x - half.x
+	var tutorial_field := GameManager.tutorial_mission and TutorialHooks.fight() >= 3
+	if tutorial_field and low_x > high_x:
+		center.x = clear.get_center().x
+	else:
+		center.x = clampf(center.x, low_x, high_x)
 	center.y = clampf(center.y, clear.position.y + half.y, clear.end.y - half.y)
 	var visual := grid.size * zoom
 	var pan := center - (grid_host.size - visual) * 0.5 - window.get_center() * zoom
@@ -2888,7 +3032,7 @@ func _play_mission_briefing() -> void:
 	await dialogue_bar.play(MISSION_COMMS, cue)
 
 
-func _begin_actor_turn() -> void:
+func _begin_actor_turn(snap_camera: bool = false, reveal_nudge := Vector2.ZERO) -> void:
 	if _placing or _opening or _turn_busy:
 		return
 	_prune_queue()
@@ -2907,11 +3051,13 @@ func _begin_actor_turn() -> void:
 	_animating = true
 	_refresh()
 	if actor.team != "enemy" or OverworldAi.prey(actor, GameManager.all_mechs()) == null:
-		await _reveal_unit(actor)
+		await _reveal_unit(actor, snap_camera, reveal_nudge)
 	if not is_inside_tree() or actor != _current_actor():
 		_animating = false
 		return
 	if actor.team == "enemy":
+		if snap_camera:
+			_snap_return_field = true
 		await _run_one_enemy_turn(actor)
 		return
 	_animating = false
@@ -2947,6 +3093,9 @@ func _run_one_enemy_turn(enemy: MechState) -> void:
 	await _animate_move(enemy, path)
 	if not is_inside_tree():
 		return
+	await get_tree().create_timer(TURN_SETTLE).timeout
+	if not is_inside_tree():
+		return
 	if OverworldAi.prey(enemy, GameManager.all_mechs()) != null:
 		if await _offer_enemy_attack(enemy):
 			_turn_busy = false
@@ -2959,7 +3108,6 @@ func _run_one_enemy_turn(enemy: MechState) -> void:
 		_advance_actor()
 		await _begin_actor_turn()
 		return
-	await get_tree().create_timer(0.12).timeout
 	_animating = false
 	_status_override = ""
 	_turn_busy = false
@@ -3053,31 +3201,169 @@ func _animate_move(unit: MechState, path: Array[Vector2i]) -> void:
 	token.queue_free()
 
 
+func _open_tutorial_under_cover() -> void:
+	GameManager.hold_cover()
+	var started := Time.get_ticks_msec()
+	_pin_place_panel()
+	_settle_intro_view()
+	_opening = false
+	_tutorial.begin("b1")
+	await _zoom_into(_tutorial_encounter())
+	if not is_inside_tree():
+		return
+	var elapsed := float(Time.get_ticks_msec() - started) / 1000.0
+	var remain := TUTORIAL_RETURN_HOLD - elapsed
+	if remain > 0.0:
+		await get_tree().create_timer(remain).timeout
+	if not is_inside_tree():
+		return
+	await GameManager.reveal_cover(RETURN_REVEAL_SECONDS)
+
+
+func _boot_tutorial() -> void:
+	_placing = false
+	_placement_confirmed = true
+	if place_panel != null:
+		place_panel.visible = false
+	_tutorial = TutorialDirector.new()
+	_tutorial.name = "TutorialDirector"
+	add_child(_tutorial)
+	_tutorial.bind(self)
+	_tutorial.seat(1)
+	_fill_round()
+
+
+func _tutorial_encounter() -> EncounterData:
+	var raven: MechState = null
+	for unit in GameManager.player_mechs:
+		if unit != null and unit.data != null and unit.data.id == "raven":
+			raven = unit
+			break
+	if raven != null:
+		raven.overworld_position = TutorialStage.raven_cell(1, true)
+	return EncounterData.create_from_tactic(raven, BattleTactic.standard(), GameManager.all_mechs())
+
+
+func _tutorial_on_map() -> void:
+	var fight := _tutorial.fight_index()
+	_tutorial.seat(fight)
+	_map_locked = true
+	_opening = false
+	_animating = false
+	_refresh()
+	if fight >= 3:
+		var ally := _pilot_by_id("barrage")
+		if ally != null:
+			_place_ally(ally, TutorialStage.lead_cell(3, false))
+	_fill_round()
+	var lead_id := TutorialStage.lead_id(fight)
+	for unit in GameManager.player_mechs:
+		if unit != null and unit.data != null and unit.data.id == lead_id:
+			unit.has_moved = false
+	_fill_round()
+	_map_locked = false
+	_refresh()
+	TutorialHooks.settled()
+	# The contact sits past the lead. Slide the map left so that side of the fight is on screen.
+	var nudge := Vector2.ZERO
+	if fight >= 3:
+		nudge = Vector2(-400.0, 0.0)
+	elif fight == 2:
+		nudge = Vector2(-300.0, 0.0)
+	await _begin_actor_turn(true, nudge)
+	if not is_inside_tree():
+		return
+	await get_tree().create_timer(TUTORIAL_RETURN_HOLD).timeout
+	if not is_inside_tree():
+		return
+	await _lift_return_cover()
+
+
+func _pilot_by_id(data_id: String) -> MechState:
+	for unit in GameManager.player_mechs:
+		if unit != null and unit.data != null and unit.data.id == data_id:
+			return unit
+	return null
+
+
+func _place_ally(unit: MechState, dest: Vector2i) -> void:
+	var start := _open_neighbor(dest)
+	unit.overworld_position = dest
+	if start != dest:
+		unit.face_toward_x(start.x, dest.x)
+	_refresh()
+
+
+func _open_neighbor(dest: Vector2i) -> Vector2i:
+	var neighbors: Array[Vector2i] = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
+	for step in neighbors:
+		var candidate := dest + step
+		if not StageMap.contains(candidate) or StageMap.blocked(candidate):
+			continue
+		if _unit_at(candidate) != null:
+			continue
+		return candidate
+	return dest
+
+
+func tutorial_anchor(anchor: String) -> Control:
+	if anchor == "overworld.attack":
+		return attack_button
+	if anchor == "overworld.tactics":
+		return _tactic_panel
+	if anchor == "overworld.rewards":
+		return _prize_label
+	if anchor == "overworld.fight":
+		return _fight_style_label
+	if anchor.begins_with("overworld.tactic."):
+		return _tactic_buttons.get(anchor.trim_prefix("overworld.tactic.")) as Control
+	if anchor == "overworld.step":
+		var dest := TutorialStage.lead_cell(TutorialHooks.fight(), true)
+		return _buttons.get(dest) as Control
+	if is_instance_valid(_battle_layer) and _battle_layer.has_method("tutorial_anchor"):
+		return _battle_layer.call("tutorial_anchor", anchor) as Control
+	return null
+
+
 func _close_battle() -> void:
 	_animating = true
 	if is_instance_valid(_battle_layer):
 		_battle_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# The fight still covers the screen, so the map can come back underneath without a pop.
+	await GameManager.fade_to_black(RETURN_DIP_SECONDS)
+	if not is_inside_tree():
+		GameManager.fade_from_black(RETURN_DIP_SECONDS)
+		return
+	# The fight leaves under the cover. The map is posed there too, so the fade lifts onto a still picture.
 	grid.visible = true
 	if approach_layer != null:
 		approach_layer.visible = true
 	_status_override = ""
-	_refresh()
-	await _blend_back_to_map()
 	if is_instance_valid(_battle_layer):
 		_battle_layer.queue_free()
 	_battle_layer = null
+	await _restore_map_under_cover()
 	if not is_inside_tree():
 		return
 	_animating = false
 	_turn_busy = false
 	_status_override = ""
 	_refresh()
-	if await _show_campaign_resolution():
+	var mission_over := _campaign_just_ended()
+	var tutorial_map := GameManager.tutorial_mission and _tutorial != null and _tutorial.on_map()
+	if tutorial_map:
+		await _tutorial_on_map()
 		return
-	_map_locked = false
-	_advance_actor()
-	await _begin_actor_turn()
+	if not mission_over:
+		_advance_actor()
+		await _settle_opening_camera()
+		if not is_inside_tree():
+			return
+	await _lift_return_cover()
+	if not is_inside_tree():
+		return
+	if mission_over and await _show_campaign_resolution():
+		return
+	await _begin_actor_turn(true)
 
 
 func _living_count(roster: Array[MechState]) -> int:
@@ -3086,6 +3372,14 @@ func _living_count(roster: Array[MechState]) -> int:
 		if unit != null and unit.alive:
 			count += 1
 	return count
+
+
+func _campaign_just_ended() -> bool:
+	var players := _living_count(GameManager.player_mechs)
+	var enemies := _living_count(GameManager.enemy_mechs)
+	var players_wiped := _players_before_battle > 0 and players == 0
+	var enemies_wiped := _enemies_before_battle > 0 and enemies == 0
+	return players_wiped or enemies_wiped
 
 
 func _show_campaign_resolution() -> bool:
@@ -3180,38 +3474,63 @@ func _spawn_battle(encounter: EncounterData) -> void:
 	add_child(_battle_layer)
 
 
-## Pull the camera back to the view the player left, while the fight fades off it.
-func _blend_back_to_map() -> void:
+## Put the map on the view the player left. The cover stays up, so none of the snap is seen.
+func _restore_map_under_cover() -> void:
 	await get_tree().process_frame
 	if not is_inside_tree():
-		return
-	var start_scale := grid.scale.x
-	var start_pos := grid.global_position
-	var end_pose := _sample_saved_view()
-	var end_scale: float = end_pose["scale"]
-	var end_pos: Vector2 = end_pose["position"]
-	grid.scale = Vector2(start_scale, start_scale)
-	grid.global_position = start_pos
-	_sync_approach_boxes()
-	var tween := _begin_scene_blend()
-	tween.tween_method(
-		_slide_grid.bind(start_pos, end_pos, start_scale, end_scale),
-		0.0,
-		1.0,
-		SCENE_BLEND_SECONDS
-	)
-	tween.tween_method(_set_chrome_alpha, _chrome_alpha(), 1.0, SCENE_BLEND_SECONDS)
-	if is_instance_valid(_battle_layer):
-		tween.tween_property(_battle_layer, "modulate:a", 0.0, SCENE_BLEND_SECONDS)
-	await tween.finished
-	if not is_inside_tree():
+		GameManager.fade_from_black(RETURN_DIP_SECONDS)
 		return
 	_map_locked = false
 	GameManager.zoom_focus_cells.clear()
 	grid.pivot_offset = Vector2.ZERO
 	_map_zoom = _saved_map_zoom
 	_map_pan = _saved_map_pan
+	_set_chrome_alpha(1.0)
 	_fit_grid()
+	await get_tree().process_frame
+
+
+## The next turn's camera, applied while the screen is still black.
+func _settle_opening_camera() -> void:
+	var actor := _current_actor()
+	if actor == null:
+		return
+	var prey: MechState = null
+	if actor.team == "enemy":
+		prey = OverworldAi.prey(actor, GameManager.all_mechs())
+	if prey == null:
+		await _reveal_unit(actor, true)
+		return
+	_selected = actor
+	_confirming = true
+	_confirm_target = prey
+	_refresh()
+	for _step in 2:
+		await get_tree().process_frame
+		if not is_inside_tree():
+			return
+	var pose := _enemy_field_pose()
+	_confirming = false
+	_confirm_target = null
+	_cancel_enemy_field_frame()
+	_refresh()
+	if pose.is_empty():
+		return
+	if not _preview_return_held:
+		_saved_map_zoom = _map_zoom
+		_saved_map_pan = _map_pan
+		_preview_return_held = true
+	_attack_framing = true
+	_map_zoom = float(pose["zoom"])
+	_map_pan = pose["pan"]
+	_apply_map_view()
+	_attack_framing = false
+
+
+func _lift_return_cover() -> void:
+	var reveal := GameManager.fade_from_black(RETURN_REVEAL_SECONDS)
+	if reveal != null and reveal.is_valid():
+		await reveal.finished
 
 
 func _begin_scene_blend() -> Tween:
@@ -3229,29 +3548,6 @@ func _place_zoomed_grid(amount: float, start_focus: Vector2, end_focus: Vector2,
 	grid.global_position = pivot - _zoom_pivot_local * zoom
 	_sync_approach_boxes()
 	_fit_cell_hit_points()
-
-
-func _slide_grid(amount: float, start_pos: Vector2, end_pos: Vector2, start_scale: float, end_scale: float) -> void:
-	var zoom := lerpf(start_scale, end_scale, amount)
-	grid.scale = Vector2(zoom, zoom)
-	grid.global_position = start_pos.lerp(end_pos, amount)
-	_sync_approach_boxes()
-	_fit_cell_hit_points()
-
-
-## Apply the saved camera for one call, then the caller puts the zoomed pose back.
-func _sample_saved_view() -> Dictionary:
-	_map_zoom = _saved_map_zoom
-	_map_pan = _saved_map_pan
-	var was_locked := _map_locked
-	_map_locked = false
-	_fit_grid()
-	var pose := {
-		"scale": grid.scale.x,
-		"position": grid.global_position,
-	}
-	_map_locked = was_locked
-	return pose
 
 
 func _chrome_alpha() -> float:

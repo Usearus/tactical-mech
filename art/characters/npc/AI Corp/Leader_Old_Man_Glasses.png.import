@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ccommsmisc001"
-path="res://.godot/imported/comms.png-cc04717576286ce2d8ffb884a6fa9add.ctex"
+uid="uid://bpun07cpw1a4g"
+path="res://.godot/imported/Leader_Old_Man_Glasses.png-ac31379404e6f9adf5d935da3f56b1cf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/characters/misc/comms.png"
-dest_files=["res://.godot/imported/comms.png-cc04717576286ce2d8ffb884a6fa9add.ctex"]
+source_file="res://art/characters/npc/AI Corp/Leader_Old_Man_Glasses.png"
+dest_files=["res://.godot/imported/Leader_Old_Man_Glasses.png-ac31379404e6f9adf5d935da3f56b1cf.ctex"]
 
 [params]
 

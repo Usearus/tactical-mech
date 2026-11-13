@@ -1,0 +1,85 @@
+class_name TutorialScript
+extends RefCounted
+
+## The lesson order. Each step names the control that advances it.
+
+
+static func steps() -> Array[Dictionary]:
+	return [
+		_step("b1", "We'll start on the battlefield. There are [gold]2 rounds in a battle[/gold]. In each round you will get a hand of cards shown below.", "", "continue", "", false),
+		_step("b1", "You'll see there are [gold]3 cards[/gold] at the moment, because you are [gold]fighting with 1 mech[/gold].", "", "continue", "", false),
+		_step("b1", "Fight with [gold]2 mechs[/gold] and get [gold]4 cards in hand[/gold]. Fight with [gold]3 mechs[/gold] and get [gold]6 cards in hand[/gold].", "", "continue", "", false),
+		_step("b1", "In this game you'll discover even more [gold]advantages for fighting with a full squad in battle[/gold].", "", "continue", "", false),
+		_step("b1", "This section shows the [gold]cost to use the card[/gold].", "battle.cost", "continue", "", false),
+		_step("b1", "[gold]Playing this card will cost 1 action[/gold], which lowers the action counter on all enemies. When this [gold]reaches 0, enemies will attack[/gold].", "battle.clock", "continue", "", false),
+		_step("b1", "Play Burst Fire.", "battle.card", "card", "raven_burst_fire", false),
+		_step("b1", "This will do [gold]4 damage to any unit within 2 cells[/gold] from Raven, and reduce the time before all enemies will act by [gold]1 action point[/gold]. Click this enemy.", "battle.enemy", "target", "", false),
+		_step("b1", "Let's ignore the other cards for now. [gold]Ending the round will always cost 1 action point[/gold], so this enemy will be able to act once we end the round.", "battle.end_round", "end_round", "", true),
+		_step("b1", "Play Burst Fire again.", "battle.card", "card", "raven_burst_fire", true),
+		_step("b1", "This attack will destroy the contact and end the fight.", "battle.enemy", "target", "", false),
+		_step("r1", "[gold]Winning a battle lets you choose a reward[/gold]. Upgrades stay with your mechs for the [gold]rest of the mission[/gold].", "", "continue", "", true, false, false, false, false, true),
+		_step("r1", "[gold]Refresh[/gold] deals a new set. [gold]Skip[/gold] adds 2 charge instead of taking a reward.", "battle.reward_tools", "continue", "", false, false, true),
+		_step("r1", "Pick one reward.", "battle.rewards", "reward_pick", "", false),
+		_step("r1", "Press Continue to take it.", "battle.reward_continue", "reward", "", false, false, false, true),
+		_step("m2", "Now it's [gold]Comet's turn[/gold]. They're in range, now attack.", "overworld.attack", "attack", "", true),
+		_step("m2", "This is the [gold]battle preview screen[/gold]. The [gold]yellow grid[/gold] is where the battle will take place.", "", "continue", "", false, false, false, false, true),
+		_step("m2", "[gold]Tactics[/gold] will change where the [gold]battle grid is located[/gold]. Use this to build your strategy.", "overworld.tactics", "continue", "", false),
+		_step("m2", "[gold]Disadvantaged fights[/gold] (2vs3, 1vs2) will net you [gold]2.0x chances at rarer rewards[/gold] post-battle, making them worth it.", "overworld.rewards", "continue", "", false, false, false, true),
+		_step("m2", "Let's see what the [gold]Flank below\"[/gold] tactic does.", "overworld.tactic.south", "tactic", "south", false),
+		_step("m2", "The [gold]grid shifted down 1 cell[/gold], and the[gold]reward rarity went down to 1.0x[/gold] because it is an [gold]\"Even fight\"[/gold] (2vs2).", "overworld.fight", "continue", "", false, false, false, true),
+		_step("m2", "Change our [gold]tactics back to Defense[/gold].", "overworld.tactic.standard", "tactic", "standard", false),
+		_step("m2", "Let's commence this fight with Raven and Comet.", "overworld.attack", "commence", "", false),
+		_step("b2", "You have [gold]2 mechs in battle now[/gold]. There's a [gold]badge for each mech[/gold] that matches the card color.", "battle.badge", "continue", "", true, false, true),
+		_step("b2", "Some cards have [gold]no cost to use[/gold]. Play Dart now.", "battle.card", "card", "comet_dart", false),
+		_step("b2", "Attack this contact.", "battle.enemy", "target", "", false, true),
+		_step("b2", "Play Snap Shot.", "battle.card", "card", "raven_snap_shot", true),
+		_step("b2", "Attack either contact.", "battle.enemy", "target", "", false, true, true),
+		_step("b2", "[gold]Drag this card onto the Overdrive slot[/gold] to the right sidebar to build up your overdrive. I'll show you how to use overdrive next fight.", "battle.pitch", "pitch", "raven_burst_fire", true),
+		_step("b2", "End round 1.", "battle.end_round", "end_round", "", true),
+		_step("b2", "Play Burst Fire.", "battle.card", "card", "raven_burst_fire", true),
+		_step("b2", "Click the contact.", "battle.enemy", "target", "", false),
+		_step("r2", "Rewards come in 3 categories: [gold]Upgrade[/gold] an existing card, [gold]New Card[/gold] for a mech, and [gold]Edicts[/gold] that add bonuses during battle.", "", "continue", "", true, false, false, false, false, true),
+		_step("r2", "Pick one reward.", "battle.rewards", "reward_pick", "", false),
+		_step("r2", "Press Continue to take it.", "battle.reward_continue", "reward", "", false, false, false, true),
+		_step("m3", "Now it's [gold]Barrage's turn[/gold]. Move 1 cell up.", "overworld.step", "moved", "", true),
+		_step("m3", "Attack the contact.", "overworld.attack", "attack", "", true),
+		_step("m3", "All [gold]3 of your mechs[/gold] are in this one. Commence.", "overworld.attack", "commence", "", false),
+		_step("b3", "Here's your [gold]overdrive bar[/gold].", "battle.charge", "continue", "", true),
+		_step("b3", "Every time you [gold]end a round[/gold], all [gold]cards in hand fill this bar[/gold].", "battle.charge", "continue", "", false),
+		_step("b3", "You can also manually [gold]drag cards into the Overdrive Slot[/gold] to fill the bar like we did last fight.", "battle.charge", "continue", "", false),
+		_step("b3", "Drag this card onto the [gold]Overdrive slot[/gold], which will [gold]finish filling the bar[/gold].", "battle.pitch", "pitch", "", false),
+		_step("b3", "The [gold]Overdrive bar[/gold] is charged, and will [gold]make your cards stronger for the remainder of battle[/gold] after you activate overdrive. Let's activate overdrive now.", "battle.overdrive", "overdrive", "", true),
+		_step("b3", "Cards that have been [gold]enhanced by overdrive will show blue attributes[/gold].", "", "continue", "", false),
+		_step("b3", "If you have [gold]empty slots in your hand[/gold] after activating overdrive you will [gold]automatically draw your mechs overdrive cards[/gold].", "", "continue", "", false),
+		_step("b3", "Play Salvo, [gold]Barrage's overdrive card[/gold].", "battle.card", "card", "barrage_salvo", false),
+		_step("b3", "Salvo will [gold]hit every enemy in range[/gold]. This is perfect positioning.", "battle.barrage", "continue", "", false),
+		_step("b3", "Select the cell barrage is on to lock in the attack from this location.", "battle.barrage", "stay", "", false),
+	]
+
+
+static func _step(
+	phase: String,
+	say: String,
+	anchor: String,
+	event: String,
+	detail: String,
+	wait_to_show: bool,
+	any_target := false,
+	span := false,
+	above := false,
+	bottom := false,
+	top := false
+) -> Dictionary:
+	return {
+		"phase": phase,
+		"say": say,
+		"anchor": anchor,
+		"event": event,
+		"detail": detail,
+		"wait": wait_to_show,
+		"any_target": any_target,
+		"span": span,
+		"above": above,
+		"bottom": bottom,
+		"top": top,
+	}

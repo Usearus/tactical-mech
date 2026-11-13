@@ -49,9 +49,10 @@ func present(card: CardData, damage: int, block: int) -> void:
 	_show_cost(card, overdrive)
 	special_label.text = MechCard.SPECIAL_NOTE
 	special_label.visible = card.is_special
-	var copy := card.description.strip_edges()
+	var copy := MechCard.shown_copy(card)
 	body.bbcode_enabled = true
-	body.text = MechCard.tint_upgrade_copy(copy, card)
+	MechCard.ensure_gold_text(body)
+	body.text = copy
 	body.visible = copy != ""
 	_show_stats(card, damage, block)
 

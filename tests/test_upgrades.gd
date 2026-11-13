@@ -568,6 +568,29 @@ func test_the_battle_bonus_panel_lists_the_tactic_then_the_edicts() -> void:
 	var offense_tip := panel.get_node("%Rows").get_children()[0].get_node("%Tip") as CanvasItem
 	assert_true(offense_tip.visible, "offense keeps a tip")
 	assert_eq(str(offense_tip.get_meta("note")), offense.note)
+	var saved_offense := GameManager.battle_offense
+	GameManager.battle_offense = false
+	panel.refresh()
+	var quiet: PackedStringArray = []
+	for child in panel.get_node("%Rows").get_children():
+		var quiet_label := child.get_node("%Name") as Label
+		quiet.append("" if quiet_label == null else quiet_label.text)
+	GameManager.battle_offense = true
+	panel.refresh()
+	var live := panel.get_node("%Rows").get_children()
+	var live_names: PackedStringArray = []
+	for child in live:
+		var live_label := child.get_node("%Name") as Label
+		live_names.append("" if live_label == null else live_label.text)
+	var overdrive_note := ""
+	if not live.is_empty():
+		var overdrive_tip := live[-1].get_node("%Tip") as CanvasItem
+		if overdrive_tip != null:
+			overdrive_note = str(overdrive_tip.get_meta("note"))
+	GameManager.battle_offense = saved_offense
+	assert_false(quiet.has(BonusPanel.OVERDRIVE_NAME), "overdrive stays off the panel until it is on")
+	assert_eq(live_names[live_names.size() - 1], BonusPanel.OVERDRIVE_NAME)
+	assert_eq(overdrive_note, BonusPanel.OVERDRIVE_NOTE)
 
 
 func test_the_bonus_scenes_load() -> void:
@@ -658,6 +681,7 @@ func test_field_repair_heals_living_fighters() -> void:
 	wounded.hp = 6
 	assert_true(EDICT_BONUS.repairs(wounded))
 	assert_eq(EDICT_BONUS.healed_hp(wounded.hp, wounded.data.max_hp), 8)
+	assert_eq(EDICT_BONUS.healed_hp(wounded.hp, wounded.data.max_hp, EDICT_BONUS.FIELD_REPAIR_NOW), 9)
 	assert_eq(EDICT_BONUS.healed_hp(wounded.data.max_hp - 1, wounded.data.max_hp), wounded.data.max_hp)
 	var dead := _mech("comet", false)
 	assert_false(EDICT_BONUS.repairs(dead))
@@ -698,7 +722,9 @@ func test_the_edict_catalog_drops_heavy_odds() -> void:
 		if offer.id == "edict_primed":
 			assert_true(offer.blurb.contains("3"))
 		if offer.id == "edict_field_repair":
+			assert_true(offer.blurb.contains("3"))
 			assert_true(offer.blurb.contains("fought"))
+			assert_true(offer.blurb.contains("2"))
 	assert_false(names.has("Heavy Odds"))
 	assert_true(names.has("Plus Two"))
 	var banner := _reload_scene("res://scenes/ui/mode_banner.tscn")

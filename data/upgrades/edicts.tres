@@ -25,7 +25,7 @@ id = "edict_field_repair"
 kind = "Edict"
 rarity = 2
 display_name = "Field Repair"
-blurb = "After each fight, every living mech that fought heals 2."
+blurb = "Every living mech heals 3 now. After each later fight, every living mech that fought heals 2."
 
 [sub_resource type="Resource" id="o5"]
 script = ExtResource("2_offer")

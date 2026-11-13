@@ -3,6 +3,8 @@ class_name BonusPanel
 extends PanelContainer
 
 const ROW_SCENE := preload("res://scenes/ui/bonus_panel_row.tscn")
+const OVERDRIVE_NAME := "Overdrive"
+const OVERDRIVE_NOTE := "Attacks hit harder, guards block more, charge cards cost nothing, and each mech's overdrive card can enter the hand."
 
 @onready var _rows: VBoxContainer = %Rows
 
@@ -13,7 +15,8 @@ func _ready() -> void:
 	refresh()
 
 
-## Tactic first, then the mission bonuses in the order they were picked.
+## Tactic first, then the mission bonuses in pick order.
+## Overdrive joins the list only after the player turns it on.
 func refresh() -> void:
 	var tactic := _current_tactic()
 	var bonuses: Array[Dictionary] = []
@@ -23,6 +26,8 @@ func refresh() -> void:
 			if offer == null or offer.display_name == "":
 				continue
 			bonuses.append({"name": offer.display_name, "tip": offer.blurb})
+	if GameManager.battle_offense:
+		bonuses.append({"name": OVERDRIVE_NAME, "tip": OVERDRIVE_NOTE})
 	var title := ""
 	var tip := ""
 	if tactic != null and tactic.shows_on_panel():

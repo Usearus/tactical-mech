@@ -21,7 +21,7 @@
 script = ExtResource("14_gold")
 
 [node name="GameMenu" type="CanvasLayer"]
-layer = 90
+layer = 96
 script = ExtResource("1_menu")
 
 [node name="Root" type="Control" parent="."]
@@ -384,7 +384,7 @@ custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
 scroll_active = false
 theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/normal_font_size = 28
-text = "[gold]Evade:[/gold] Negates one incoming attack."
+text = "[gold]Evade:[/gold] Has [gold]Retain[/gold] and negates one incoming attack."
 autowrap_mode = 3
 
 [node name="Intercept" type="HBoxContainer" parent="Root/MenuPage/Margin/Column/Legend/Scroll/List"]
@@ -610,7 +610,7 @@ scroll_active = false
 custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
 theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/normal_font_size = 36
-text = "Each mech brings its own deck. More mechs in the fight means more cards. Play a card, then choose its target. Attacks deal damage within their range. Move cards step that mech. Drag a card to [gold]Discard[/gold] to get rid of it without playing it. Drag it to [gold]Insert to charge[/gold] to discard it and add 1 [gold]charge[/gold]. Open [gold]Discard[/gold] to see every card that left your hand, including ones you inserted. A battle lasts two rounds, or ends sooner if one side is wiped out."
+text = "Each mech brings its own deck. More mechs in the fight means more cards. Play a card, then choose its target. Attacks deal damage within their range. Move cards step that mech. Drag a card to [gold]Discard[/gold] to get rid of it without playing it. Drag it to [gold]Insert to charge[/gold] to discard it and add 1 [gold]charge[/gold]. Open [gold]Discard[/gold] to see every card that left your hand, including ones you inserted. At the end of a round, cards left in hand feed the [gold]Overdrive[/gold] slot until it is full. A card with [gold]Retain[/gold] stays. A battle lasts two rounds, or ends sooner if one side is wiped out."
 autowrap_mode = 3
 
 [node name="Defense" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
@@ -623,7 +623,7 @@ scroll_active = false
 custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
 theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/normal_font_size = 36
-text = "[gold]Guard[/gold] absorbs hits during the battle, then drops when you return to the map. [gold]Barrier[/gold] absorbs hits after [gold]Guard[/gold], and whatever is left stays on the map. An [gold]Evade[/gold] card stays in hand and negates one incoming attack. [gold]Intercept[/gold] takes the hit of any ally that is 1 cell away."
+text = "[gold]Guard[/gold] absorbs hits during the battle, then drops when you return to the map. [gold]Barrier[/gold] absorbs hits after [gold]Guard[/gold], and whatever is left stays on the map. An [gold]Evade[/gold] card has [gold]Retain[/gold], so it stays in hand when the round ends, and it negates one incoming attack. [gold]Intercept[/gold] takes the hit of any ally that is 1 cell away."
 autowrap_mode = 3
 
 [node name="Timers" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]
@@ -662,7 +662,7 @@ scroll_active = false
 custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
 theme_override_colors/default_color = Color(0.9, 0.92, 0.95, 1)
 theme_override_font_sizes/normal_font_size = 36
-text = "Drag a card onto [gold]Insert to charge[/gold] to add 1 [gold]charge[/gold]. Dragging a card onto [gold]Discard[/gold] does not add charge. Throwing a hand away for a new one on round 1 adds 1 [gold]charge[/gold] per card. Cards still in hand when the battle ends add 1 [gold]charge[/gold] each."
+text = "Drag a card onto [gold]Insert to charge[/gold] to add 1 [gold]charge[/gold]. Dragging a card onto [gold]Discard[/gold] does not add charge. Cards left in hand at the end of a round feed the [gold]Overdrive[/gold] slot until it is full. A card with [gold]Retain[/gold] stays. Cards still in hand when the battle ends add 1 [gold]charge[/gold] each."
 autowrap_mode = 3
 
 [node name="UsingOverdrive" type="RichTextLabel" parent="Root/HowTo/Margin/Column/Split/Directions/Pages"]

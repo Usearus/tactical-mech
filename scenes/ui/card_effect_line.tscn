@@ -2,6 +2,10 @@
 
 [ext_resource type="Texture2D" path="res://art/icons/stats/attack.svg" id="1_icon"]
 [ext_resource type="FontFile" uid="uid://tlv3b4ojb0q8" path="res://fonts/m5x7.ttf" id="2_font"]
+[ext_resource type="Script" path="res://scripts/ui/gold_text.gd" id="3_gold"]
+
+[sub_resource type="RichTextEffect" id="RichTextEffect_gold"]
+script = ExtResource("3_gold")
 
 [node name="CardEffectLine" type="HBoxContainer"]
 mouse_filter = 2
@@ -17,13 +21,18 @@ texture = ExtResource("1_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Text" type="Label" parent="."]
+[node name="Text" type="RichTextLabel" parent="."]
+custom_minimum_size = Vector2(212, 28)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
-theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 26
+theme_override_colors/default_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_fonts/normal_font = ExtResource("2_font")
+theme_override_font_sizes/normal_font_size = 26
+bbcode_enabled = true
+custom_effects = Array[RichTextEffect]([SubResource("RichTextEffect_gold")])
 text = "1"
-vertical_alignment = 1
+fit_content = false
+scroll_active = false
+autowrap_mode = 3

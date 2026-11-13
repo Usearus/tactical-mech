@@ -57,7 +57,7 @@ func _fill(unit: MechState, cards: Array[CardData]) -> void:
 		slot.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		slot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		_list.add_child(slot)
-		slot.show_card(card, stroke, GameManager.card_damage(card), GameManager.card_block(card), UpgradeDeck.listing_tag(card, unit.data))
+		slot.show_card(card, stroke, card.damage, card.block, UpgradeDeck.listing_tag(card, unit.data), false)
 		if card.is_special and slot.card_view != null:
 			slot.card_view.play_shine()
 			var badge := slot.card_view.special_badge()

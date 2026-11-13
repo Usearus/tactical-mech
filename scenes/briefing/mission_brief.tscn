@@ -132,7 +132,6 @@ theme_override_constants/separation = 10
 
 [node name="Tutorial" parent="Margin/Root/MapPanel/Inset/Clip/MissionList" unique_id=2110802872 instance=ExtResource("10_topic")]
 unique_name_in_owner = true
-visible = false
 layout_mode = 2
 text = "Tutorial"
 
@@ -247,7 +246,17 @@ stretch_mode = 6
 layout_mode = 2
 theme_override_constants/separation = 16
 
+[node name="TutorialBrief" type="Label" parent="Briefing/Window/Margin/Column/Conditions"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "Learn how to play Tactical Mech."
+autowrap_mode = 3
+
 [node name="Win" type="VBoxContainer" parent="Briefing/Window/Margin/Column/Conditions" unique_id=89236067]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 6
 
@@ -265,6 +274,7 @@ text = "Clear every hostile."
 autowrap_mode = 3
 
 [node name="Lose" type="VBoxContainer" parent="Briefing/Window/Margin/Column/Conditions" unique_id=845031102]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 6
 

@@ -33,6 +33,22 @@ func _ready() -> void:
 	visible = false
 
 
+func options_row() -> Control:
+	return _options
+
+
+func continue_button() -> Button:
+	return _continue
+
+
+func refresh_button() -> Button:
+	return _refresh
+
+
+func skip_button() -> Button:
+	return _skip
+
+
 func present(units: Array, memory: MissionUpgrades) -> void:
 	_units = units
 	_memory = memory
@@ -76,6 +92,8 @@ func _on_option(index: int) -> void:
 		if option != null:
 			option.set_selected(child_index == index)
 	_sync_buttons()
+	if GameManager.tutorial_mission:
+		TutorialHooks.notify("reward_pick")
 
 
 func _sync_buttons() -> void:

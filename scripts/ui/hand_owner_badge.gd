@@ -24,6 +24,20 @@ func _ready() -> void:
 		_head.texture = null
 
 
+## The pin and head are drawn above this control, so the control rect is only the bottom tip.
+func visual_rect() -> Rect2:
+	var rect := Rect2()
+	for child in get_children():
+		var part := child as Control
+		if part == null or not part.visible:
+			continue
+		var box := part.get_global_rect()
+		if not box.has_area():
+			continue
+		rect = box if not rect.has_area() else rect.merge(box)
+	return rect if rect.has_area() else get_global_rect()
+
+
 func show_head(art_id: String, rim: Color) -> void:
 	if not is_node_ready():
 		call_deferred("show_head", art_id, rim)

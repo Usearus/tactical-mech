@@ -1,7 +1,7 @@
 @tool
 extends RichTextEffect
 
-## [gold]keyword[/gold] in Rule Book directions. Same gold as S and A grades.
+## [gold]keyword[/gold] in rule-book directions and on card copy. Same gold as S and A grades.
 var bbcode := "gold"
 
 

@@ -1,5 +1,6 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
+[ext_resource type="Script" path="res://scripts/battle/battle_cell_button.gd" id="1_button"]
 [ext_resource type="PackedScene" path="res://scenes/ui/cell_mark.tscn" id="1_mark"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_action.tscn" id="2_action"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_hit_points.tscn" id="3_hp"]
@@ -48,6 +49,7 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [node name="BattleCell" type="Button"]
+script = ExtResource("1_button")
 clip_text = true
 focus_mode = 0
 theme_override_colors/font_color = Color(1, 1, 1, 1)

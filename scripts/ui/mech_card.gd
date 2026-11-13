@@ -39,6 +39,8 @@ const CHARGE_ICON: Texture2D = preload("res://icodot-svg/ui/weather-nature/icon-
 const CLOCK_ICON: Texture2D = preload("res://art/icons/stats/clock.svg")
 const CHARGE_SHADER: Shader = preload("res://shaders/icon_white.gdshader")
 const ENHANCED_COLOR := Color(0.45, 0.78, 1.0)
+const GOLD_TEXT := preload("res://scripts/ui/gold_text.gd")
+const RETAIN_LEAD := "[gold]Retain.[/gold]"
 const INSTANT_LEAD := "Instant use:"
 ## Clock and charge cost on a card. The action badge scene stores the same gold.
 const COST_COLOR := Color(1, 0.92, 0.55)
@@ -89,6 +91,8 @@ var _power_amount := 0.0
 var _stat_key := ""
 var _stat_damage := 0
 var _stat_block := 0
+## False on a deck list. Opening Strike, Plus Two, Overdrive, and Free Opener stay on the hand.
+var _battle_rules := true
 var _frame_style: StyleBoxTexture
 var _frame_tint: ShaderMaterial
 var _wave_tween: Tween
@@ -218,6 +222,18 @@ func set_owner_badge(art_id: String, rim: Color, slot: Control = null) -> void:
 	_mount_owner_badge()
 
 
+func owner_mark() -> Control:
+	if _owner_badge != null and is_instance_valid(_owner_badge) and _owner_badge.visible:
+		return _owner_badge
+	return null
+
+
+func cost_mark() -> Control:
+	if _action_cost == null:
+		return null
+	return _action_cost.get_parent() as Control
+
+
 func clear_owner_badge() -> void:
 	_badge_art = ""
 	if _owner_badge == null or not is_instance_valid(_owner_badge):
@@ -296,9 +312,13 @@ func _apply_badge_tone(immediate: bool) -> void:
 	_dim_tween.tween_property(_owner_badge, "modulate", tone, ENEMY_DIM_TIME)
 
 
-func present(card: CardData, stroke: Color, damage := -1, block := -1) -> void:
+func present(card: CardData, stroke: Color, damage := -1, block := -1, battle_rules := true) -> void:
 	_shown = card
 	_stroke = stroke
+	_battle_rules = battle_rules
+	if not battle_rules:
+		damage = -1
+		block = -1
 	_stat_damage = card.damage if damage < 0 else damage
 	_stat_block = card.block if block < 0 else block
 	title_label.text = card.display_name
@@ -307,12 +327,44 @@ func present(card: CardData, stroke: Color, damage := -1, block := -1) -> void:
 	if badge != null:
 		badge.modulate = Color.WHITE
 	detail_label.bbcode_enabled = true
-	detail_label.text = tint_upgrade_copy(card.description, card)
+	ensure_gold_text(detail_label)
+	detail_label.text = shown_copy(card)
 	_show_action_cost(card)
 	_set_power_amount(_power_amount)
 	_apply_stats()
 	_sync_special_mark(card)
 	_bind_tips()
+
+
+## Card copy with a gold Retain lead when the card stays through the end of the round.
+static func shown_copy(card: CardData) -> String:
+	if card == null:
+		return ""
+	return with_retain(tint_upgrade_copy(card.description, card), card.retain)
+
+
+## Retain is the first word. It is painted in the rule-book gold.
+static func with_retain(copy: String, retain: bool) -> String:
+	if not retain:
+		return copy
+	var body := copy.strip_edges()
+	if body.is_empty():
+		return RETAIN_LEAD
+	return "%s %s" % [RETAIN_LEAD, body]
+
+
+static func ensure_gold_text(label: RichTextLabel) -> void:
+	if label == null:
+		return
+	for effect in label.custom_effects:
+		if effect != null and effect.bbcode == "gold":
+			return
+	var effects: Array[RichTextEffect] = []
+	for effect in label.custom_effects:
+		if effect != null:
+			effects.append(effect)
+	effects.append(GOLD_TEXT.new() as RichTextEffect)
+	label.custom_effects = effects
 
 
 ## A boosted step shows the new distance in blue. The note at the end is the added bonus, in parentheses.
@@ -937,9 +989,14 @@ func _show_action_cost(card: CardData) -> void:
 		return
 	if cost_row != null:
 		cost_row.visible = true
-	var overdrive := GameManager.battle_offense
+	var overdrive := GameManager.battle_offense and _battle_rules
 	var charge := card != null and card.pays_charge()
-	var waived := card != null and GameManager.opener_is_free() and (card.pays_action() or card.charge_due(false) > 0)
+	var waived := (
+		_battle_rules
+		and card != null
+		and GameManager.opener_is_free()
+		and (card.pays_action() or card.charge_due(false) > 0)
+	)
 	var owed := 1
 	if card == null:
 		owed = 1
@@ -1050,9 +1107,14 @@ func _bind_tips() -> void:
 	if _action_cost != null:
 		cost_row = _action_cost.get_parent() as Control
 	if cost_row != null:
-		var overdrive := GameManager.battle_offense
+		var overdrive := GameManager.battle_offense and _battle_rules
 		var phrase := "Cost: Card costs 1 action to use."
-		if _shown != null and GameManager.opener_is_free() and (_shown.pays_action() or _shown.charge_due(false) > 0):
+		if (
+			_battle_rules
+			and _shown != null
+			and GameManager.opener_is_free()
+			and (_shown.pays_action() or _shown.charge_due(false) > 0)
+		):
 			phrase = "Cost: The first card this battle is free."
 		elif _shown != null:
 			phrase = _shown.cost_note(overdrive)

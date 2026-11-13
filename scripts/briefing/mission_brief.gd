@@ -11,6 +11,9 @@ extends Control
 @onready var mission_2: BaseButton = %Mission2
 @onready var locked: PanelContainer = %Locked
 @onready var locked_title: Label = %LockedTitle
+@onready var win_block: VBoxContainer = %Win
+@onready var lose_block: VBoxContainer = %Lose
+@onready var tutorial_brief: Label = %TutorialBrief
 @onready var clip: Control = $Margin/Root/MapPanel/Inset/Clip
 @onready var map: TextureRect = $Margin/Root/MapPanel/Inset/Clip/Map
 @onready var crosshair: Control = $Margin/Root/MapPanel/Inset/Clip/Crosshair
@@ -22,6 +25,10 @@ const ZOOM_MISSION_1 := 1.0
 const FOCUS_MISSION_2 := Vector2(0.363, 0.604)
 ## A little larger than the frame so the photo can slide southwest and still cover it.
 const ZOOM_MISSION_2 := 1.05
+## Northeast of the other missions, over the upper east side of the island.
+const FOCUS_TUTORIAL := Vector2(0.55, 0.32)
+## A little larger than the frame so the photo can slide northeast and still cover it.
+const ZOOM_TUTORIAL := 1.05
 ## Top of the photo, over the upper river. No mission sits here.
 const FOCUS_OPENING := Vector2(0.5, 0.0)
 const ZOOM_OPENING := 1.0
@@ -50,7 +57,7 @@ func _ready() -> void:
 	for button in [tutorial, mission_1, mission_2]:
 		button.button_group = group
 	back_button.pressed.connect(_on_back_pressed)
-	tutorial.pressed.connect(_on_locked_pressed.bind(tutorial))
+	tutorial.pressed.connect(_on_mission_pressed.bind(tutorial, GameManager.STAGE_TUTORIAL))
 	mission_1.pressed.connect(_on_mission_pressed.bind(mission_1, GameManager.STAGE_0_0))
 	mission_2.pressed.connect(_on_mission_pressed.bind(mission_2, GameManager.STAGE_0_1))
 	start_button.pressed.connect(_on_start_pressed)
@@ -62,8 +69,7 @@ func _ready() -> void:
 	clip.resized.connect(_on_clip_resized)
 	_hide_briefing()
 	_hide_locked()
-	# Hidden until the tutorial mission is ready.
-	tutorial.visible = false
+	tutorial.visible = true
 	crosshair.visible = false
 	_move_map(FOCUS_OPENING, ZOOM_OPENING, false)
 
@@ -109,6 +115,7 @@ func _on_mission_pressed(button: BaseButton, stage_path: String) -> void:
 	_hide_locked()
 	_chosen_stage = stage_path
 	briefing_title.text = button.text
+	_show_conditions(stage_path)
 	_focus_mission(stage_path)
 	if _briefing_open:
 		return
@@ -168,6 +175,9 @@ func _on_start_pressed() -> void:
 	if _leaving:
 		return
 	_leave()
+	if _chosen_stage == GameManager.STAGE_TUTORIAL:
+		GameManager.deploy_tutorial()
+		return
 	GameManager.choose_stage(_chosen_stage)
 	GameManager.play_story(GameManager.story_for_stage(_chosen_stage))
 
@@ -181,14 +191,26 @@ func _leave() -> void:
 	mission_2.disabled = true
 
 
+func _show_conditions(stage_path: String) -> void:
+	var teaching := stage_path == GameManager.STAGE_TUTORIAL
+	win_block.visible = not teaching
+	lose_block.visible = not teaching
+	tutorial_brief.visible = teaching
+
+
 func _focus_mission(stage_path: String) -> void:
 	var reveal := not _show_cursor
 	_show_cursor = true
 	_reticule_share = RETICULE_SHARE
-	if stage_path == GameManager.STAGE_0_1:
-		_move_map(FOCUS_MISSION_2, ZOOM_MISSION_2, true, reveal)
-	else:
-		_move_map(FOCUS_MISSION_1, ZOOM_MISSION_1, true, reveal)
+	var focus := FOCUS_MISSION_1
+	var zoom := ZOOM_MISSION_1
+	if stage_path == GameManager.STAGE_TUTORIAL:
+		focus = FOCUS_TUTORIAL
+		zoom = ZOOM_TUTORIAL
+	elif stage_path == GameManager.STAGE_0_1:
+		focus = FOCUS_MISSION_2
+		zoom = ZOOM_MISSION_2
+	_move_map(focus, zoom, true, reveal)
 
 
 func _prepare_map() -> void:

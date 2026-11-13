@@ -14,6 +14,8 @@ extends Resource
 @export var is_special: bool = false
 ## Guard adds block to a mech. Dodge stays in hand and negates one attack.
 @export_enum("Guard", "Dodge") var defense_kind: String = "Guard"
+## Stays in hand when a round ends. Dragging it to Discard or the Overdrive slot still takes it.
+@export var retain: bool = false
 @export var damage: int = 0
 ## Guard added when this card is played. Dodge cards ignore this and negate the attack.
 @export var block: int = 0

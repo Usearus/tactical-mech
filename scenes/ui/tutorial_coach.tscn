@@ -1,0 +1,137 @@
+[gd_scene format=3 uid="uid://cfnios34aflrw"]
+
+[ext_resource type="Script" uid="uid://ci1pqktpaum2l" path="res://scripts/ui/tutorial_coach.gd" id="1_coach"]
+[ext_resource type="Texture2D" uid="uid://ccommsmisc001" path="res://art/characters/npc/comms.png" id="2_portrait"]
+[ext_resource type="Theme" uid="uid://dfjrh01ei61f3" path="res://themes/game_theme.tres" id="3_theme"]
+[ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="4_sci"]
+[ext_resource type="PackedScene" uid="uid://w2vke8x0fk42" path="res://scenes/ui/sci_flashing_button.tscn" id="5_btn"]
+[ext_resource type="Script" uid="uid://rvnfy23yqg3u" path="res://scripts/ui/gold_text.gd" id="6_gold"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_outline"]
+bg_color = Color(0.45, 0.82, 1, 0)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.45, 0.82, 1, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="RichTextEffect" id="RichTextEffect_gold"]
+script = ExtResource("6_gold")
+
+[node name="TutorialCoach" type="CanvasLayer" unique_id=70770571]
+layer = 40
+script = ExtResource("1_coach")
+
+[node name="Shade" type="Control" parent="." unique_id=808250871]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("3_theme")
+
+[node name="DimTop" type="ColorRect" parent="Shade" unique_id=324197360]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.3)
+
+[node name="DimBottom" type="ColorRect" parent="Shade" unique_id=1675925285]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.3)
+
+[node name="DimLeft" type="ColorRect" parent="Shade" unique_id=1747259714]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.3)
+
+[node name="DimRight" type="ColorRect" parent="Shade" unique_id=816065564]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.3)
+
+[node name="Outline" type="Panel" parent="Shade" unique_id=714778988]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_outline")
+
+[node name="Callout" type="PanelContainer" parent="." unique_id=1370495239]
+unique_name_in_owner = true
+offset_right = 400.0
+offset_bottom = 104.0
+theme = ExtResource("4_sci")
+theme_type_variation = &"SecondaryPanel"
+
+[node name="Row" type="HBoxContainer" parent="Callout" unique_id=1474834936]
+layout_mode = 2
+size_flags_vertical = 0
+theme = ExtResource("3_theme")
+theme_override_constants/separation = 10
+
+[node name="PortraitFrame" type="PanelContainer" parent="Callout/Row" unique_id=1423264765]
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme = ExtResource("4_sci")
+theme_type_variation = &"SecondaryPanel"
+
+[node name="Portrait" type="TextureRect" parent="Callout/Row/PortraitFrame" unique_id=1490329829]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_portrait")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Pad" type="MarginContainer" parent="Callout/Row" unique_id=1148779163]
+layout_mode = 2
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="Column" type="VBoxContainer" parent="Callout/Row/Pad" unique_id=774939215]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme = ExtResource("3_theme")
+theme_override_constants/separation = 6
+
+[node name="Body" type="RichTextLabel" parent="Callout/Row/Pad/Column" unique_id=1981388341]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+mouse_filter = 2
+theme = ExtResource("3_theme")
+theme_override_colors/default_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/normal_font_size = 28
+bbcode_enabled = true
+text = "Select Raven."
+fit_content = true
+scroll_active = false
+custom_effects = [SubResource("RichTextEffect_gold")]
+
+[node name="Continue" parent="Callout/Row/Pad/Column" unique_id=985555197 instance=ExtResource("5_btn")]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+text = "Continue"

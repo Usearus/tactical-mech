@@ -14,8 +14,13 @@ const BATTLE_SIZE := Vector2i(6, 3)
 ## stage-{act}-{mission}. Mission 1 is act 0 mission 0. Mission 2 is act 0 mission 1.
 const STAGE_0_0 := "res://scenes/stage/stage-0-0.tscn"
 const STAGE_0_1 := "res://scenes/stage/stage-0-1.tscn"
+const STAGE_TUTORIAL := "res://scenes/stage/stage-tutorial.tscn"
 ## Stage scene for the current mission. Each stage is a Node2D of tile layers.
 var stage_scene := STAGE_0_0
+## The lesson mission. Lost fights restart, and the coach may gate input.
+var tutorial_mission := false
+## Fight 3 is the first time a pitched card fills the bar.
+var tutorial_charge_open := false
 
 
 func overworld_size() -> Vector2i:
@@ -119,6 +124,8 @@ func open_scene(scene_path: String) -> void:
 
 func quit_stage() -> void:
 	SoundBank.stop_loop()
+	tutorial_mission = false
+	tutorial_charge_open = false
 	player_mechs = []
 	enemy_mechs = StartingRoster.create_enemies()
 	turn_number = 1
@@ -149,8 +156,21 @@ func story_for_stage(path: String) -> String:
 ## Each stage brings its own enemy spawns.
 func choose_stage(path: String) -> void:
 	stage_scene = path
+	tutorial_mission = path == STAGE_TUTORIAL
+	tutorial_charge_open = false
 	StageMap.use(path)
 	enemy_mechs = StartingRoster.create_enemies()
+
+
+## Tutorial skips the story and the squad picker. Raven, Comet, and Barrage deploy.
+func deploy_tutorial() -> void:
+	choose_stage(STAGE_TUTORIAL)
+	var chosen: Array[MechData] = [
+		load(TutorialStage.RAVEN_PATH) as MechData,
+		load(TutorialStage.COMET_PATH) as MechData,
+		load(TutorialStage.BARRAGE_PATH) as MechData,
+	]
+	deploy(chosen)
 
 
 ## Mechs this stage's player seats require. Stage 1 has three.
@@ -175,6 +195,7 @@ func deploy(chosen: Array[MechData]) -> void:
 func begin_encounter(encounter: EncounterData) -> void:
 	current_encounter = encounter
 	phase = Phase.BATTLE
+	SoundBank.music("battle")
 	battle_offense = false
 	reset_opening_edicts()
 	var attacker := encounter.attacker
@@ -185,6 +206,7 @@ func begin_encounter(encounter: EncounterData) -> void:
 func finish_battle(reason: String = "", battle_positions: Dictionary = {}) -> void:
 	if phase != Phase.BATTLE:
 		return
+	SoundBank.music("overworld")
 	for unit in player_mechs:
 		unit.close_battle_guard()
 	_apply_field_repair()
@@ -308,13 +330,22 @@ func _apply_field_repair() -> void:
 	if current_encounter == null or not _has_edict("edict_field_repair"):
 		return
 	for unit in current_encounter.participants:
-		var mech := unit as MechState
-		if not EDICT_BONUS.repairs(mech):
-			continue
-		var cap := mech.hp
-		if mech.data != null:
-			cap = mech.data.max_hp
-		mech.hp = EDICT_BONUS.healed_hp(mech.hp, cap)
+		_repair_mech(unit, EDICT_BONUS.FIELD_REPAIR)
+
+
+## Picking Field Repair heals every living mech for 3. Later fights use the smaller grant.
+func grant_field_repair_now() -> void:
+	for unit in player_mechs:
+		_repair_mech(unit, EDICT_BONUS.FIELD_REPAIR_NOW)
+
+
+func _repair_mech(unit: MechState, amount: int) -> void:
+	if not EDICT_BONUS.repairs(unit):
+		return
+	var cap := unit.hp
+	if unit.data != null:
+		cap = unit.data.max_hp
+	unit.hp = EDICT_BONUS.healed_hp(unit.hp, cap, amount)
 
 
 ## Primed fills the squad gauge when the battle opens. A full gauge keeps what it can.
@@ -367,6 +398,8 @@ func spend_charge(amount: int = 1) -> bool:
 
 
 func charge_from_pitch() -> bool:
+	if tutorial_mission and not tutorial_charge_open:
+		return false
 	if player_attack_gauge >= player_attack_max:
 		return false
 	player_attack_gauge += 1
@@ -436,12 +469,25 @@ func end_overworld_turn() -> void:
 func _change_scene(path: String) -> void:
 	var current := get_tree().current_scene
 	if current != null and current.scene_file_path == "res://scenes/main/main.tscn":
+		_start_music_for(path)
 		get_tree().call_deferred("change_scene_to_file", path)
 		return
 	if _transitioning:
 		return
+	_start_music_for(path)
 	_transitioning = true
 	_fade_then_swap(path)
+
+
+## Title, the mission pick, mech select, and the story between them share one track.
+func _start_music_for(path: String) -> void:
+	var clip := ""
+	if path == OVERWORLD_SCENE:
+		clip = "overworld"
+	elif path == COMMAND_SCENE or path == BRIEFING_SCENE or path == SELECT_SCENE or path.begins_with("res://scenes/story/"):
+		clip = "title"
+	if clip != "":
+		SoundBank.music(clip)
 
 
 func _fade_then_swap(path: String) -> void:
@@ -477,6 +523,63 @@ func _finish_transition() -> void:
 		_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_transitioning = false
 	transition_finished.emit()
+
+
+## Snap to black and stop a scene fade that was about to reveal the map.
+func hold_cover() -> void:
+	if _fade_tween != null and _fade_tween.is_valid():
+		_fade_tween.kill()
+	_fade.color.a = 1.0
+	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
+
+
+## Cover the screen without changing scenes. The battle return hides the fight under this.
+func fade_to_black(seconds: float) -> void:
+	if _fade_tween != null and _fade_tween.is_valid():
+		_fade_tween.kill()
+	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
+	if _fade.color.a >= 0.98 or seconds <= 0.0:
+		_fade.color.a = 1.0
+		return
+	_fade_tween = create_tween()
+	_fade_tween.set_trans(Tween.TRANS_CUBIC)
+	_fade_tween.set_ease(Tween.EASE_IN)
+	_fade_tween.tween_property(_fade, "color:a", 1.0, seconds)
+	await _fade_tween.finished
+
+
+## Lift the cover. The tween runs beside whatever the caller plays under it.
+func fade_from_black(seconds: float) -> Tween:
+	if _fade_tween != null and _fade_tween.is_valid():
+		_fade_tween.kill()
+	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
+	if seconds <= 0.0:
+		_fade.color.a = 0.0
+		_release_fade_if_clear()
+		return null
+	_fade_tween = create_tween()
+	_fade_tween.set_trans(Tween.TRANS_CUBIC)
+	_fade_tween.set_ease(Tween.EASE_IN_OUT)
+	_fade_tween.tween_property(_fade, "color:a", 0.0, seconds)
+	_fade_tween.finished.connect(_release_fade_if_clear, CONNECT_ONE_SHOT)
+	return _fade_tween
+
+
+## Lift a cover that replaced the scene fade, and let the new scene continue.
+func reveal_cover(seconds: float) -> void:
+	var reveal := fade_from_black(seconds)
+	if _transitioning:
+		_transitioning = false
+		transition_finished.emit()
+	if reveal != null and reveal.is_valid():
+		await reveal.finished
+
+
+func _release_fade_if_clear() -> void:
+	if _transitioning:
+		return
+	if _fade.color.a <= 0.01:
+		_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 ## The new scene is on screen. Scene changes fade in after _ready, so wait before an opening banner.

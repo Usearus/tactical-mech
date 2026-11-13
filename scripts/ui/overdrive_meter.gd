@@ -4,12 +4,11 @@ class_name OverdriveMeter
 extends HBoxContainer
 
 const SEGMENT_SCENE := preload("res://scenes/ui/overdrive_segment.tscn")
-const NOTE := "Discarding a card fills this gauge, and cards left in hand when a battle ends do too. When it is full, press Activate Overdrive. Attacks hit harder, guards block more, and each mech's overdrive card can enter the hand."
+const NOTE := "Dragging a card onto the Overdrive slot fills this gauge, and cards left in hand at the end of a round do too until it is full. A card with Retain stays in hand. Cards left in hand when a battle ends add charge as well. When it is full, press Activate Overdrive. Attacks hit harder, guards block more, and each mech's overdrive card can enter the hand."
 const MUTED := Color(0.18, 0.38, 0.5)
 const ACCENT := Color(0.25, 0.72, 0.95)
-## Pulse target, and the type size of the Activate button beside the gauge.
+## Pulse target for a full gauge.
 const FLASH_COLOR := Color(0.72, 0.94, 1.0)
-const TEXT_SIZE := 32
 ## Matches the squad gauge flash: a short swing toward white, then back.
 const PULSE_STEP := 0.45
 

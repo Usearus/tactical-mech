@@ -15,7 +15,6 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_evade.tscn" id="8_evade"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_guard.tscn" id="8_guard"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stat_badge_hit_points.tscn" id="8_hp"]
-[ext_resource type="PackedScene" uid="uid://b7n3handprom" path="res://scenes/ui/hand_prompt.tscn" id="9_prompt"]
 [ext_resource type="PackedScene" path="res://scenes/ui/sci_secondary_button_square.tscn" id="11_sq"]
 [ext_resource type="PackedScene" uid="uid://byj1wl4xpte36" path="res://scenes/ui/overdrive_meter.tscn" id="12_meter"]
 [ext_resource type="PackedScene" uid="uid://w2vke8x0fk42" path="res://scenes/ui/sci_flashing_button.tscn" id="13_flash"]
@@ -28,7 +27,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/bonus_panel.tscn" id="23_bonus"]
 [ext_resource type="PackedScene" uid="uid://braoo5qgd7dmm" path="res://scenes/ui/panel_bar.tscn" id="24_bar"]
 [ext_resource type="PackedScene" path="res://scenes/ui/play_prompt.tscn" id="25_prompt"]
-[ext_resource type="Script" path="res://scripts/ui/ui_click.gd" id="26_click"]
+[ext_resource type="Script" uid="uid://s7ns7oysv78q" path="res://scripts/ui/ui_click.gd" id="26_click"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_discard_glow"]
 bg_color = Color(0.2, 0.55, 1, 0)
@@ -64,6 +63,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_battle")
+
+[node name="TutorialBadges" type="Control" parent="."]
+unique_name_in_owner = true
+mouse_filter = 2
 
 [node name="Background" type="ColorRect" parent="." unique_id=845974649]
 layout_mode = 1
@@ -285,7 +288,6 @@ grow_vertical = 2
 
 [node name="ActivateButton" parent="MarginContainer/Full Layout/Board Row/SideBar/Sidebar Column/Overdrive Panel/VBoxContainer" unique_id=636293191 instance=ExtResource("13_flash")]
 unique_name_in_owner = true
-visible = false
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -494,8 +496,8 @@ grow_vertical = 2
 mouse_default_cursor_shape = 2
 theme = ExtResource("2_n6gaa")
 theme_type_variation = &"PrimaryButtonSquare"
-script = ExtResource("26_click")
 disabled = true
+script = ExtResource("26_click")
 
 [node name="DiscardMargin" type="MarginContainer" parent="MarginContainer/Full Layout/Hand Margin/HandAnchor/CornerColumn/HBoxContainer/DiscardStack/DiscardPile" unique_id=1769898166]
 layout_mode = 1
@@ -783,11 +785,4 @@ layer = 90
 visible = false
 
 [node name="UpgradePick" parent="UpgradeLayer" unique_id=621985543 instance=ExtResource("17_upgrade")]
-unique_name_in_owner = true
-
-[node name="HandPromptLayer" type="CanvasLayer" parent="." unique_id=1928374651]
-layer = 80
-visible = false
-
-[node name="HandPrompt" parent="HandPromptLayer" unique_id=1928374652 instance=ExtResource("9_prompt")]
 unique_name_in_owner = true

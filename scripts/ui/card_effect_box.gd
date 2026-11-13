@@ -2,6 +2,8 @@ class_name CardEffectBox
 extends PanelContainer
 
 const LINE_SCENE := preload("res://scenes/ui/card_effect_line.tscn")
+## Shown under Effects when the card stays through the end of the round.
+const RETAIN_EFFECT := "[gold]Retain:[/gold] Stays in hand until used or discarded."
 const CHARGE_SHADER: Shader = preload("res://shaders/icon_white.gdshader")
 const CLOCK_ICON: Texture2D = preload("res://art/icons/stats/clock.svg")
 const ICONS := {
@@ -14,6 +16,9 @@ const ICONS := {
 	"bar": preload("res://art/icons/stats/crescent.svg"),
 	"chg": preload("res://icodot-svg/ui/weather-nature/icon-lightning-ui.svg"),
 }
+
+## Text column inside the 280-wide panel: margins, the icon, and the row gap.
+const TEXT_WIDTH := 212.0
 
 var _shown_key := ""
 
@@ -36,7 +41,18 @@ func show_card(card: CardData, damage: int, block: int) -> void:
 	var effects := _effect_rows(card, damage, block)
 	_effects_heading.visible = not effects.is_empty()
 	_fill(_effect_lines, effects)
-	reset_size()
+	hug()
+
+
+## The window stays as wide as its column and only as tall as the lines it is showing.
+func hug() -> void:
+	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	var measured := get_combined_minimum_size()
+	var width := maxf(custom_minimum_size.x, measured.x)
+	var height := measured.y
+	if height < 1.0:
+		return
+	size = Vector2(width, height)
 
 
 func _cost_row(card: CardData, overdrive: bool) -> Dictionary:
@@ -75,6 +91,8 @@ func _effect_rows(card: CardData, damage: int, block: int) -> Array[Dictionary]:
 			rows.append({"kind": "mov", "text": "%d movement" % card.movement})
 	if card.intercept and not card.is_dodge():
 		rows.append({"kind": "int", "text": "1 intercept"})
+	if card.retain:
+		rows.append({"kind": "", "text": RETAIN_EFFECT})
 	return rows
 
 
@@ -89,8 +107,9 @@ func _fill(host: VBoxContainer, rows: Array[Dictionary]) -> void:
 		var line := LINE_SCENE.instantiate()
 		host.add_child(line)
 		var icon := line.get_node("Icon") as TextureRect
-		var text := line.get_node("Text") as Label
+		var text := line.get_node("Text") as RichTextLabel
 		var kind := str(row["kind"])
+		icon.visible = kind != ""
 		if kind == "act":
 			icon.texture = CLOCK_ICON
 			icon.modulate = MechCard.COST_COLOR
@@ -102,9 +121,59 @@ func _fill(host: VBoxContainer, rows: Array[Dictionary]) -> void:
 			bolt.shader = CHARGE_SHADER
 			bolt.set_shader_parameter("ink", MechCard.COST_COLOR if host == _cost_lines else Color(0.95, 0.96, 0.98))
 			icon.material = bolt
-		else:
+		elif kind != "":
 			icon.texture = ICONS[kind] as Texture2D
 			icon.modulate = Color(0.95, 0.96, 0.98)
 			icon.material = null
 		if text != null:
-			text.text = str(row["text"])
+			var source := str(row["text"])
+			text.text = source
+			_fit_line(text, source)
+
+
+## A rich text line measured at zero width reports a screen-tall minimum. Measure the column instead.
+func _fit_line(text: RichTextLabel, source: String) -> void:
+	text.fit_content = false
+	text.scroll_active = false
+	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text.custom_minimum_size = Vector2(TEXT_WIDTH, 0)
+	text.size = Vector2(TEXT_WIDTH, 32)
+	var expected := _wrapped_height(text, source)
+	var content_h := float(text.get_content_height())
+	var height := expected
+	if content_h > expected and content_h < expected + 48.0:
+		height = content_h
+	text.custom_minimum_size.y = height
+	text.size.y = height
+
+
+func _wrapped_height(label: RichTextLabel, source: String) -> float:
+	var font := label.get_theme_font("normal_font")
+	var font_size := label.get_theme_font_size("normal_font_size")
+	if font == null:
+		return 28.0
+	var plain := _strip_bbcode(source)
+	var line_h := float(font.get_height(font_size) + label.get_theme_constant("line_separation"))
+	var lines := _wrap_count(font, font_size, plain, TEXT_WIDTH)
+	return maxf(line_h * float(lines), 28.0)
+
+
+func _wrap_count(font: Font, font_size: int, plain: String, max_width: float) -> int:
+	if plain.is_empty():
+		return 1
+	var words := plain.split(" ", false)
+	var lines := 1
+	var line := ""
+	for word in words:
+		var trial := word if line.is_empty() else "%s %s" % [line, word]
+		if font.get_string_size(trial, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= max_width:
+			line = trial
+		else:
+			lines += 1
+			line = word
+	return lines
+
+
+func _strip_bbcode(source: String) -> String:
+	var pattern := RegEx.create_from_string("\\[/?[^\\]]+\\]")
+	return pattern.sub(source, "", true)

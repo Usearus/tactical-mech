@@ -55,6 +55,7 @@ script = ExtResource("2_card")
 id = "raven_evade"
 display_name = "Evade"
 description = "Evade 1 attack entirely if in hand."
+retain = true
 card_type = "Defense"
 cost_kind = "Free"
 defense_kind = "Dodge"
