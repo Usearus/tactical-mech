@@ -3016,7 +3016,7 @@ func _spawn_paint(coords: Vector2i, unit: MechState, shade: Color, border: Color
 
 
 func _play_mission_briefing() -> void:
-	if GameManager.stage_scene == GameManager.STAGE_0_1:
+	if GameManager.stage_scene == GameManager.STAGE_0_1 or GameManager.stage_scene == GameManager.STAGE_0_2:
 		SoundBank.loop("rain")
 	else:
 		SoundBank.loop("wind")
@@ -3029,6 +3029,8 @@ func _play_mission_briefing() -> void:
 	var cue := "mission_1"
 	if GameManager.stage_scene == GameManager.STAGE_0_1:
 		cue = "mission_2"
+	elif GameManager.stage_scene == GameManager.STAGE_0_2:
+		cue = "mission_3"
 	await dialogue_bar.play(MISSION_COMMS, cue)
 
 

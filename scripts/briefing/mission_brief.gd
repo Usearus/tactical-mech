@@ -1,6 +1,7 @@
 extends Control
 
 ## Pick a mission on the map. The view opens north of the missions, with no reticule until one is chosen.
+## The briefing art shows that mission's tiles, cropped to the frame. No mechs and no weather.
 
 @onready var window: PanelContainer = %Window
 @onready var briefing_title: Label = %BriefingTitle
@@ -9,6 +10,7 @@ extends Control
 @onready var tutorial: BaseButton = %Tutorial
 @onready var mission_1: BaseButton = %Mission1
 @onready var mission_2: BaseButton = %Mission2
+@onready var mission_3: BaseButton = %Mission3
 @onready var locked: PanelContainer = %Locked
 @onready var locked_title: Label = %LockedTitle
 @onready var win_block: VBoxContainer = %Win
@@ -17,6 +19,10 @@ extends Control
 @onready var clip: Control = $Margin/Root/MapPanel/Inset/Clip
 @onready var map: TextureRect = $Margin/Root/MapPanel/Inset/Clip/Map
 @onready var crosshair: Control = $Margin/Root/MapPanel/Inset/Clip/Crosshair
+@onready var art_clip: Control = %ArtClip
+@onready var _stage_view: SubViewportContainer = %StageView
+@onready var _stage_camera: Camera2D = %StageCamera
+@onready var _stage_host: Node2D = %StageHost
 
 ## Center of the photo. Matches the crosshair placed in the scene.
 const FOCUS_MISSION_1 := Vector2(0.5, 0.5)
@@ -25,6 +31,9 @@ const ZOOM_MISSION_1 := 1.0
 const FOCUS_MISSION_2 := Vector2(0.363, 0.604)
 ## A little larger than the frame so the photo can slide southwest and still cover it.
 const ZOOM_MISSION_2 := 1.05
+## East bank of the river, south of the tutorial pin and east of the bridge.
+const FOCUS_MISSION_3 := Vector2(0.62, 0.48)
+const ZOOM_MISSION_3 := 1.05
 ## Northeast of the other missions, over the upper east side of the island.
 const FOCUS_TUTORIAL := Vector2(0.55, 0.32)
 ## A little larger than the frame so the photo can slide northeast and still cover it.
@@ -54,12 +63,13 @@ var _focus_tween: Tween
 func _ready() -> void:
 	var group := ButtonGroup.new()
 	group.allow_unpress = false
-	for button in [tutorial, mission_1, mission_2]:
+	for button in [tutorial, mission_1, mission_2, mission_3]:
 		button.button_group = group
 	back_button.pressed.connect(_on_back_pressed)
 	tutorial.pressed.connect(_on_mission_pressed.bind(tutorial, GameManager.STAGE_TUTORIAL))
 	mission_1.pressed.connect(_on_mission_pressed.bind(mission_1, GameManager.STAGE_0_0))
 	mission_2.pressed.connect(_on_mission_pressed.bind(mission_2, GameManager.STAGE_0_1))
+	mission_3.pressed.connect(_on_mission_pressed.bind(mission_3, GameManager.STAGE_0_2))
 	start_button.pressed.connect(_on_start_pressed)
 	window.resized.connect(_center_window_pivot)
 	locked.resized.connect(_center_locked_pivot)
@@ -67,6 +77,7 @@ func _ready() -> void:
 	_center_locked_pivot()
 	_prepare_map()
 	clip.resized.connect(_on_clip_resized)
+	art_clip.resized.connect(_fit_stage)
 	_hide_briefing()
 	_hide_locked()
 	tutorial.visible = true
@@ -106,7 +117,7 @@ func _on_back_pressed() -> void:
 	if _leaving:
 		return
 	_leave()
-	GameManager.go_to_command()
+	GameManager.go_to_hangar()
 
 
 func _on_mission_pressed(button: BaseButton, stage_path: String) -> void:
@@ -117,6 +128,7 @@ func _on_mission_pressed(button: BaseButton, stage_path: String) -> void:
 	briefing_title.text = button.text
 	_show_conditions(stage_path)
 	_focus_mission(stage_path)
+	_show_stage_map(stage_path)
 	if _briefing_open:
 		return
 	_briefing_open = true
@@ -189,6 +201,7 @@ func _leave() -> void:
 	tutorial.disabled = true
 	mission_1.disabled = true
 	mission_2.disabled = true
+	mission_3.disabled = true
 
 
 func _show_conditions(stage_path: String) -> void:
@@ -210,7 +223,139 @@ func _focus_mission(stage_path: String) -> void:
 	elif stage_path == GameManager.STAGE_0_1:
 		focus = FOCUS_MISSION_2
 		zoom = ZOOM_MISSION_2
+	elif stage_path == GameManager.STAGE_0_2:
+		focus = FOCUS_MISSION_3
+		zoom = ZOOM_MISSION_3
 	_move_map(focus, zoom, true, reveal)
+
+
+## The stage's tiles fill the briefing art. Weather and the placed mechs stay out.
+func _show_stage_map(stage_path: String) -> void:
+	var packed := load(stage_path) as PackedScene
+	if packed == null:
+		return
+	var stage := packed.instantiate() as Node2D
+	if stage == null:
+		return
+	strip_map_preview(stage)
+	var bounds := tile_bounds(stage)
+	if bounds.size.x < 1.0 or bounds.size.y < 1.0:
+		stage.free()
+		return
+	_clear_stage_host()
+	stage.process_mode = Node.PROCESS_MODE_DISABLED
+	_stage_host.add_child(stage)
+	_stage_view.visible = true
+	_fit_stage()
+
+
+func _clear_stage_host() -> void:
+	var stale: Array[Node] = []
+	for child in _stage_host.get_children():
+		stale.append(child)
+	for child in stale:
+		_stage_host.remove_child(child)
+		child.free()
+
+
+func _fit_stage() -> void:
+	if _stage_host.get_child_count() == 0:
+		return
+	var view := art_clip.size
+	if view.x < 2.0 or view.y < 2.0:
+		return
+	var stage := _stage_host.get_child(0) as Node2D
+	var frame := cover_frame(view, tile_bounds(stage))
+	_stage_camera.position = frame.center
+	_stage_camera.zoom = Vector2(frame.zoom, frame.zoom)
+	_stage_camera.make_current()
+
+
+## Drops weather and every placed mech. Tile layers, shadows, and lights stay.
+static func strip_map_preview(stage: Node) -> void:
+	if stage == null:
+		return
+	var drop: Array[Node] = []
+	_collect_preview_drop(stage, drop)
+	for node in drop:
+		var parent := node.get_parent()
+		if parent != null:
+			parent.remove_child(node)
+		node.free()
+
+
+static func _collect_preview_drop(node: Node, drop: Array[Node]) -> void:
+	for child in node.get_children():
+		if _drops_from_preview(child):
+			drop.append(child)
+		else:
+			_collect_preview_drop(child, drop)
+
+
+static func _drops_from_preview(node: Node) -> bool:
+	if node.name == StageMap.WEATHER_NODE:
+		return true
+	return node is Marker2D
+
+
+## Tile layers in the stage's parent space, so a sibling camera can frame them.
+static func tile_bounds(stage: Node2D) -> Rect2:
+	var bounds := Rect2()
+	if stage == null:
+		return bounds
+	var found := false
+	var layers: Array[TileMapLayer] = []
+	_collect_tile_layers(stage, layers)
+	for layer in layers:
+		if layer.tile_set == null or not (layer as CanvasItem).visible:
+			continue
+		var used := layer.get_used_rect()
+		if used.size.x <= 0 or used.size.y <= 0:
+			continue
+		var tile := Vector2(layer.tile_set.tile_size)
+		var rect := Rect2(Vector2(used.position) * tile, Vector2(used.size) * tile)
+		var to_stage := _layer_transform(layer, stage)
+		var corners: Array[Vector2] = [
+			to_stage * rect.position,
+			to_stage * Vector2(rect.end.x, rect.position.y),
+			to_stage * rect.end,
+			to_stage * Vector2(rect.position.x, rect.end.y),
+		]
+		for corner in corners:
+			var point: Vector2 = stage.transform * corner
+			if not found:
+				bounds = Rect2(point, Vector2.ZERO)
+				found = true
+			else:
+				bounds = bounds.expand(point)
+	return bounds
+
+
+static func _collect_tile_layers(node: Node, into: Array[TileMapLayer]) -> void:
+	for child in node.get_children():
+		if child is TileMapLayer:
+			into.append(child)
+		_collect_tile_layers(child, into)
+
+
+static func _layer_transform(layer: Node2D, stage: Node2D) -> Transform2D:
+	var xform := Transform2D.IDENTITY
+	var node: Node = layer
+	while node is Node2D and node != stage:
+		xform = (node as Node2D).transform * xform
+		node = node.get_parent()
+	return xform
+
+
+## Zoom that fills the view and crops the extra. The camera sits on the center.
+static func cover_frame(view: Vector2, bounds: Rect2) -> Dictionary:
+	var zoom := 1.0
+	if bounds.size.x >= 1.0 and bounds.size.y >= 1.0 and view.x >= 1.0 and view.y >= 1.0:
+		zoom = maxf(view.x / bounds.size.x, view.y / bounds.size.y)
+	return {
+		"center": bounds.get_center(),
+		"zoom": zoom,
+	}
 
 
 func _prepare_map() -> void:

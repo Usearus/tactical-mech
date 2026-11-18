@@ -1,0 +1,168 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/hangar/settings.gd" id="1_settings"]
+[ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="2_sheet"]
+[ext_resource type="PackedScene" uid="uid://c3f0iqk8frqh6" path="res://scenes/ui/panel_secondary.tscn" id="3_panel"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_back"]
+atlas = ExtResource("2_sheet")
+region = Rect2(30, 274, 48, 22)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_track"]
+content_margin_top = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.07, 0.09, 0.14, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.62, 0.78, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fill"]
+bg_color = Color(0.45, 0.82, 1, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="Gradient" id="Gradient_grab"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(0.72, 0.94, 1, 1, 0.72, 0.94, 1, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_grab"]
+gradient = SubResource("Gradient_grab")
+width = 22
+height = 36
+
+[node name="Settings" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_settings")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.047058824, 0.10980392, 0.20392157, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 16
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BackButton" type="TextureButton" parent="Margin/Root/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 34)
+layout_mode = 2
+size_flags_vertical = 4
+texture_normal = SubResource("AtlasTexture_back")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 40
+text = "Settings"
+vertical_alignment = 1
+
+[node name="Body" type="CenterContainer" parent="Margin/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Window" parent="Margin/Root/Body" instance=ExtResource("3_panel")]
+custom_minimum_size = Vector2(720, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="Inset" type="MarginContainer" parent="Margin/Root/Body/Window"]
+layout_mode = 2
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 32
+
+[node name="Rows" type="VBoxContainer" parent="Margin/Root/Body/Window/Inset"]
+layout_mode = 2
+theme_override_constants/separation = 36
+
+[node name="MusicRow" type="VBoxContainer" parent="Margin/Root/Body/Window/Inset/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="MusicLabel" type="Label" parent="Margin/Root/Body/Window/Inset/Rows/MusicRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Music"
+
+[node name="MusicSlider" type="HSlider" parent="Margin/Root/Body/Window/Inset/Rows/MusicRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+focus_mode = 0
+theme_override_icons/grabber = SubResource("GradientTexture2D_grab")
+theme_override_icons/grabber_highlight = SubResource("GradientTexture2D_grab")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_fill")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_fill")
+theme_override_styles/slider = SubResource("StyleBoxFlat_track")
+max_value = 100.0
+step = 1.0
+value = 100.0
+
+[node name="EffectsRow" type="VBoxContainer" parent="Margin/Root/Body/Window/Inset/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="EffectsLabel" type="Label" parent="Margin/Root/Body/Window/Inset/Rows/EffectsRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Sound effects"
+
+[node name="EffectsSlider" type="HSlider" parent="Margin/Root/Body/Window/Inset/Rows/EffectsRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+focus_mode = 0
+theme_override_icons/grabber = SubResource("GradientTexture2D_grab")
+theme_override_icons/grabber_highlight = SubResource("GradientTexture2D_grab")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_fill")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_fill")
+theme_override_styles/slider = SubResource("StyleBoxFlat_track")
+max_value = 100.0
+step = 1.0
+value = 100.0

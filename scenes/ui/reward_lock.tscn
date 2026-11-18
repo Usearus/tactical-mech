@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/reward_lock.gd" id="1_lock"]
+[ext_resource type="PackedScene" path="res://scenes/ui/empty_card_slot.tscn" id="2_slot"]
+
+[node name="RewardLock" type="VBoxContainer"]
+mouse_filter = 2
+theme_override_constants/separation = 0
+alignment = 0
+script = ExtResource("1_lock")
+
+[node name="Lift" type="Control" parent="."]
+custom_minimum_size = Vector2(0, 55)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Slot" parent="." instance=ExtResource("2_slot")]
+layout_mode = 2
+
+[node name="Lock" parent="Slot"]
+visible = true

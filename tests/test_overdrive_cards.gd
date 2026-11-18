@@ -248,6 +248,9 @@ func test_bastion_holds_the_line() -> void:
 	var shepherd_unit := MechState.new()
 	shepherd_unit.data = load("res://data/mechs/player/bulldog.tres") as MechData
 	assert_true(FinisherBanner.uses_attack_strip(shepherd_unit), "shepherd finisher plays the missiles")
+	var lancer_unit := MechState.new()
+	lancer_unit.data = load("res://data/mechs/player/lancer.tres") as MechData
+	assert_true(FinisherBanner.uses_attack_strip(lancer_unit), "lancer finisher plays the attack")
 	var pilot := MechSprites.pilot_frames("blue")
 	assert_true(pilot != null and pilot.get_frame_count("idle") >= 1, "blue pilot")
 
@@ -266,6 +269,23 @@ func test_comet_finisher_plays_the_laser() -> void:
 	var beam := white.get_frame_texture("attack", 0)
 	assert_eq(int(beam.get_width()), 64, "laser cell width")
 	assert_eq(int(beam.get_height()), 64, "laser cell height")
+
+
+func test_lancer_finisher_plays_the_attack() -> void:
+	var lancer := load("res://data/mechs/player/lancer.tres") as MechData
+	var unit := MechState.new()
+	unit.data = lancer
+	assert_eq(unit.art_id, "tan", "lancer uses the tan sheet")
+	assert_true(FinisherBanner.uses_attack_strip(unit), "lancer finisher plays the attack")
+	var tan := MechSprites.frames_for("tan")
+	assert_true(tan != null and tan.has_animation("attack"), "tan attack strip")
+	if tan == null:
+		return
+	assert_eq(tan.get_frame_count("idle"), 8, "idle frames")
+	assert_eq(tan.get_frame_count("attack"), 10, "attack frames")
+	var shot := tan.get_frame_texture("attack", 0)
+	assert_eq(int(shot.get_width()), 64, "attack cell width")
+	assert_eq(int(shot.get_height()), 64, "attack cell height")
 
 
 func test_shepherd_finisher_plays_the_missiles() -> void:

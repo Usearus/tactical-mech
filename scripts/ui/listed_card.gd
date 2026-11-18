@@ -2,6 +2,7 @@ class_name ListedCard
 extends Control
 
 const CARD_SCENE := preload("res://scenes/ui/mech_card.tscn")
+const GROUP_CARD_SCENE := preload("res://scenes/ui/mech_card_group.tscn")
 const CARD_SIZE := Vector2(176, 268)
 const TAG_GAP := 4.0
 
@@ -17,11 +18,12 @@ func _ready() -> void:
 	_pin_bounds()
 
 
-func show_card(card: CardData, stroke: Color, damage: int, block: int, tag: String, battle_rules := true) -> void:
+func show_card(card: CardData, stroke: Color, damage: int, block: int, tag: String, battle_rules := true, squad := false) -> void:
 	if _host == null or card == null:
 		return
 	if card_view == null:
-		card_view = CARD_SCENE.instantiate() as MechCard
+		var scene: PackedScene = GROUP_CARD_SCENE if squad else CARD_SCENE
+		card_view = scene.instantiate() as MechCard
 		card_view.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		card_view.position = Vector2.ZERO
 		card_view.custom_minimum_size = CARD_SIZE
@@ -32,9 +34,13 @@ func show_card(card: CardData, stroke: Color, damage: int, block: int, tag: Stri
 		card_view.scale = Vector2.ONE
 		_host.add_child(card_view)
 	card_view.present(card, stroke, damage, block, battle_rules)
+	card_view.set_pull_enabled(false)
 	if _tag == null:
+		_pin_bounds()
 		return
-	_tag.show_caption(tag, _tone_for(tag))
+	_tag.visible = tag != ""
+	if tag != "":
+		_tag.show_caption(tag, _tone_for(tag))
 	_pin_bounds()
 
 
@@ -50,9 +56,9 @@ func _tone_for(tag: String) -> String:
 func _pin_bounds() -> void:
 	size_flags_horizontal = SIZE_SHRINK_CENTER
 	size_flags_vertical = SIZE_SHRINK_CENTER
-	var tag_h := 28.0
+	var tag_h := 0.0
 	var tag_w := 0.0
-	if _tag != null:
+	if _tag != null and _tag.visible:
 		_tag.reset_size()
 		tag_h = _tag.size.y + TAG_GAP
 		tag_w = _tag.size.x

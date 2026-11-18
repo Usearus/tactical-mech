@@ -36,7 +36,7 @@ func _ready() -> void:
 func show_choice(choice: UpgradeChoice) -> void:
 	if choice == null or choice.preview == null or _card_host == null:
 		return
-	var squad := choice.kind == "Immediate" or choice.kind == "Edict"
+	var squad := choice.kind == "Immediate" or choice.kind == "Edict" or choice.kind == "Revive"
 	if _card == null:
 		var scene: PackedScene = GROUP_CARD_SCENE if squad else CARD_SCENE
 		_card = scene.instantiate() as MechCard
@@ -54,8 +54,11 @@ func show_choice(choice: UpgradeChoice) -> void:
 		_stars[index].visible = index < choice.rarity
 	_shine_after = choice.rarity >= 3
 	_set_rare_shadow(_shine_after)
-	var badges := _show_badges(choice.mechs)
-	_show_kind_tag(_kind_caption(choice.kind), badges)
+	var owners: Array[MechState] = []
+	if choice.kind != "Edict":
+		owners = choice.mechs
+	var badges := _show_badges(owners)
+	_show_kind_tag(_kind_caption(choice.kind), badges, choice.kind == "Edict")
 	_prime_reveal()
 
 
@@ -124,11 +127,13 @@ func _kind_caption(kind: String) -> String:
 		return UpgradeDeck.TAG_UPGRADE
 	if kind == "Grant":
 		return UpgradeDeck.TAG_NEW
+	if kind == "Edict":
+		return "Edict"
 	return ""
 
 
-## Sits to the right of the portrait pin. Upgrade and new-card offers only.
-func _show_kind_tag(caption: String, badge_count: int) -> void:
+## Upgrade and new-card chips sit to the right of the portrait pin. An edict chip is centered, with no pin.
+func _show_kind_tag(caption: String, badge_count: int, centered := false) -> void:
 	if _card_host == null:
 		return
 	if caption == "":
@@ -148,7 +153,9 @@ func _show_kind_tag(caption: String, badge_count: int) -> void:
 	_kind_tag.reset_size()
 	var pin_h := 78.0 * HandOwnerBadge.PIN_SCALE
 	var x := 0.0
-	if badge_count > 0:
+	if centered:
+		x = (CARD_SIZE.x - _kind_tag.size.x) * 0.5
+	elif badge_count > 0:
 		x = float(badge_count - 1) * 52.0 + 80.0 * HandOwnerBadge.PIN_SCALE + 8.0
 	_kind_tag.position = Vector2(x, -(pin_h + _kind_tag.size.y) * 0.5)
 

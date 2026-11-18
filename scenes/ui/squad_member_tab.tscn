@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/ui/rule_topic.tscn" id="1_tab"]
+[ext_resource type="Script" path="res://scripts/ui/squad_member_tab.gd" id="2_face"]
+
+[node name="SquadMemberTab" instance=ExtResource("1_tab")]
+custom_minimum_size = Vector2(148, 64)
+size_flags_horizontal = 4
+clip_contents = true
+text = ""
+script = ExtResource("2_face")
+
+[node name="Face" type="Control" parent="." index="0"]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Portrait" type="AnimatedSprite2D" parent="Face"]
+unique_name_in_owner = true
+texture_filter = 0
+centered = true

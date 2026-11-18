@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dbuprxg5v1nm3"
-path="res://.godot/imported/tan.fire-pose.png-6d6f39edd5b148594e8c27c00ca0f556.ctex"
+uid="uid://yp33dk8e34wc"
+path="res://.godot/imported/tan.attack.png-c73f3c2b9b45904e8d40067cc26df9ec.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/mechs/player/tan/tan.fire-pose.png"
-dest_files=["res://.godot/imported/tan.fire-pose.png-6d6f39edd5b148594e8c27c00ca0f556.ctex"]
+source_file="res://art/mechs/player/tan/tan.attack.png"
+dest_files=["res://.godot/imported/tan.attack.png-c73f3c2b9b45904e8d40067cc26df9ec.ctex"]
 
 [params]
 

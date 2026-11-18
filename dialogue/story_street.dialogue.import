@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://dl30miaimylcf"
+path="res://.godot/imported/story_street.dialogue-bdea6b4709f64976b74ff027a847478c.tres"
+
+[deps]
+
+source_file="res://dialogue/story_street.dialogue"
+dest_files=["res://.godot/imported/story_street.dialogue-bdea6b4709f64976b74ff027a847478c.tres"]
+
+[params]
+
+defaults=true

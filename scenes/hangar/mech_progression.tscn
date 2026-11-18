@@ -1,0 +1,343 @@
+[gd_scene format=3 uid="uid://b4h56cuggba52"]
+
+[ext_resource type="Script" uid="uid://bvljn83sqgo8y" path="res://scripts/hangar/mech_progression.gd" id="1_squad"]
+[ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="2_sheet"]
+[ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="3_theme"]
+[ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="4_btn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/info_note.tscn" id="5_note"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_back"]
+atlas = ExtResource("2_sheet")
+region = Rect2(30, 274, 48, 22)
+
+[node name="SquadProgression" type="Control" unique_id=2133750238]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_squad")
+
+[node name="Backdrop" type="ColorRect" parent="." unique_id=1623250527]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.047058824, 0.10980392, 0.20392157, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=129844066]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 16
+
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=20063575]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root" unique_id=1143438276]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BackButton" type="TextureButton" parent="Margin/Root/Header" unique_id=1168818160]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 34)
+layout_mode = 2
+size_flags_vertical = 4
+texture_normal = SubResource("AtlasTexture_back")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Margin/Root/Header" unique_id=1008851004]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 40
+text = "Squad"
+vertical_alignment = 1
+
+[node name="TabScroll" type="ScrollContainer" parent="Margin/Root" unique_id=377491925]
+layout_mode = 2
+horizontal_scroll_mode = 3
+vertical_scroll_mode = 0
+
+[node name="Tabs" type="HBoxContainer" parent="Margin/Root/TabScroll" unique_id=1254396149]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Body" type="HBoxContainer" parent="Margin/Root" unique_id=483703656]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="LeftColumn" type="VBoxContainer" parent="Margin/Root/Body" unique_id=919370053]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="LeftPanel" type="PanelContainer" parent="Margin/Root/Body/LeftColumn" unique_id=733373397]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource("3_theme")
+theme_type_variation = &"PrimaryPanel"
+
+[node name="LeftScroll" type="ScrollContainer" parent="Margin/Root/Body/LeftColumn/LeftPanel" unique_id=63606277]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="LeftStack" type="VBoxContainer" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="StagePanel" type="PanelContainer" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack" unique_id=1765448993]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("3_theme")
+theme_type_variation = &"SecondaryPanel"
+
+[node name="Stage" type="Control" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/StagePanel" unique_id=1014408533]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 168)
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Mech" type="AnimatedSprite2D" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/StagePanel/Stage" unique_id=1519517978]
+unique_name_in_owner = true
+z_index = 1
+scale = Vector2(2.8, 2.8)
+offset = Vector2(0, 1.125)
+
+[node name="Pilot" type="AnimatedSprite2D" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/StagePanel/Stage" unique_id=2064539725]
+unique_name_in_owner = true
+z_index = 2
+scale = Vector2(2, 2)
+offset = Vector2(-16, 2)
+
+[node name="LeftPad" type="MarginContainer" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack" unique_id=1743263376]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="Column" type="VBoxContainer" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad" unique_id=1066527826]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="StatTable" type="VBoxContainer" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column" unique_id=586733744]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="Name + Role" type="VBoxContainer" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable" unique_id=597614618]
+layout_mode = 2
+
+[node name="Name" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/Name + Role" unique_id=1073324527]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Mech"
+autowrap_mode = 3
+
+[node name="Role" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/Name + Role" unique_id=2064691896]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.84, 0.32, 1)
+theme_override_font_sizes/font_size = 22
+text = "Assassin, Offensive"
+autowrap_mode = 3
+
+[node name="Blurb" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable" unique_id=588358372]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.84, 0.88, 1)
+theme_override_font_sizes/font_size = 22
+text = "Deck description"
+autowrap_mode = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable" unique_id=1491506409]
+layout_mode = 2
+
+[node name="StatHeader" type="HBoxContainer" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer" unique_id=523117213]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="StatsLabel" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatHeader" unique_id=1306918548]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "Stats"
+
+[node name="TierLabel" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatHeader" unique_id=1346886780]
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Tier"
+horizontal_alignment = 2
+
+[node name="StatGrid" type="GridContainer" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer" unique_id=1535713170]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 2
+columns = 3
+
+[node name="HpName" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatGrid" unique_id=1387668742]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "HP"
+
+[node name="HpStat" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatGrid" unique_id=1416555908]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "0"
+horizontal_alignment = 2
+
+[node name="HpGrade" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatGrid" unique_id=1645747261]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "D"
+horizontal_alignment = 2
+
+[node name="AtkName" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatGrid" unique_id=1652834363]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "ATK"
+
+[node name="AtkStat" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatGrid" unique_id=1641769514]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "0-0"
+horizontal_alignment = 2
+
+[node name="AtkGrade" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatGrid" unique_id=1474137072]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "D"
+horizontal_alignment = 2
+
+[node name="RngName" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatGrid" unique_id=1230898936]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "RNG"
+
+[node name="RngStat" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatGrid" unique_id=469734750]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "0-0"
+horizontal_alignment = 2
+
+[node name="RngGrade" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatGrid" unique_id=2009875763]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "D"
+horizontal_alignment = 2
+
+[node name="MovName" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatGrid" unique_id=1027748460]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "MOV"
+
+[node name="MovStat" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatGrid" unique_id=648632229]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "0"
+horizontal_alignment = 2
+
+[node name="MovGrade" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatGrid" unique_id=1746662848]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "D"
+horizontal_alignment = 2
+
+[node name="SpdName" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatGrid" unique_id=1733418013]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "SPD"
+
+[node name="SpdStat" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatGrid" unique_id=613076339]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "0"
+horizontal_alignment = 2
+
+[node name="SpdGrade" type="Label" parent="Margin/Root/Body/LeftColumn/LeftPanel/LeftScroll/LeftStack/LeftPad/Column/StatTable/VBoxContainer/StatGrid" unique_id=24034589]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "D"
+horizontal_alignment = 2
+
+[node name="EnhanceButton" parent="Margin/Root/Body/LeftColumn" unique_id=769829221 instance=ExtResource("4_btn")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "Enhance pilot"
+
+[node name="RightPanel" type="PanelContainer" parent="Margin/Root/Body" unique_id=267598831]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 3.0
+theme = ExtResource("3_theme")
+theme_type_variation = &"SecondaryPanel"
+
+[node name="RightPad" type="MarginContainer" parent="Margin/Root/Body/RightPanel" unique_id=1302880453]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="CardScroll" type="ScrollContainer" parent="Margin/Root/Body/RightPanel/RightPad" unique_id=1978807358]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="CardFlow" type="HFlowContainer" parent="Margin/Root/Body/RightPanel/RightPad/CardScroll" unique_id=413931638]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+
+[node name="SpecialNote" parent="." unique_id=386739332 instance=ExtResource("5_note")]
+unique_name_in_owner = true
+z_index = 130
+layout_mode = 0

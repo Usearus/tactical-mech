@@ -1,0 +1,358 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/hangar/mech_details.gd" id="1_details"]
+[ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="2_sheet"]
+[ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="3_theme"]
+[ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="4_btn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/info_note.tscn" id="5_note"]
+[ext_resource type="Shader" uid="uid://cq4x1eey38sqy" path="res://shaders/card_edge_fade.gdshader" id="6_fade"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_back"]
+atlas = ExtResource("2_sheet")
+region = Rect2(30, 274, 48, 22)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fade"]
+shader = ExtResource("6_fade")
+
+[sub_resource type="Gradient" id="Gradient_card_fade"]
+offsets = PackedFloat32Array(0, 0, 0.62)
+colors = PackedColorArray(0.08, 0.09, 0.12, 0, 0.08, 0.09, 0.12, 0, 0.08, 0.09, 0.12, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_card_fade"]
+gradient = SubResource("Gradient_card_fade")
+width = 256
+height = 4
+
+[node name="MechDetails" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_details")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.047058824, 0.10980392, 0.20392157, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 16
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BackButton" type="TextureButton" parent="Margin/Root/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 34)
+layout_mode = 2
+size_flags_vertical = 4
+texture_normal = SubResource("AtlasTexture_back")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Margin/Root/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 40
+text = "Mech details"
+vertical_alignment = 1
+
+[node name="PilotButton" parent="Margin/Root/Header" instance=ExtResource("4_btn")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(420, 56)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+text = "Pilot progression"
+
+[node name="Dossier" type="PanelContainer" parent="Margin/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+theme = ExtResource("3_theme")
+theme_type_variation = &"PrimaryPanel"
+
+[node name="Content" type="PanelContainer" parent="Margin/Root/Dossier"]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource("3_theme")
+theme_type_variation = &"SecondaryPanel"
+
+[node name="Column" type="VBoxContainer" parent="Margin/Root/Dossier/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="Identity" type="HBoxContainer" parent="Margin/Root/Dossier/Content/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="Stage" type="Panel" parent="Margin/Root/Dossier/Content/Column/Identity"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 160)
+custom_maximum_size = Vector2(400, -1)
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 1.6
+theme_type_variation = &"PreviewStageOpen"
+
+[node name="Pilot" type="AnimatedSprite2D" parent="Margin/Root/Dossier/Content/Column/Identity/Stage"]
+unique_name_in_owner = true
+z_index = 2
+
+[node name="Mech" type="AnimatedSprite2D" parent="Margin/Root/Dossier/Content/Column/Identity/Stage"]
+unique_name_in_owner = true
+z_index = 1
+
+[node name="CopyColumn" type="MarginContainer" parent="Margin/Root/Dossier/Content/Column/Identity"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_right = 16
+
+[node name="Copy" type="VBoxContainer" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+theme_override_constants/separation = 22
+
+[node name="Details" type="BoxContainer" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 40
+
+[node name="Profile" type="VBoxContainer" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_constants/separation = 10
+
+[node name="Role" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/Profile"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.98, 0.84, 0.32, 1)
+theme_override_font_sizes/font_size = 30
+text = "Bruiser, Offensive"
+autowrap_mode = 3
+
+[node name="Blurb" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/Profile"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.82, 0.84, 0.88, 1)
+theme_override_font_sizes/font_size = 28
+text = "Deck mixes a variety of shot strengths, and can guard itself before moving in to fire."
+autowrap_mode = 3
+
+[node name="StatTable" type="VBoxContainer" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="StatHeader" type="HBoxContainer" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_constants/separation = 76
+
+[node name="StatsLabel" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Stats"
+vertical_alignment = 1
+
+[node name="TierLabel" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatHeader"]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Tier"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="StatGrid" type="GridContainer" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 2
+columns = 3
+
+[node name="HpName" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "HP"
+
+[node name="HpStat" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "0"
+horizontal_alignment = 2
+
+[node name="HpGrade" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "D"
+horizontal_alignment = 2
+
+[node name="AtkName" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "ATK"
+
+[node name="AtkStat" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "0-0"
+horizontal_alignment = 2
+
+[node name="AtkGrade" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "D"
+horizontal_alignment = 2
+
+[node name="RngName" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "RNG"
+
+[node name="RngStat" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "0-0"
+horizontal_alignment = 2
+
+[node name="RngGrade" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "D"
+horizontal_alignment = 2
+
+[node name="MovName" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "MOV"
+
+[node name="MovStat" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "0"
+horizontal_alignment = 2
+
+[node name="MovGrade" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "D"
+horizontal_alignment = 2
+
+[node name="SpdName" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "SPD"
+
+[node name="SpdStat" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "0"
+horizontal_alignment = 2
+
+[node name="SpdGrade" type="Label" parent="Margin/Root/Dossier/Content/Column/Identity/CopyColumn/Copy/Details/StatTable/StatGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "D"
+horizontal_alignment = 2
+
+[node name="CardRow" type="Control" parent="Margin/Root/Dossier/Content/Column"]
+custom_minimum_size = Vector2(0, 252)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DeckScroll" type="ScrollContainer" parent="Margin/Root/Dossier/Content/Column/CardRow"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 3
+vertical_scroll_mode = 0
+
+[node name="DeckLead" type="MarginContainer" parent="Margin/Root/Dossier/Content/Column/CardRow/DeckScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 64
+
+[node name="Deck" type="HBoxContainer" parent="Margin/Root/Dossier/Content/Column/CardRow/DeckScroll/DeckLead"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="CardFade" type="TextureRect" parent="Margin/Root/Dossier/Content/Column/CardRow"]
+unique_name_in_owner = true
+z_index = 120
+z_as_relative = false
+material = SubResource("ShaderMaterial_fade")
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -140.0
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_card_fade")
+expand_mode = 1
+
+[node name="SpecialNote" parent="." instance=ExtResource("5_note")]
+unique_name_in_owner = true
+z_index = 130
+layout_mode = 0

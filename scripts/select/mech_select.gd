@@ -3,6 +3,8 @@ extends Control
 const CARD_SCENE := preload("res://scenes/ui/mech_card.tscn")
 const SLOT_SCENE := preload("res://scenes/ui/strip_card_slot.tscn")
 const ROW_SCENE := preload("res://scenes/ui/roster_row.tscn")
+const ROW_SCRIPT := preload("res://scripts/ui/roster_row.gd")
+const EYES_SCRIPT := preload("res://scripts/ui/pilot_eyes.gd")
 const TIER_GOLD := Color(0.98, 0.84, 0.32)
 ## Screen pixels the cut moves right for each pixel down. Matches the squad-screen reference.
 const SHAPE_SLOPE := 0.46
@@ -26,6 +28,7 @@ var _deal_token := 0
 var _deal_tries := 0
 var _buttons: Dictionary = {}
 var _checks: Dictionary = {}
+var _eyes: Dictionary = {}
 var _syncing := false
 
 @onready var _special_note: InfoNote = %SpecialNote
@@ -104,8 +107,11 @@ func _build_roster() -> void:
 		var check := button.get_node("%Check") as CheckBox
 		check.toggled.connect(_on_check_toggled.bind(data))
 		roster.add_child(button)
+		var eyes := button.get_node("%PilotEyes") as EYES_SCRIPT
+		eyes.show_pilot(data.art_id)
 		_buttons[data.id] = button
 		_checks[data.id] = check
+		_eyes[data.id] = eyes
 
 
 func _on_roster_pressed(data: MechData) -> void:
@@ -155,6 +161,12 @@ func _refresh() -> void:
 		var check := _checks.get(data.id) as CheckBox
 		if check != null:
 			check.button_pressed = slot >= 0
+		var eyes := _eyes.get(data.id) as EYES_SCRIPT
+		if eyes != null:
+			eyes.set_lit(slot >= 0)
+		var row := button as ROW_SCRIPT
+		if row != null:
+			row.set_checked(slot >= 0)
 	_syncing = false
 	_show_focused()
 	deploy_button.disabled = _squad.size() != _squad_limit()

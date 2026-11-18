@@ -1,6 +1,6 @@
 extends Node
 
-enum Phase { COMMAND, OVERWORLD, BATTLE, SELECT, STORY, BRIEFING }
+enum Phase { COMMAND, OVERWORLD, BATTLE, SELECT, STORY, BRIEFING, HANGAR, SETTINGS, REWARDS, PROGRESSION, MECH_DETAILS, PILOT_PROGRESSION }
 
 const COMMAND_SCENE := "res://scenes/command/command.tscn"
 const SELECT_SCENE := "res://scenes/select/mech_select.tscn"
@@ -8,12 +8,21 @@ const OVERWORLD_SCENE := "res://scenes/overworld/overworld.tscn"
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 const STORY1_SCENE := "res://scenes/story/story1.tscn"
 const STORY2_SCENE := "res://scenes/story/story2.tscn"
+const STORY3_SCENE := "res://scenes/story/story3.tscn"
 const BRIEFING_SCENE := "res://scenes/briefing/mission_brief.tscn"
+const HANGAR_SCENE := "res://scenes/hangar/hangar.tscn"
+const SETTINGS_SCENE := "res://scenes/hangar/settings.tscn"
+const REWARDS_SCENE := "res://scenes/hangar/rewards.tscn"
+const PROGRESSION_SCENE := "res://scenes/hangar/mech_progression.tscn"
+const MECH_DETAILS_SCENE := "res://scenes/hangar/mech_details.tscn"
+const PILOT_PROGRESSION_SCENE := "res://scenes/hangar/pilot_progression.tscn"
 ## Side-by-side battle board, in columns then rows. North-south fights use the swapped size.
 const BATTLE_SIZE := Vector2i(6, 3)
 ## stage-{act}-{mission}. Mission 1 is act 0 mission 0. Mission 2 is act 0 mission 1.
+## Mission 3 is act 0 mission 2.
 const STAGE_0_0 := "res://scenes/stage/stage-0-0.tscn"
 const STAGE_0_1 := "res://scenes/stage/stage-0-1.tscn"
+const STAGE_0_2 := "res://scenes/stage/stage-0-2.tscn"
 const STAGE_TUTORIAL := "res://scenes/stage/stage-tutorial.tscn"
 ## Stage scene for the current mission. Each stage is a Node2D of tile layers.
 var stage_scene := STAGE_0_0
@@ -31,6 +40,8 @@ const SQUAD_ATTACK_MAX := 10
 
 var phase: Phase = Phase.COMMAND
 var available_mechs: Array[MechData] = []
+## Mech opened from the progression grid. The details screen reads this.
+var progression_mech_id := ""
 var player_mechs: Array[MechState] = []
 var enemy_mechs: Array[MechState] = []
 var turn_number: int = 1
@@ -100,6 +111,37 @@ func go_to_command() -> void:
 	_change_scene(COMMAND_SCENE)
 
 
+func go_to_hangar() -> void:
+	phase = Phase.HANGAR
+	_change_scene(HANGAR_SCENE)
+
+
+func go_to_settings() -> void:
+	phase = Phase.SETTINGS
+	_change_scene(SETTINGS_SCENE)
+
+
+func go_to_rewards() -> void:
+	phase = Phase.REWARDS
+	_change_scene(REWARDS_SCENE)
+
+
+func go_to_progression() -> void:
+	phase = Phase.PROGRESSION
+	_change_scene(PROGRESSION_SCENE)
+
+
+func go_to_mech_details(mech_id: String) -> void:
+	progression_mech_id = mech_id
+	phase = Phase.MECH_DETAILS
+	_change_scene(MECH_DETAILS_SCENE)
+
+
+func go_to_pilot_progression() -> void:
+	phase = Phase.PILOT_PROGRESSION
+	_change_scene(PILOT_PROGRESSION_SCENE)
+
+
 ## Story beat. The scene plays its lines, then opens its own next scene.
 func play_story(scene_path: String) -> void:
 	open_scene(scene_path)
@@ -119,6 +161,18 @@ func open_scene(scene_path: String) -> void:
 		phase = Phase.STORY
 	elif scene_path == BRIEFING_SCENE:
 		phase = Phase.BRIEFING
+	elif scene_path == HANGAR_SCENE:
+		phase = Phase.HANGAR
+	elif scene_path == SETTINGS_SCENE:
+		phase = Phase.SETTINGS
+	elif scene_path == REWARDS_SCENE:
+		phase = Phase.REWARDS
+	elif scene_path == PROGRESSION_SCENE:
+		phase = Phase.PROGRESSION
+	elif scene_path == MECH_DETAILS_SCENE:
+		phase = Phase.MECH_DETAILS
+	elif scene_path == PILOT_PROGRESSION_SCENE:
+		phase = Phase.PILOT_PROGRESSION
 	_change_scene(scene_path)
 
 
@@ -145,10 +199,12 @@ func start_mission() -> void:
 	open_scene(BRIEFING_SCENE)
 
 
-## Mission 1 opens on the alley. Mission 2 opens on the bridge.
+## Mission 1 opens on the alley. Mission 2 opens on the bridge. Mission 3 opens on the east bank.
 func story_for_stage(path: String) -> String:
 	if path == STAGE_0_1:
 		return STORY2_SCENE
+	if path == STAGE_0_2:
+		return STORY3_SCENE
 	return STORY1_SCENE
 
 
@@ -479,12 +535,12 @@ func _change_scene(path: String) -> void:
 	_fade_then_swap(path)
 
 
-## Title, the mission pick, mech select, and the story between them share one track.
+## Title, the hangar, settings, rewards, mech progression, mech details, pilot progression, the mission pick, mech select, and the story between them share one track.
 func _start_music_for(path: String) -> void:
 	var clip := ""
 	if path == OVERWORLD_SCENE:
 		clip = "overworld"
-	elif path == COMMAND_SCENE or path == BRIEFING_SCENE or path == SELECT_SCENE or path.begins_with("res://scenes/story/"):
+	elif path == COMMAND_SCENE or path == HANGAR_SCENE or path == SETTINGS_SCENE or path == REWARDS_SCENE or path == PROGRESSION_SCENE or path == MECH_DETAILS_SCENE or path == PILOT_PROGRESSION_SCENE or path == BRIEFING_SCENE or path == SELECT_SCENE or path.begins_with("res://scenes/story/"):
 		clip = "title"
 	if clip != "":
 		SoundBank.music(clip)

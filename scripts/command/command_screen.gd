@@ -13,6 +13,7 @@ const PILOT_DROP := 150.0
 const PILOT_TOP := 48.0
 
 @onready var start_button: Button = %StartButton
+@onready var settings_button: Button = %SettingsButton
 @onready var test_button: Button = %TestButton
 @onready var mech_sprite: AnimatedSprite2D = %Mech
 @onready var pilot_sprite: Sprite2D = %Pilot
@@ -25,6 +26,7 @@ var _pilot_body := 0.0
 
 func _ready() -> void:
 	start_button.pressed.connect(_on_start_pressed)
+	settings_button.pressed.connect(_on_settings_pressed)
 	test_button.pressed.connect(_on_test_pressed)
 	_setup_cast()
 	resized.connect(_layout_cast)
@@ -92,8 +94,9 @@ func _on_start_pressed() -> void:
 		return
 	_leaving = true
 	start_button.disabled = true
+	settings_button.disabled = true
 	test_button.disabled = true
-	GameManager.start_mission()
+	GameManager.go_to_hangar()
 
 
 func _on_test_pressed() -> void:
@@ -101,5 +104,16 @@ func _on_test_pressed() -> void:
 		return
 	_leaving = true
 	start_button.disabled = true
+	settings_button.disabled = true
 	test_button.disabled = true
 	get_tree().change_scene_to_file(ISO_STAGE)
+
+
+func _on_settings_pressed() -> void:
+	if _leaving:
+		return
+	_leaving = true
+	start_button.disabled = true
+	settings_button.disabled = true
+	test_button.disabled = true
+	GameManager.go_to_settings()

@@ -396,7 +396,7 @@ func _silence_mouse(node: Node) -> void:
 
 
 func _setup_battle() -> void:
-	if GameManager.stage_scene == GameManager.STAGE_0_1:
+	if GameManager.stage_scene == GameManager.STAGE_0_1 or GameManager.stage_scene == GameManager.STAGE_0_2:
 		SoundBank.loop("rain")
 	else:
 		SoundBank.loop("wind")

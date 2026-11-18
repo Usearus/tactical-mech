@@ -10,7 +10,7 @@ Citadel is the government security organization.
 
 Helion is the firm that developed the project and told two stories about it. Shepherd used to work there.
 
-Osterveld is the buyer: the company with the foreign site and the private army.
+Moreau Industries is the buyer: the company with the foreign site and the private army.
 
 The project is called the Ledger project in files and in Citadel's internal order. People may still call the machine the system.
 
@@ -30,11 +30,11 @@ Revelations change what earlier missions meant. The story is there so the player
 
 ### What the story is about
 
-Citadel and Helion look like enemies. Their fight is useful to Osterveld, which arranges intel and incentives so that a larger war is the likely outcome. Osterveld uses that war to keep its own forces ahead, to make governments dependent on its systems, and to watch real people decide under fire.
+Citadel and Helion look like enemies. Their fight is useful to Moreau Industries, which arranges intel and incentives so that a larger war is the likely outcome. Moreau Industries uses that war to keep its own forces ahead, to make governments dependent on its systems, and to watch real people decide under fire.
 
 ### Ending
 
-The squad breaks Osterveld's command node. Osterveld's forces stop answering. That army is finished. It does not fall back to another base.
+The squad breaks Moreau Industries' command node. Moreau Industries' forces stop answering. That army is finished. It does not fall back to another base.
 
 In that same fight, Raven releases the cover-up and the recording, and the player sees the public story change. The squad is alive after the release. Comet did not stop it. Bastion, finished with Mercer, stands with it. They have been fugitive until this moment. They are not fugitive after it.
 
@@ -48,13 +48,13 @@ Citadel's interest shows up in two steps. In the first movement, the squad learn
 
 ### What the AI is for
 
-Osterveld gave the Ledger project a job: stay ahead of any military that could threaten its position, and keep its own losses low. Shaping wars is how it does that job. It feeds the incentives and the intel that make escalation the likely next move, then meets that war with forces already prepared for it.
+Moreau Industries gave the Ledger project a job: stay ahead of any military that could threaten its position, and keep its own losses low. Shaping wars is how it does that job. It feeds the incentives and the intel that make escalation the likely next move, then meets that war with forces already prepared for it.
 
-The system improves by watching real people decide under fire. A simulation cannot guarantee those choices. Osterveld expected Citadel to send a deniable team, and it expected the lab to be defended. It did not know which way the squad would push. Those choices are the valuable part. The squad was a safe source of that data because they were expendable.
+The system improves by watching real people decide under fire. A simulation cannot guarantee those choices. Moreau Industries expected Citadel to send a deniable team, and it expected the lab to be defended. It did not know which way the squad would push. Those choices are the valuable part. The squad was a safe source of that data because they were expendable.
 
 The fights themselves give the squad no hint. They play as a machine hunt. In the second movement, the recording shows the pilots were alive and unable to get out. In the third movement, the squad learns the system had rigged the defenders. The pilots could not communicate and could not escape. They were locked in, and they watched it happen to them.
 
-Citadel still owns the cover-up until Raven's release. Osterveld keeps the recording until the squad takes it to the public. Some of the people who own Osterveld suspect how far the Ledger project goes and accept the results because the outcome favors them.
+Citadel still owns the cover-up until Raven's release. Moreau Industries keeps the recording until the squad takes it to the public. Some of the people who own Moreau Industries suspect how far the Ledger project goes and accept the results because the outcome favors them.
 
 Citadel ends the campaign still intending to field what it kept. It no longer has the operational record. Live pilots locked in a machine, and the squad's own choices used as training, are the part the squad destroys. Citadel's remaining order calls the leftover national security.
 
@@ -86,7 +86,7 @@ The public correction is real, and the player sees it land. Raven releases the c
 
 Citadel chose a deniable squad and meant to disown them if the raid went bad. It did not plan a massacre headline. After the squad counted the bodies, someone at Citadel decided the squad would be the cover story.
 
-Osterveld expected that kind of operation and that kind of mess. It kept the recording. It did not write the headline. Citadel owns the cover-up.
+Moreau Industries expected that kind of operation and that kind of mess. It kept the recording. It did not write the headline. Citadel owns the cover-up.
 
 ### The squad
 
@@ -124,13 +124,13 @@ After the safe house, the missions run in this order:
 2. Recover that equipment from a warehouse. They are attacked twice. Both attacks are Holt's people. The first finds the squad at the warehouse. The second tries to stop the mechs leaving.
 3. Fight Holt, face to face. Holt comes after them for going to Jacob. Holt knew the squad was deniable and believes a failed off-books raid has to be buried. Holt does not know the murder headline was written after the body count, and does not know about the theft. Commander Mercer is a different person.
 4. Shepherd finds the squad after the fight with Holt. The broadcasts named them, and Shepherd comes looking. The squad was not searching for a former Helion employee. Jacob is not involved. Shepherd knows a second Helion facility, not the one where the squad counted the bodies, and wants the archive there. Shepherd gives them information and helps them get there.
-5. Fight through that facility. The defenders are Helion's own people. Citadel is not there. Osterveld is not a force on the field.
-6. Fight Helion. This is where they reach the records. The Ledger project was already being fielded. Citadel had been told it was still unfinished, which is why Citadel tried to steal it before it was finished. Osterveld had been told it was ready, and that version matches the records. The archive names Osterveld. The squad does not yet know Osterveld is the company that has been pushing the war. They also learn the operation was part of a larger fight. They were not hunting that motive from the safe house. They do not know it during the prologue. The records are at Shepherd's facility, not in the wrecks they already left. The squad does not yet learn what the fielded units do to the people inside them.
+5. Fight through that facility. The defenders are Helion's own people. Citadel is not there. Moreau Industries is not a force on the field.
+6. Fight Helion. This is where they reach the records. The Ledger project was already being fielded. Citadel had been told it was still unfinished, which is why Citadel tried to steal it before it was finished. Moreau Industries had been told it was ready, and that version matches the records. The archive names Moreau Industries. The squad does not yet know Moreau Industries is the company that has been pushing the war. They also learn the operation was part of a larger fight. They were not hunting that motive from the safe house. They do not know it during the prologue. The records are at Shepherd's facility, not in the wrecks they already left. The squad does not yet learn what the fielded units do to the people inside them.
 
-Second movement. The squad follows the name Osterveld from the archive to a facility outside the country. They believe Osterveld is building a private military with the technology. Osterveld's own military holds the site. Local security is also there, told to guard a civilian facility. Those local troops are not part of the conspiracy. They know the public story. They think they are stopping the squad that murdered those pilots. Osterveld lets that story do the work. The squad has to go through them to reach Osterveld's part of the site. There the squad discovers Osterveld has been pushing both sides toward the war, and that Osterveld kept the recording of the opening. The recording shows the pilots were alive and unable to get out. The squad does not yet know what sealed them in, and does not yet know the system was pushing Helion's two pitches.
+Second movement. The squad follows the name Moreau Industries from the archive to a facility outside the country. They believe Moreau Industries is building a private military with the technology. Moreau Industries' own military holds the site. Local security is also there, told to guard a civilian facility. Those local troops are not part of the conspiracy. They know the public story. They think they are stopping the squad that murdered those pilots. Moreau Industries lets that story do the work. The squad has to go through them to reach Moreau Industries' part of the site. There the squad discovers Moreau Industries has been pushing both sides toward the war, and that Moreau Industries kept the recording of the opening. The recording shows the pilots were alive and unable to get out. The squad does not yet know what sealed them in, and does not yet know the system was pushing Helion's two pitches.
 
-Third movement, first mission. Bastion gets the meeting with Commander Mercer. Osterveld's forces hit that meeting. The squad and Mercer fight together to survive, and the cover story comes out in that mission. Bastion learns Mercer helped write it. During that ambush the squad learns where Citadel keeps the research from the original raid. Osterveld's strike orders name the vault. The squad takes that off the attackers. Mercer may know the place and still does not open it. Mercer does not take them there and does not give them a key. That mission ends there.
+Third movement, first mission. Bastion gets the meeting with Commander Mercer. Moreau Industries' forces hit that meeting. The squad and Mercer fight together to survive, and the cover story comes out in that mission. Bastion learns Mercer helped write it. During that ambush the squad learns where Citadel keeps the research from the original raid. Moreau Industries' strike orders name the vault. The squad takes that off the attackers. Mercer may know the place and still does not open it. Mercer does not take them there and does not give them a key. That mission ends there.
 
-Third movement, second mission. The squad breaks into that Citadel site. The stolen operational record shows the system doing the job it was given, the opening as useful data, the lock-in, the shutdown list, and the two pitches the system pushed while Osterveld went along. The site itself shows Citadel means to field that research. Shepherd does not carry the rest of that copy out. The squad destroys the operational record there: the part that sealed pilots in, and the part that kept Raven and Comet on the network.
+Third movement, second mission. The squad breaks into that Citadel site. The stolen operational record shows the system doing the job it was given, the opening as useful data, the lock-in, the shutdown list, and the two pitches the system pushed while Moreau Industries went along. The site itself shows Citadel means to field that research. Shepherd does not carry the rest of that copy out. The squad destroys the operational record there: the part that sealed pilots in, and the part that kept Raven and Comet on the network.
 
-Fourth movement. The squad breaks Osterveld's command node, a site they have not been to before. The foreign site was where they found the recording. The Citadel vault was where they learned the system and destroyed its operational record. This node is what Osterveld's forces answer to. Those forces stop answering. That army is finished. Raven releases the cover-up and the recording as that fight happens, and the player sees the public story change. The public sees the lie and the pilots alive, unable to get out. The public does not learn how the system sealed them in. The squad has been fugitive until this point, and is alive after the release. The last scene is an internal order to continue with the incomplete copy, and then the squad, together. Citadel does not explain itself to the public.
+Fourth movement. The squad breaks Moreau Industries' command node, a site they have not been to before. The foreign site was where they found the recording. The Citadel vault was where they learned the system and destroyed its operational record. This node is what Moreau Industries' forces answer to. Those forces stop answering. That army is finished. Raven releases the cover-up and the recording as that fight happens, and the player sees the public story change. The public sees the lie and the pilots alive, unable to get out. The public does not learn how the system sealed them in. The squad has been fugitive until this point, and is alive after the release. The last scene is an internal order to continue with the incomplete copy, and then the squad, together. Citadel does not explain itself to the public.

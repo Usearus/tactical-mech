@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/reward_stars.gd" id="1_stars"]
+[ext_resource type="Texture2D" path="res://icodot-svg/ui/geometry/icon-geo-star-ui.svg" id="2_star"]
+[ext_resource type="Shader" path="res://shaders/icon_white.gdshader" id="3_gold"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gold"]
+shader = ExtResource("3_gold")
+shader_parameter/ink = Color(0.98, 0.84, 0.32, 1)
+
+[node name="RewardStars" type="HBoxContainer"]
+mouse_filter = 2
+theme_override_constants/separation = 4
+alignment = 1
+script = ExtResource("1_stars")
+
+[node name="Star1" type="TextureRect" parent="."]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_gold")
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Star2" type="TextureRect" parent="."]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_gold")
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Star3" type="TextureRect" parent="."]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_gold")
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_star")
+expand_mode = 1
+stretch_mode = 5

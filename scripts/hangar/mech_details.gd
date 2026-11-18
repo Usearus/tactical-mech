@@ -1,0 +1,402 @@
+extends Control
+
+const CARD_SCENE := preload("res://scenes/ui/mech_card.tscn")
+const SLOT_SCENE := preload("res://scenes/ui/strip_card_slot.tscn")
+const TIER_GOLD := Color(0.98, 0.84, 0.32)
+## Blurb stays beside the stat table above this width/height. Taller screens stack them.
+const DETAILS_ROW_ASPECT := 1.5
+## Portrait stays capped on wide screens so the blurb column can use the rest.
+const STAGE_ROW_MAX_X := 400.0
+## Share of the identity row the portrait keeps while the blurb and stats are stacked.
+const STACKED_PORTRAIT_RATIO := 0.6
+## Seconds from one preview attack to the next. The first plays as soon as the mech is shown.
+const PREVIEW_ATTACK_WAIT := 10.0
+
+@onready var _back: BaseButton = %BackButton
+@onready var _pilot_button: BaseButton = %PilotButton
+@onready var _title: Label = %Title
+@onready var _special_note: InfoNote = %SpecialNote
+@onready var identity: HBoxContainer = %Identity
+@onready var stage: Panel = %Stage
+@onready var copy_column: MarginContainer = %CopyColumn
+@onready var pilot_sprite: AnimatedSprite2D = %Pilot
+@onready var mech_sprite: AnimatedSprite2D = %Mech
+@onready var details: BoxContainer = %Details
+@onready var role: Label = %Role
+@onready var blurb: Label = %Blurb
+@onready var stat_table: VBoxContainer = %StatTable
+@onready var stat_grid: GridContainer = %StatGrid
+@onready var hp_stat: Label = %HpStat
+@onready var hp_grade: Label = %HpGrade
+@onready var atk_stat: Label = %AtkStat
+@onready var atk_grade: Label = %AtkGrade
+@onready var rng_stat: Label = %RngStat
+@onready var rng_grade: Label = %RngGrade
+@onready var mov_stat: Label = %MovStat
+@onready var mov_grade: Label = %MovGrade
+@onready var spd_stat: Label = %SpdStat
+@onready var spd_grade: Label = %SpdGrade
+@onready var deck_lead: MarginContainer = %DeckLead
+@onready var deck: HBoxContainer = %Deck
+@onready var deck_scroll: ScrollContainer = %DeckScroll
+@onready var card_fade: TextureRect = %CardFade
+
+var _data: MechData
+var _leaving := false
+var _attack_clock: Timer
+
+
+func _ready() -> void:
+	_attack_clock = Timer.new()
+	_attack_clock.name = "PreviewAttack"
+	_attack_clock.wait_time = PREVIEW_ATTACK_WAIT
+	_attack_clock.timeout.connect(_play_preview_attack)
+	add_child(_attack_clock)
+	mech_sprite.animation_finished.connect(_on_preview_attack_finished)
+	_back.pressed.connect(_on_back)
+	_pilot_button.pressed.connect(_on_pilot)
+	stage.resized.connect(_place_pair)
+	deck.resized.connect(_sync_card_fade)
+	deck_lead.resized.connect(_sync_card_fade)
+	deck_scroll.resized.connect(_sync_card_fade)
+	deck_scroll.get_h_scroll_bar().value_changed.connect(func(_value: float) -> void:
+		_sync_card_fade()
+	)
+	resized.connect(_arrange_details)
+	identity.resized.connect(_arrange_details)
+	_watch_stat_tips()
+	_arrange_details()
+	_show(_focused())
+
+
+func _on_back() -> void:
+	if _leaving:
+		return
+	_leave()
+	GameManager.go_to_progression()
+
+
+func _on_pilot() -> void:
+	if _leaving or _data == null:
+		return
+	_leave()
+	GameManager.go_to_pilot_progression()
+
+
+func _leave() -> void:
+	_leaving = true
+	_back.disabled = true
+	_pilot_button.disabled = true
+	_stop_preview_attack()
+
+
+func _focused() -> MechData:
+	var mech_id := GameManager.progression_mech_id
+	if mech_id == "":
+		return null
+	for data in StartingRoster.player_roster():
+		if data != null and data.id == mech_id:
+			return data
+	return null
+
+
+func _show(data: MechData) -> void:
+	_data = data
+	var shown := data != null
+	role.visible = shown
+	blurb.visible = shown
+	stat_table.visible = shown
+	_pilot_button.disabled = not shown
+	if not shown:
+		_title.text = "Mech details"
+		pilot_sprite.visible = false
+		mech_sprite.visible = false
+		_stop_preview_attack()
+		_show_deck(null)
+		return
+	_title.text = data.display_name
+	role.text = data.role_line()
+	blurb.text = data.blurb
+	_show_stat(hp_stat, hp_grade, data.max_hp, data.hp_grade)
+	var attack := _attack_span(data)
+	_show_span(atk_stat, atk_grade, attack.x, attack.y, data.atk_grade)
+	var reach := _reach_span(data)
+	_show_span(rng_stat, rng_grade, reach.x, reach.y, data.rng_grade, true)
+	_show_stat(mov_stat, mov_grade, data.move_range, data.move_grade)
+	_show_stat(spd_stat, spd_grade, data.speed, data.speed_grade)
+	var pilot := MechSprites.pilot_frames(data.art_id)
+	_apply_sprite(pilot_sprite, pilot, MechSprites.portrait_plays(pilot))
+	_apply_sprite(mech_sprite, MechSprites.frames_for(data.art_id), true)
+	_cue_preview_attack()
+	_show_deck(data)
+	_place_pair()
+
+
+## Plays the attack once when a mech is shown, then again every 10 seconds.
+func _cue_preview_attack() -> void:
+	var frames := mech_sprite.sprite_frames
+	if frames == null or not frames.has_animation("attack"):
+		_stop_preview_attack()
+		return
+	_play_preview_attack()
+	_attack_clock.start()
+
+
+func _play_preview_attack() -> void:
+	if mech_sprite.sprite_frames == null or not mech_sprite.sprite_frames.has_animation("attack"):
+		return
+	mech_sprite.play("attack")
+	mech_sprite.offset = MechSprites.reach_offset(mech_sprite)
+
+
+func _on_preview_attack_finished() -> void:
+	if mech_sprite.animation != "attack":
+		return
+	if mech_sprite.sprite_frames != null and mech_sprite.sprite_frames.has_animation("idle"):
+		mech_sprite.play("idle")
+	mech_sprite.offset = Vector2.ZERO
+
+
+func _stop_preview_attack() -> void:
+	if _attack_clock != null:
+		_attack_clock.stop()
+	mech_sprite.offset = Vector2.ZERO
+
+
+## Lowest and highest damage on this mech's attack cards.
+func _attack_span(mech: MechData) -> Vector2i:
+	return _card_span(mech, true)
+
+
+## Lowest and highest reach on this mech's attack cards.
+func _reach_span(mech: MechData) -> Vector2i:
+	return _card_span(mech, false)
+
+
+func _card_span(mech: MechData, damage: bool) -> Vector2i:
+	var low := 0
+	var high := 0
+	var found := false
+	var mech_deck := MechDecks.for_mech(mech)
+	if mech_deck == null:
+		return Vector2i.ZERO
+	for card in mech_deck.cards:
+		if card == null or card.card_type != "Attack":
+			continue
+		var amount := card.damage if damage else card.reach
+		if not found:
+			low = amount
+			high = amount
+			found = true
+		else:
+			low = mini(low, amount)
+			high = maxi(high, amount)
+	return Vector2i(low, high)
+
+
+func _show_stat(value: Label, grade: Label, amount: int, letter: String) -> void:
+	value.text = str(amount)
+	_show_grade(grade, letter)
+
+
+func _show_span(value: Label, grade: Label, low: int, high: int, letter: String, single_when_equal := false) -> void:
+	if single_when_equal and low == high:
+		value.text = str(low)
+	else:
+		value.text = "%d-%d" % [low, high]
+	_show_grade(grade, letter)
+
+
+func _show_grade(grade: Label, letter: String) -> void:
+	grade.text = letter
+	if letter == "S" or letter == "A":
+		grade.add_theme_color_override("font_color", TIER_GOLD)
+	else:
+		grade.remove_theme_color_override("font_color")
+
+
+func _watch_stat_tips() -> void:
+	if _special_note == null or stat_grid == null:
+		return
+	for child in stat_grid.get_children():
+		var stat := child as Control
+		if stat == null:
+			continue
+		var note := _stat_tip(stat.name)
+		if note.is_empty():
+			continue
+		_special_note.tap(stat, note)
+
+
+func _stat_tip(node_name: String) -> String:
+	for key in MechData.STAT_TIPS:
+		if node_name.begins_with(key):
+			return MechData.STAT_TIPS[key]
+	return ""
+
+
+func _show_deck(mech: MechData) -> void:
+	_close_special_note()
+	for child in deck.get_children():
+		deck.remove_child(child)
+		child.free()
+	if mech == null:
+		_sync_card_fade()
+		return
+	var cards := MechDecks.for_mech(mech)
+	if cards == null:
+		_sync_card_fade()
+		return
+	var stroke := MechCard.stroke_for(mech)
+	for card in _strip_order(cards.cards):
+		var slot := SLOT_SCENE.instantiate() as Control
+		deck.add_child(slot)
+		var view := CARD_SCENE.instantiate() as MechCard
+		view.fit_strip()
+		view.size = view.custom_minimum_size
+		slot.add_child(view)
+		view.present(card, stroke)
+		if card.is_special:
+			_add_special_info(view)
+			view.play_shine()
+	deck_scroll.scroll_horizontal = 0
+	_sync_card_fade()
+
+
+func _apply_sprite(sprite: AnimatedSprite2D, frames: SpriteFrames, animate: bool) -> void:
+	if frames == null or not frames.has_animation("idle"):
+		sprite.visible = false
+		return
+	sprite.visible = true
+	if sprite.sprite_frames != frames:
+		sprite.sprite_frames = frames
+		sprite.play("idle")
+	if animate:
+		if not sprite.is_playing():
+			sprite.play("idle")
+	else:
+		sprite.pause()
+		sprite.frame = 0
+	sprite.flip_h = false
+
+
+func _strip_order(cards: Array[CardData]) -> Array[CardData]:
+	var specials: Array[CardData] = []
+	var regular: Array[CardData] = []
+	for card in cards:
+		if card == null:
+			continue
+		if card.is_special:
+			specials.append(card)
+		else:
+			regular.append(card)
+	specials.append_array(regular)
+	return specials
+
+
+func _sync_card_fade() -> void:
+	var leftover := deck_lead.size.x - deck_scroll.scroll_horizontal - deck_scroll.size.x
+	card_fade.visible = leftover > 4.0
+
+
+## Blurb sits beside the stat table on wide screens. Taller ones stack it on top
+## and give the portrait 60% of the row.
+func _arrange_details() -> void:
+	if size.x < 8.0 or size.y < 8.0:
+		return
+	var stacked := size.x / size.y < DETAILS_ROW_ASPECT
+	if details.vertical != stacked:
+		details.vertical = stacked
+		stat_table.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if stacked else Control.SIZE_SHRINK_END
+	_fit_copy_column(stacked)
+
+
+func _fit_copy_column(stacked: bool) -> void:
+	if not stacked:
+		if is_equal_approx(stage.custom_maximum_size.x, STAGE_ROW_MAX_X) and copy_column.size_flags_horizontal == Control.SIZE_EXPAND_FILL:
+			return
+		_set_width_limit(stage, 0.0, STAGE_ROW_MAX_X)
+		_set_width_limit(copy_column, 0.0, 0.0)
+		stage.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		copy_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		return
+	if identity.size.x < 8.0:
+		return
+	var usable := identity.size.x - float(identity.get_theme_constant("separation"))
+	var portrait_width := usable * STACKED_PORTRAIT_RATIO
+	if is_equal_approx(stage.custom_maximum_size.x, portrait_width):
+		return
+	_set_width_limit(stage, portrait_width, portrait_width)
+	_set_width_limit(copy_column, usable - portrait_width, usable - portrait_width)
+	stage.size_flags_horizontal = Control.SIZE_FILL
+	copy_column.size_flags_horizontal = Control.SIZE_FILL
+
+
+func _set_width_limit(control: Control, minimum_x: float, maximum_x: float) -> void:
+	var minimum := control.custom_minimum_size
+	var maximum := control.custom_maximum_size
+	minimum.x = minimum_x
+	maximum.x = maximum_x
+	control.custom_minimum_size = minimum
+	control.custom_maximum_size = maximum
+
+
+func _place_pair() -> void:
+	if stage.size.x < 8.0 or stage.size.y < 8.0:
+		return
+	var show_pilot := pilot_sprite.visible
+	var show_mech := mech_sprite.visible
+	if not show_pilot and not show_mech:
+		return
+	var area_height := stage.size.y - 8.0
+	var area_width := stage.size.x - 16.0
+	var mech_slot := minf(area_height, area_width * 0.78)
+	if mech_slot < 32.0:
+		return
+	var pilot_slot := mech_slot * 0.58
+	var baseline := stage.size.y - 4.0
+	var pilot_left := 4.0
+	if show_pilot and show_mech:
+		var shift := mech_slot * 0.34
+		var mech_left := (pilot_slot - mech_slot) * 0.5 + shift
+		_place_sprite(pilot_sprite, pilot_slot, pilot_left, baseline)
+		_place_sprite(mech_sprite, mech_slot, pilot_left + mech_left, baseline)
+	elif show_pilot:
+		_place_sprite(pilot_sprite, pilot_slot, pilot_left, baseline)
+	else:
+		_place_sprite(mech_sprite, mech_slot, (stage.size.x - mech_slot) * 0.5, baseline)
+
+
+func _place_sprite(sprite: AnimatedSprite2D, slot: float, left: float, baseline: float) -> void:
+	var tex_size := Vector2(MechSprites.FRAME_SIZE, MechSprites.FRAME_SIZE)
+	var tex: Texture2D = null
+	if sprite.sprite_frames != null and sprite.sprite_frames.has_animation("idle"):
+		tex = sprite.sprite_frames.get_frame_texture("idle", 0)
+		if tex != null:
+			tex_size = tex.get_size()
+	var content := Rect2(Vector2.ZERO, tex_size)
+	if sprite == pilot_sprite and tex != null:
+		content = MechSprites.content_rect(tex)
+	var longest := maxf(content.size.x, content.size.y)
+	if longest < 1.0:
+		longest = maxf(tex_size.x, tex_size.y)
+	var fit := slot / longest
+	sprite.scale = Vector2(fit, fit)
+	var content_center_x := content.position.x + content.size.x * 0.5
+	var content_bottom := content.position.y + content.size.y
+	sprite.position = Vector2(
+		left + slot * 0.5 - (content_center_x - tex_size.x * 0.5) * fit,
+		baseline - (content_bottom - tex_size.y * 0.5) * fit
+	)
+
+
+func _add_special_info(view: MechCard) -> void:
+	var badge := view.special_badge()
+	if badge == null or _special_note == null:
+		return
+	_special_note.attach(badge, MechCard.SPECIAL_NOTE)
+
+
+func _close_special_note() -> void:
+	if _special_note != null:
+		_special_note.dismiss()

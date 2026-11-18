@@ -1,0 +1,136 @@
+[gd_scene format=3 uid="uid://bsoj6pacyqfrk"]
+
+[ext_resource type="Script" uid="uid://dyb76rdspwbrt" path="res://scripts/hangar/rewards.gd" id="1_rewards"]
+[ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="2_sheet"]
+[ext_resource type="PackedScene" path="res://scenes/ui/rule_topic.tscn" id="4_tab"]
+[ext_resource type="PackedScene" path="res://scenes/ui/info_note.tscn" id="5_note"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_back"]
+atlas = ExtResource("2_sheet")
+region = Rect2(30, 274, 48, 22)
+
+[node name="Rewards" type="Control" unique_id=1952320922]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_rewards")
+
+[node name="Backdrop" type="ColorRect" parent="." unique_id=1943610413]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.047058824, 0.10980392, 0.20392157, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=260013530]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 16
+
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=1508319285]
+layout_mode = 2
+theme_override_constants/separation = 32
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root" unique_id=1084662545]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BackButton" type="TextureButton" parent="Margin/Root/Header" unique_id=650183906]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 34)
+layout_mode = 2
+size_flags_vertical = 4
+texture_normal = SubResource("AtlasTexture_back")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Margin/Root/Header" unique_id=1334145732]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 40
+text = "Unlockables"
+vertical_alignment = 1
+
+[node name="Tabs" type="HBoxContainer" parent="Margin/Root/Header" unique_id=1039663402]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_constants/separation = 12
+
+[node name="NewCards" parent="Margin/Root/Header/Tabs" unique_id=423591456 instance=ExtResource("4_tab")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 22
+button_pressed = true
+text = "New cards"
+alignment = 1
+
+[node name="Upgrades" parent="Margin/Root/Header/Tabs" unique_id=1260914389 instance=ExtResource("4_tab")]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 22
+text = "Upgrades"
+alignment = 1
+
+[node name="Edicts" parent="Margin/Root/Header/Tabs" unique_id=265983627 instance=ExtResource("4_tab")]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 22
+text = "Edicts"
+alignment = 1
+
+[node name="Instants" parent="Margin/Root/Header/Tabs" unique_id=947267555 instance=ExtResource("4_tab")]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 22
+text = "Instants"
+alignment = 1
+
+[node name="Intro" type="VBoxContainer" parent="Margin/Root" unique_id=1212216326]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Category" type="Label" parent="Margin/Root/Intro" unique_id=151851781]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "New cards"
+
+[node name="Summary" type="Label" parent="Margin/Root/Intro" unique_id=1618031463]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Added to one mech's deck."
+autowrap_mode = 3
+
+[node name="CardScroll" type="ScrollContainer" parent="Margin/Root" unique_id=1828771787]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="CardList" type="VBoxContainer" parent="Margin/Root/CardScroll" unique_id=755239463]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 24
+
+[node name="LockedNote" parent="." unique_id=736208499 instance=ExtResource("5_note")]
+unique_name_in_owner = true
+layout_mode = 0

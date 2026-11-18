@@ -3,12 +3,51 @@
 [ext_resource type="Theme" uid="uid://c58dj4alu30k1" path="res://themes/sci_fi_ui_theme.tres" id="1_3bh40"]
 [ext_resource type="PackedScene" uid="uid://bgrbx6435mfm7" path="res://scenes/ui/sci_checkbox.tscn" id="1_check"]
 [ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="1_sheet"]
-[ext_resource type="Script" path="res://scripts/ui/ui_click.gd" id="2_click"]
+[ext_resource type="Script" path="res://scripts/ui/roster_row.gd" id="2_click"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pilot_eyes.tscn" id="3_eyes"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_open"]
+content_margin_left = 60.0
+content_margin_top = 10.0
+content_margin_right = 128.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_sheet")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(626, 147, 64, 64)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_open_hover"]
+content_margin_left = 60.0
+content_margin_top = 10.0
+content_margin_right = 128.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_sheet")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(626, 147, 64, 64)
+modulate_color = Color(1.25, 1.4, 1.45, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_open_pressed"]
+content_margin_left = 60.0
+content_margin_top = 10.0
+content_margin_right = 128.0
+content_margin_bottom = 10.0
+texture = ExtResource("1_sheet")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(626, 147, 64, 64)
+modulate_color = Color(0.8, 1.45, 1.55, 1)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_normal"]
 content_margin_left = 60.0
 content_margin_top = 10.0
-content_margin_right = 10.0
+content_margin_right = 128.0
 content_margin_bottom = 10.0
 texture = ExtResource("1_sheet")
 texture_margin_left = 12.0
@@ -20,7 +59,7 @@ region_rect = Rect2(312, 86, 64, 64)
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pressed"]
 content_margin_left = 60.0
 content_margin_top = 10.0
-content_margin_right = 10.0
+content_margin_right = 128.0
 content_margin_bottom = 10.0
 texture = ExtResource("1_sheet")
 texture_margin_left = 12.0
@@ -32,7 +71,7 @@ region_rect = Rect2(510, 86, 64, 64)
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_hover"]
 content_margin_left = 60.0
 content_margin_top = 10.0
-content_margin_right = 10.0
+content_margin_right = 128.0
 content_margin_bottom = 10.0
 texture = ExtResource("1_sheet")
 texture_margin_left = 12.0
@@ -40,18 +79,6 @@ texture_margin_top = 12.0
 texture_margin_right = 12.0
 texture_margin_bottom = 12.0
 region_rect = Rect2(378, 86, 64, 64)
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_disabled"]
-content_margin_left = 60.0
-content_margin_top = 10.0
-content_margin_right = 10.0
-content_margin_bottom = 10.0
-texture = ExtResource("1_sheet")
-texture_margin_left = 12.0
-texture_margin_top = 12.0
-texture_margin_right = 12.0
-texture_margin_bottom = 12.0
-region_rect = Rect2(444, 86, 64, 64)
 
 [node name="RosterRow" type="Button" unique_id=299772481]
 custom_minimum_size = Vector2(0, 60)
@@ -63,17 +90,23 @@ theme = ExtResource("1_3bh40")
 theme_type_variation = &"PrimaryButtonSquare"
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
-script = ExtResource("2_click")
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 36
-theme_override_styles/normal = SubResource("StyleBoxTexture_normal")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_pressed")
-theme_override_styles/hover = SubResource("StyleBoxTexture_hover")
-theme_override_styles/hover_pressed = SubResource("StyleBoxTexture_pressed")
-theme_override_styles/disabled = SubResource("StyleBoxTexture_disabled")
-theme_override_styles/focus = SubResource("StyleBoxTexture_hover")
+theme_override_styles/normal = SubResource("StyleBoxTexture_open")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_open_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_open_hover")
+theme_override_styles/hover_pressed = SubResource("StyleBoxTexture_open_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_open")
+theme_override_styles/focus = SubResource("StyleBoxTexture_open_hover")
 text = "Comet"
 alignment = 0
+script = ExtResource("2_click")
+open_style = SubResource("StyleBoxTexture_open")
+open_hover_style = SubResource("StyleBoxTexture_open_hover")
+open_pressed_style = SubResource("StyleBoxTexture_open_pressed")
+filled_style = SubResource("StyleBoxTexture_normal")
+filled_hover_style = SubResource("StyleBoxTexture_hover")
+filled_pressed_style = SubResource("StyleBoxTexture_pressed")
 
 [node name="Check" parent="." unique_id=377877961 instance=ExtResource("1_check")]
 unique_name_in_owner = true
@@ -88,3 +121,18 @@ offset_right = 52.0
 offset_bottom = 20.0
 grow_vertical = 2
 expand_icon = true
+
+[node name="PilotEyes" parent="." unique_id=1622675276 instance=ExtResource("3_eyes")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -122.0
+offset_top = -26.0
+offset_right = -9.0
+offset_bottom = 26.0
+grow_horizontal = 0
+grow_vertical = 2

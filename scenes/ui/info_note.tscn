@@ -14,7 +14,7 @@ z_as_relative = false
 z_index = 40
 mouse_filter = 0
 theme = ExtResource("3_theme")
-theme_type_variation = &"PrimaryPanel"
+theme_type_variation = &"SecondaryPanel"
 
 [node name="Row" type="HBoxContainer" parent="."]
 layout_mode = 2

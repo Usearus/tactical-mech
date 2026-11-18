@@ -37,6 +37,11 @@ func test_mission_comms_stop_at_the_end_of_each_cue() -> void:
 	assert_eq(second[0].text, "Rain's on the bridge. Red corp holds the far bank.")
 	assert_eq(second[3].text, "Clear the bridge and we pull back to base.")
 	assert_ne(first[3].text, second[0].text, "the cues stay separate")
+	var third := _spoken(load("res://dialogue/mission_comms.dialogue"), "mission_3")
+	assert_eq(third.size(), 4, "mission 3 comms")
+	assert_eq(third[0].text, "Rain's on the waterfront. Green corp holds the street, water behind the buildings.")
+	assert_eq(third[3].text, "Clear the street and we pull back to base.")
+	assert_ne(second[3].text, third[0].text, "mission 3 stays separate from mission 2")
 
 
 func test_story_scenes_point_at_their_dialogue() -> void:
@@ -53,6 +58,25 @@ func test_story_scenes_point_at_their_dialogue() -> void:
 	opening = bridge._opening_line(bridge.dialogue.resource_path, "start")
 	assert_eq(opening.text, "The bridge is the only line across. Red corp owns the other end.")
 	bridge.free()
+
+	var street := _spoken(load("res://dialogue/story_street.dialogue"), "start")
+	assert_eq(street.size(), 3, "street lines")
+	assert_eq(street[0].character, "Comet")
+	assert_eq(street[0].text, "Rain on the east bank. Green corp is in the street, water behind them.")
+	assert_eq(street[0].tags[0], "art=white")
+	assert_eq(street[1].character, "Raven")
+	assert_eq(street[1].text, "No boss on this block. The scouts close the gap. The rest have to step in beside us.")
+	assert_eq(street[1].tags[0], "art=purple")
+	assert_eq(street[2].text, "Hold the open street. Let them come off the buildings.")
+	assert_eq(street[2].tags[0], "art=white")
+
+	var east_bank := (load("res://scenes/story/story3.tscn") as PackedScene).instantiate() as StoryPlayer
+	assert_eq(east_bank.dialogue.resource_path, "res://dialogue/story_street.dialogue")
+	assert_eq(east_bank.next_scene, "res://scenes/select/mech_select.tscn")
+	opening = east_bank._opening_line(east_bank.dialogue.resource_path, east_bank.start_cue)
+	assert_eq(opening.speaker, "Comet")
+	assert_eq(opening.text, "Rain on the east bank. Green corp is in the street, water behind them.")
+	east_bank.free()
 
 
 func test_the_bar_keeps_a_response_button_and_the_known_portraits() -> void:

@@ -5,10 +5,8 @@
 [ext_resource type="PackedScene" uid="uid://qxdubftejjtg" path="res://scenes/ui/panel_primary.tscn" id="3_window"]
 [ext_resource type="PackedScene" uid="uid://dcj6os8mqkath" path="res://scenes/ui/sci_primary_button.tscn" id="4_start"]
 [ext_resource type="Texture2D" uid="uid://dm65y6nga4i2m" path="res://art/backgrounds/NYC_pallette.jpg" id="5_map"]
-[ext_resource type="Texture2D" uid="uid://bfsnt2gcpfks0" path="res://art/backgrounds/scene_alley.jpg" id="6_alley"]
 [ext_resource type="PackedScene" path="res://scenes/ui/map_crosshair.tscn" id="7_cross"]
 [ext_resource type="Texture2D" uid="uid://demt1svh1bufm" path="res://art/ui-components/theme_assets.png" id="8_sheet"]
-[ext_resource type="PackedScene" uid="uid://c2fvjjatnm6rj" path="res://scenes/ui/menu_corner.tscn" id="9_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/rule_topic.tscn" id="10_topic"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_back"]
@@ -32,7 +30,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.07, 0.05, 0.1, 1)
+color = Color(0.047058824, 0.10980392, 0.20392157, 1)
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=1093742319]
 layout_mode = 1
@@ -69,10 +67,6 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 40
 text = "Select Mission"
 vertical_alignment = 1
-
-[node name="MenuCorner" parent="Margin/Root/Header" unique_id=1868873673 instance=ExtResource("9_menu")]
-layout_mode = 2
-size_flags_vertical = 4
 
 [node name="MapPanel" parent="Margin/Root" unique_id=585588366 instance=ExtResource("2_panel")]
 layout_mode = 2
@@ -126,7 +120,7 @@ layout_mode = 1
 offset_left = 16.0
 offset_top = 16.0
 offset_right = 436.0
-offset_bottom = 180.0
+offset_bottom = 248.0
 mouse_filter = 2
 theme_override_constants/separation = 10
 
@@ -144,6 +138,11 @@ text = "Mission 1"
 unique_name_in_owner = true
 layout_mode = 2
 text = "Mission 2"
+
+[node name="Mission3" parent="Margin/Root/MapPanel/Inset/Clip/MissionList" unique_id=589504230 instance=ExtResource("10_topic")]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Mission 3"
 
 [node name="Locked" parent="." unique_id=1063570413 instance=ExtResource("3_window")]
 unique_name_in_owner = true
@@ -225,12 +224,16 @@ text = "Mission 1"
 horizontal_alignment = 1
 
 [node name="ArtClip" type="Control" parent="Briefing/Window/Margin/Column" unique_id=2138978534]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 180)
 clip_contents = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Alley" type="TextureRect" parent="Briefing/Window/Margin/Column/ArtClip" unique_id=171436005]
+[node name="StageView" type="SubViewportContainer" parent="Briefing/Window/Margin/Column/ArtClip" unique_id=403743934]
+unique_name_in_owner = true
+visible = false
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -238,15 +241,26 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("6_alley")
-expand_mode = 1
-stretch_mode = 6
+stretch = true
+
+[node name="StageViewport" type="SubViewport" parent="Briefing/Window/Margin/Column/ArtClip/StageView" unique_id=354017069]
+unique_name_in_owner = true
+handle_input_locally = false
+gui_disable_input = true
+size = Vector2i(340, 180)
+render_target_update_mode = 0
+
+[node name="StageCamera" type="Camera2D" parent="Briefing/Window/Margin/Column/ArtClip/StageView/StageViewport" unique_id=2098896461]
+unique_name_in_owner = true
+
+[node name="StageHost" type="Node2D" parent="Briefing/Window/Margin/Column/ArtClip/StageView/StageViewport" unique_id=1949262692]
+unique_name_in_owner = true
 
 [node name="Conditions" type="VBoxContainer" parent="Briefing/Window/Margin/Column" unique_id=212367273]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="TutorialBrief" type="Label" parent="Briefing/Window/Margin/Column/Conditions"]
+[node name="TutorialBrief" type="Label" parent="Briefing/Window/Margin/Column/Conditions" unique_id=1228969008]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2

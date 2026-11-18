@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[node name="RewardGrid" type="GridContainer"]
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 24
+columns = 4

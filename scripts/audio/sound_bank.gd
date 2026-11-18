@@ -108,6 +108,9 @@ const _BLADES: PackedStringArray = ["Spike", "Cut", "Lance"]
 const _SHOTGUNS: PackedStringArray = ["Shotgun", "Charge"]
 
 const _POOL_SIZE := 6
+const _MUSIC_BUS := "Music"
+const _EFFECTS_BUS := "SFX"
+const _LEVELS_PATH := "user://audio.cfg"
 ## The letter tick is a short chirp played faster, so it chatters while text types.
 const _TYPING_PITCH := 2.0
 ## Interface 3-3 is one chirp and then silence. Loop only the chirp.
@@ -122,21 +125,52 @@ var _music_name := ""
 ## Where each track left off, so a return continues instead of starting over.
 var _music_at: Dictionary = {}
 var _music_streams: Dictionary = {}
+var _music_percent := 100.0
+var _effects_percent := 100.0
 
 
 func _ready() -> void:
 	## Round banners pause the tree. Music and beds keep playing through that.
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_ensure_bus(_MUSIC_BUS)
+	_ensure_bus(_EFFECTS_BUS)
 	_loop_player = AudioStreamPlayer.new()
+	_loop_player.bus = _EFFECTS_BUS
 	add_child(_loop_player)
 	_music_player = AudioStreamPlayer.new()
+	_music_player.bus = _MUSIC_BUS
 	add_child(_music_player)
 	_typing_player = AudioStreamPlayer.new()
+	_typing_player.bus = _EFFECTS_BUS
 	add_child(_typing_player)
 	for _index in _POOL_SIZE:
 		var player := AudioStreamPlayer.new()
+		player.bus = _EFFECTS_BUS
 		add_child(player)
 		_oneshots.append(player)
+	_load_levels()
+	_apply_bus(_MUSIC_BUS, _music_percent)
+	_apply_bus(_EFFECTS_BUS, _effects_percent)
+
+
+func music_percent() -> float:
+	return _music_percent
+
+
+func effects_percent() -> float:
+	return _effects_percent
+
+
+func set_music_percent(percent: float) -> void:
+	_music_percent = clampf(percent, 0.0, 100.0)
+	_apply_bus(_MUSIC_BUS, _music_percent)
+	_save_levels()
+
+
+func set_effects_percent(percent: float) -> void:
+	_effects_percent = clampf(percent, 0.0, 100.0)
+	_apply_bus(_EFFECTS_BUS, _effects_percent)
+	_save_levels()
 
 
 ## One-shot. A second play overlaps instead of cutting the first.
@@ -276,3 +310,37 @@ func _free_player() -> AudioStreamPlayer:
 		if not player.playing:
 			return player
 	return _oneshots[0]
+
+
+func _ensure_bus(bus_name: String) -> void:
+	if AudioServer.get_bus_index(bus_name) >= 0:
+		return
+	AudioServer.add_bus()
+	var index := AudioServer.bus_count - 1
+	AudioServer.set_bus_name(index, bus_name)
+	AudioServer.set_bus_send(index, "Master")
+
+
+func _apply_bus(bus_name: String, percent: float) -> void:
+	var index := AudioServer.get_bus_index(bus_name)
+	if index < 0:
+		return
+	var loudness := -80.0
+	if percent > 0.0:
+		loudness = linear_to_db(percent / 100.0)
+	AudioServer.set_bus_volume_db(index, loudness)
+
+
+func _load_levels() -> void:
+	var config := ConfigFile.new()
+	if config.load(_LEVELS_PATH) != OK:
+		return
+	_music_percent = clampf(float(config.get_value("audio", "music", 100.0)), 0.0, 100.0)
+	_effects_percent = clampf(float(config.get_value("audio", "effects", 100.0)), 0.0, 100.0)
+
+
+func _save_levels() -> void:
+	var config := ConfigFile.new()
+	config.set_value("audio", "music", _music_percent)
+	config.set_value("audio", "effects", _effects_percent)
+	config.save(_LEVELS_PATH)

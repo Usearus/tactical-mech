@@ -16,6 +16,14 @@ func test_stage_0_1_collision_shapes_block_open_ground() -> void:
 		assert_false(StageMap.blocked(spawn.cell()), "player spawn %s stays open" % spawn.name)
 
 
+func test_stage_0_2_collision_shapes_block_open_ground() -> void:
+	_assert_shapes_close_open_ground("res://scenes/stage/stage-0-2.tscn")
+	for spawn in StageMap.spawns():
+		if spawn.slot <= 0:
+			continue
+		assert_false(StageMap.blocked(spawn.cell()), "player spawn %s stays open" % spawn.name)
+
+
 func test_stage_0_0_collision_shape_blocks_open_ground() -> void:
 	_assert_shapes_close_open_ground("res://scenes/stage/stage-0-0.tscn")
 

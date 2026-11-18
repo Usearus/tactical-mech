@@ -2,6 +2,17 @@ extends CanvasLayer
 
 const TITLE_SCENE := "res://scenes/command/command.tscn"
 const BOOT_SCENE := "res://scenes/main/main.tscn"
+const HANGAR_SCENE := "res://scenes/hangar/hangar.tscn"
+const BRIEFING_SCENE := "res://scenes/briefing/mission_brief.tscn"
+const SETTINGS_SCENE := "res://scenes/hangar/settings.tscn"
+const REWARDS_SCENE := "res://scenes/hangar/rewards.tscn"
+const PROGRESSION_SCENE := "res://scenes/hangar/mech_progression.tscn"
+const MECH_DETAILS_SCENE := "res://scenes/hangar/mech_details.tscn"
+const PILOT_PROGRESSION_SCENE := "res://scenes/hangar/pilot_progression.tscn"
+## Menu panel height while Mission Log, Legend, and Quit demo are all shown.
+const MENU_FULL_HEIGHT := 240.0
+## Menu panel height while only Quit demo is shown.
+const MENU_QUIT_HEIGHT := 104.0
 const BONUS_ROW_SCENE := preload("res://scenes/ui/bonus_row.tscn")
 ## Above scene overlays such as the discard tray (layer 60). The screen fade stays at 100.
 const POPUP_LAYER := 90
@@ -83,9 +94,25 @@ func _sync_scene() -> void:
 	var path := current.scene_file_path
 	var on_title := path == TITLE_SCENE or path == BOOT_SCENE
 	var on_story := path.begins_with("res://scenes/story/")
-	root.visible = not on_title and not on_story
-	if on_title or on_story:
+	var on_hub := path == HANGAR_SCENE or path == BRIEFING_SCENE or path == SETTINGS_SCENE or path == REWARDS_SCENE or path == PROGRESSION_SCENE or path == MECH_DETAILS_SCENE or path == PILOT_PROGRESSION_SCENE
+	root.visible = not on_title and not on_story and not on_hub
+	if on_title or on_story or on_hub:
 		close()
+	_set_quit_only(false)
+
+
+## A short menu shows only Quit demo. The full menu keeps the log and the legend.
+func _set_quit_only(quit_only: bool) -> void:
+	var log_button := %MissionLog as BaseButton
+	var legend_button := %LegendButton as BaseButton
+	if log_button != null:
+		log_button.visible = not quit_only
+	if legend_button != null:
+		legend_button.visible = not quit_only
+	if menu_panel == null:
+		return
+	var height := MENU_QUIT_HEIGHT if quit_only else MENU_FULL_HEIGHT
+	menu_panel.offset_bottom = menu_panel.offset_top + height
 
 
 func toggle() -> void:

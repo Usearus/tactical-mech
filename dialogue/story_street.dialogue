@@ -1,0 +1,7 @@
+# East bank, before mission 3. [#art=id] marks who is speaking on the street.
+~ start
+
+Comet: Rain on the east bank. Green corp is in the street, water behind them. [#art=white]
+Raven: No boss on this block. The scouts close the gap. The rest have to step in beside us. [#art=purple]
+Comet: Hold the open street. Let them come off the buildings. [#art=white]
+=> END

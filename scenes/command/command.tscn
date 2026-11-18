@@ -82,13 +82,25 @@ text = "Tactical Mech"
 horizontal_alignment = 2
 uppercase = true
 
-[node name="StartButton" parent="Menu/Column" unique_id=925525369 instance=ExtResource("4_btn")]
+[node name="Actions" type="VBoxContainer" parent="Menu/Column" unique_id=1844201101]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_constants/separation = 20
+
+[node name="StartButton" parent="Menu/Column/Actions" unique_id=925525369 instance=ExtResource("4_btn")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(320, 72)
 layout_mode = 2
-size_flags_horizontal = 8
-theme_override_font_sizes/font_size = 48
-text = "START DEMO"
+size_flags_horizontal = 3
+text = "Start demo"
+
+[node name="SettingsButton" parent="Menu/Column/Actions" unique_id=1844201102 instance=ExtResource("4_sec")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+text = "Settings"
 
 [node name="TestButton" parent="." instance=ExtResource("4_sec")]
 unique_name_in_owner = true
@@ -108,3 +120,4 @@ grow_horizontal = 0
 grow_vertical = 0
 theme_override_font_sizes/font_size = 32
 text = "Test"
+modulate = Color(1, 1, 1, 0.2)

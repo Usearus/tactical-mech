@@ -37,7 +37,7 @@ func _ready() -> void:
 		call_deferred("_preview_dialogue")
 		return
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if dialogue != null and dialogue.resource_path.ends_with("story_bridge.dialogue"):
+	if dialogue != null and (dialogue.resource_path.ends_with("story_bridge.dialogue") or dialogue.resource_path.ends_with("story_street.dialogue")):
 		SoundBank.loop("rain")
 	elif dialogue != null and dialogue.resource_path.ends_with("story_alley.dialogue"):
 		SoundBank.loop("wind")

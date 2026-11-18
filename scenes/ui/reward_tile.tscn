@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/reward_tile.gd" id="1_tile"]
+[ext_resource type="PackedScene" path="res://scenes/ui/listed_card.tscn" id="2_card"]
+[ext_resource type="PackedScene" path="res://scenes/ui/reward_stars.tscn" id="3_stars"]
+
+[node name="RewardTile" type="VBoxContainer"]
+mouse_filter = 2
+theme_override_constants/separation = 6
+alignment = 1
+script = ExtResource("1_tile")
+
+[node name="BadgeRoom" type="Control" parent="."]
+visible = false
+custom_minimum_size = Vector2(0, 49)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ListedCard" parent="." instance=ExtResource("2_card")]
+layout_mode = 2
+
+[node name="StarRow" parent="." instance=ExtResource("3_stars")]
+layout_mode = 2
